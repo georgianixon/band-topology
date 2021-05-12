@@ -20,28 +20,29 @@ PauliY = 1j*np.array([[0,-1], [1,0]])
 PauliZ = np.array([[1,0], [0,-1]])
 
 normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
-cmap = mpl.cm.get_cmap('PuOr')
+cmapstring = 'twilight'
+cmap = mpl.cm.get_cmap(cmapstring)
 
 
-#
-kx = 0
-ky = 0
-t = 0.1
 A = np.array([[1,0], [-0.5, sqrt(3)/2], [-0.5,-sqrt(3)/2]])
-K = np.array([kx, ky])
-H = t*np.sum([PauliX*cos(np.dot(K, A[i])) - PauliY*sin(np.dot(K, A[i])) for i in range(3)], axis=0)
-def HGraphene(t,K):
-    return t*np.sum([PauliX*cos(np.dot(K, A[i])) - PauliY*sin(np.dot(K, A[i])) for i in range(3)], axis=0)
-HGraphene(1, K)
+B = np.array([[0,sqrt(3)], [-1.5,-sqrt(3)/2], [-1.5,sqrt(3)/2]])
+           
+def HGraphene(t1,t2, M, K):
+    H0 = t1*np.sum([PauliX*cos(np.dot(K, A[i])) - PauliY*sin(np.dot(K, A[i])) for i in range(3)], axis=0)
+    SLIS = M*PauliZ
+    TRSB = t2*np.sum([PauliZ*sin(np.dot(K, B[i])) for i in range(3)], axis=0)
+    return H0 + SLIS + TRSB
 
-t = 1
-#qlist = np.linspace(-1,1,201, endpoint=True)
+t1 = 1
+M = 0
+t2 = 0
 qpoints = 201
-qlist = np.linspace(-pi,pi, 201, endpoint=True)
-eiglist = np.zeros((201,201,2), dtype=np.complex128)
+
+qlist = np.linspace(-pi,pi, qpoints, endpoint=True)
+eiglist = np.zeros((qpoints,qpoints,2), dtype=np.complex128)
 for xi, qx in enumerate(qlist):
     for yi, qy in enumerate(qlist):
-        eigs, evecs = eig(HGraphene(t, np.array([qx, qy])))
+        eigs, evecs = eig(HGraphene(t1, t2, M, np.array([qx, qy])))
         eiglist[xi,yi] = eigs
         
 eiglist = np.real(eiglist)
@@ -51,10 +52,11 @@ fig = plt.figure()
 ax = plt.axes(projection='3d')
 groundband = ax.contour3D(X, Y, eiglist[:,:,0], 50,cmap=cmap, norm=normaliser)
 firstband = ax.contour3D(X, Y, eiglist[:,:,1], 50,cmap=cmap, norm=normaliser)
-fig.colorbar(plt.cm.ScalarMappable(cmap='PuOr', norm=normaliser))
+fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
 plt.show()
 
-#ax.view_init(60, 35)
-#fig
+ax.view_init(5, 45)
+fig
 
-#%%
+
+#%% 
