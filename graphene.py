@@ -42,7 +42,7 @@ cmap = mpl.cm.get_cmap(cmapstring)
 
 
 A = np.array([[1,0], [-0.5, sqrt(3)/2], [-0.5,-sqrt(3)/2]])
-B = np.array([[0,sqrt(3)], [-1.5,-sqrt(3)/2], [-1.5,sqrt(3)/2]])
+B = np.array([[0,sqrt(3)], [-1.5,-sqrt(3)/2], [1.5,-sqrt(3)/2]])
            
 def HGraphene(t1,t2, M, K):
     H0 = t1*np.sum([PauliX*cos(np.dot(K, A[i])) - PauliY*sin(np.dot(K, A[i])) for i in range(3)], axis=0)
@@ -51,10 +51,10 @@ def HGraphene(t1,t2, M, K):
     return H0 + SLIS + TRSB
 
 t1 = 1
-delta = 0
-t2 = 0
-qpoints = 300
-n = 0
+delta = 0.4
+t2 = 0.15
+qpoints = 500
+n = 1 #lowest band is second for some reason
 
 
 qlist = np.linspace(-pi,pi, qpoints, endpoint=True)
@@ -84,7 +84,7 @@ ax.set_yticks([-pi, 0, pi])
 ax.set_yticklabels([r"$-\pi$", 0, r"$\pi$"])
 fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
 fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str(t2)+r"$")
-plt.savefig(sh + "graphene_topangle.pdf", format="pdf")
+#plt.savefig(sh + "graphene_topangle_m_t2.pdf", format="pdf")
 plt.show()
 
 fig = plt.figure()
@@ -102,8 +102,8 @@ firstband = ax.contour3D(X, Y, eiglist[:,:,1], 50,cmap=cmap, norm=normaliser)
 ax.set_zlabel("E")
 fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
 fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str(t2)+r"$")
-plt.savefig(sh + "graphene_sideangle.pdf", format="pdf")
-
+#plt.savefig(sh + "graphene_sideangle_m_t2.pdf", format="pdf")
+plt.show()
 
 
 
