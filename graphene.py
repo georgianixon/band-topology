@@ -16,7 +16,7 @@ from mpl_toolkits import mplot3d
 import matplotlib as mpl
 
 
-sh = "/Users/Georgia Nixon/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
+sh = "/Users/Georgia/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
 
 size=16
 params = {
@@ -51,9 +51,10 @@ def HGraphene(t1,t2, M, K):
     return H0 + SLIS + TRSB
 
 t1 = 1
-delta = 0.4
-t2 = 0.15
+delta = 0
+t2 = -0.15
 qpoints = 500
+
 n = 1 #lowest band is second for some reason
 
 
@@ -84,7 +85,7 @@ ax.set_yticks([-pi, 0, pi])
 ax.set_yticklabels([r"$-\pi$", 0, r"$\pi$"])
 fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
 fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str(t2)+r"$")
-#plt.savefig(sh + "graphene_topangle_m_t2.pdf", format="pdf")
+plt.savefig(sh + "graphene_topangle_m_-t2.pdf", format="pdf")
 plt.show()
 
 fig = plt.figure()
@@ -102,23 +103,45 @@ firstband = ax.contour3D(X, Y, eiglist[:,:,1], 50,cmap=cmap, norm=normaliser)
 ax.set_zlabel("E")
 fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
 fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str(t2)+r"$")
-#plt.savefig(sh + "graphene_sideangle_m_t2.pdf", format="pdf")
+plt.savefig(sh + "graphene_sideangle_m_-t2.pdf", format="pdf")
 plt.show()
 
 
 
 #%% 
 
-uq_Acomponant = eigveclist[:,:,0]
-uq_Bcomponant = eigveclist[:,:,1]
+psi_A = eigveclist[:,:,0]
+psi_B = eigveclist[:,:,1]
 
-uq_Acomponant_dqy = np.diff(uq_Acomponant)/dq
-uq_Acomponant_dqx = np.diff(uq_Acomponant, axis=0)/dq
-uq_Bcomponant_dqy = np.diff(uq_Bcomponant)/dq
-uq_Bcomponant_dqx = np.diff(uq_Bcomponant, axis=0)/dq
+psi_A_dqy = np.diff(psi_A)/dq
+psi_A_dqx = np.diff(psi_A, axis=0)/dq
+psi_B_dqy = np.diff(psi_B)/dq
+psi_B_dqx = np.diff(psi_B, axis=0)/dq
+
+#remove end parts 
+psi_A_dqx = psi_A_dqy[:qpoints-1, :qpoints-1]
+psi_A_dqy = psi_A_dqy[:qpoints-1, :qpoints-1]
+psi_B_dqx = psi_A_dqy[:qpoints-1, :qpoints-1]
+psi_B_dqy = psi_A_dqy[:qpoints-1, :qpoints-1]
+
+Omega = 1j*(psi_A_dqx*psi_A_dqy + psi_B_dqx*psi_B_dqy - psi_A_dqy*psi_A_dqx - psi_B_dqy*psi_B_dqx)
+
+X, Y = np.meshgrid(qlist[:-1], qlist[:-1])
+fig = plt.figure()
+ax = plt.axes(projection='3d')
+ax.set_xticks([-pi, 0, pi])
+ax.set_xticklabels([r"$-\pi$", 0, r"$\pi$"])
+ax.set_yticks([-pi, 0, pi])
+ax.set_yticklabels([r"$-\pi$", 0, r"$\pi$"])
+groundband = ax.contour3D(X, Y, np.real(Omega),cmap=cmap, norm=normaliser)
+ax.set_zlabel(r"$\Omega$")
+fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
+# fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str(t2)+r"$")
+#plt.savefig(sh + "graphene_sideangle_m_t2.pdf", format="pdf")
+plt.show()
 
 
-
+np.nonzero(Omega)
 
 
 
