@@ -6,7 +6,7 @@ Created on Tue May 11 19:33:14 2021
 """
 
 import numpy as np
-from numpy import sin, cos, pi, sqrt
+from numpy import sin, cos, pi, sqrt, exp
 from numpy.linalg import eig
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,7 +16,7 @@ from mpl_toolkits import mplot3d
 import matplotlib as mpl
 
 
-sh = "/Users/Georgia/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
+sh = "/Users/Georgia Nixon/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
 
 size=16
 params = {
@@ -51,9 +51,9 @@ def HGraphene(t1,t2, M, K):
     return H0 + SLIS + TRSB
 
 t1 = 1
-delta = 0
-t2 = -0.15
-qpoints = 500
+delta = 0.4
+t2 = -0.15*exp(1j*pi/4)
+qpoints = 100
 
 n = 1 #lowest band is second for some reason
 
@@ -85,7 +85,7 @@ ax.set_yticks([-pi, 0, pi])
 ax.set_yticklabels([r"$-\pi$", 0, r"$\pi$"])
 fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
 fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str(t2)+r"$")
-plt.savefig(sh + "graphene_topangle_m_-t2.pdf", format="pdf")
+#plt.savefig(sh + "graphene_topangle_m_-t2.pdf", format="pdf")
 plt.show()
 
 fig = plt.figure()
@@ -103,7 +103,7 @@ firstband = ax.contour3D(X, Y, eiglist[:,:,1], 50,cmap=cmap, norm=normaliser)
 ax.set_zlabel("E")
 fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
 fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str(t2)+r"$")
-plt.savefig(sh + "graphene_sideangle_m_-t2.pdf", format="pdf")
+#plt.savefig(sh + "graphene_sideangle_m_-t2.pdf", format="pdf")
 plt.show()
 
 
