@@ -43,8 +43,13 @@ cmap = mpl.cm.get_cmap(cmapstring)
 
 A = np.array([[1,0], [-0.5, sqrt(3)/2], [-0.5,-sqrt(3)/2]])
 B = np.array([[0,sqrt(3)], [-1.5,-sqrt(3)/2], [1.5,-sqrt(3)/2]])
-           
+         
+  
 def HGraphene(t1,t2, M, K):
+    """
+    Calculate Graphene matrix for variables tunneling (t1), NNN tunnelling (t2),
+    energy offset (M), for particular quasimomentum (K)
+    """
     H0 = t1*np.sum([PauliX*cos(np.dot(K, A[i])) - PauliY*sin(np.dot(K, A[i])) for i in range(3)], axis=0)
     SLIS = M*PauliZ
     TRSB = t2*np.sum([PauliZ*sin(np.dot(K, B[i])) for i in range(3)], axis=0)
@@ -56,7 +61,6 @@ t2 = -0.15*exp(1j*pi/4)
 qpoints = 100
 
 n = 1 #lowest band is second for some reason
-
 
 qlist = np.linspace(-pi,pi, qpoints, endpoint=True)
 dq = qlist[1] - qlist[0]
