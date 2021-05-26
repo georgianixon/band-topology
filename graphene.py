@@ -5,6 +5,7 @@ Created on Tue May 11 19:33:14 2021
 @author: Georgia Nixon
 """
 
+
 import numpy as np
 from numpy import sin, cos, pi, sqrt, exp
 from numpy.linalg import eig
@@ -35,6 +36,7 @@ mpl.rcParams.update(params)
 PauliX = np.array([[0,1], [1,0]])
 PauliY = 1j*np.array([[0,-1], [1,0]])
 PauliZ = np.array([[1,0], [0,-1]])
+Identity = np.array([[1,0],[0,1]])
 
 normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
 cmapstring = 'twilight'
@@ -44,54 +46,70 @@ cmap = mpl.cm.get_cmap(cmapstring)
 A = np.array([[1,0], [-0.5, sqrt(3)/2], [-0.5,-sqrt(3)/2]])
 B = np.array([[0,sqrt(3)], [-1.5,-sqrt(3)/2], [1.5,-sqrt(3)/2]])
          
-  
-def HGraphene(t1,t2, M, K):
+def getevalsandevecs(HF):
+    #order by evals, also order corresponding evecs
+    evals, evecs = eig(HF)
+    idx = np.real(evals).argsort()
+    evals = evals[idx]
+    evecs = evecs[:,idx]
+    
+    #make first element of evecs real and positive
+    for vec in range(np.size(HF[0])):
+        phi = np.angle(evecs[0,vec])
+        evecs[:,vec] = exp(-1j*phi)*evecs[:,vec]
+    return evals, evecs
+
+
+def HGraphene(t1,t2,phi, Delta, K):
     """
     Calculate Graphene matrix for variables tunneling (t1), NNN tunnelling (t2),
     energy offset (M), for particular quasimomentum (K)
     """
-    H0 = t1*np.sum([PauliX*cos(np.dot(K, A[i])) - PauliY*sin(np.dot(K, A[i])) for i in range(3)], axis=0)
-    SLIS = M*PauliZ
-    TRSB = t2*np.sum([PauliZ*sin(np.dot(K, B[i])) for i in range(3)], axis=0)
-    return H0 + SLIS + TRSB
+#    IdentityPart = Identity*2*t2*cos(phi)*np.sum([cos(np.dot(K, B[i])) for i in range(3)])
+    PauliXPart = PauliX*t1*np.sum([cos(np.dot(K, A[i])) for i in range(3)])
+    PauliYPart = -PauliY*t1*np.sum([sin(np.dot(K, A[i])) for i in range(3)])
+    PauliZPart = PauliZ*(Delta + 2*t2*sin(phi)*np.sum([sin(np.dot(K, B[i])) for i in range(3)]))
+    
+    return PauliXPart + PauliYPart + PauliZPart
+
 
 t1 = 1
-delta = 0.4
-t2 = -0.15*exp(1j*pi/4)
-qpoints = 100
-
-n = 1 #lowest band is second for some reason
-
+delta = 0
+t2 = 0
+phi = pi/2
+qpoints = 200
+    
 qlist = np.linspace(-pi,pi, qpoints, endpoint=True)
-dq = qlist[1] - qlist[0]
+
 eiglist = np.zeros((qpoints,qpoints,2), dtype=np.complex128) # for both bands
 eigveclist = np.zeros((qpoints, qpoints, 2), dtype=np.complex128) # for band n
 
 for xi, qx in enumerate(qlist):
     for yi, qy in enumerate(qlist):
-        eigs, evecs = eig(HGraphene(t1, t2, delta, np.array([qx, qy])))
+        eigs, evecs = getevalsandevecs(HGraphene(t1, t2, phi, delta, np.array([qx, qy])))
+#            eigs, evecs = getevalsandevecs(HGraphene(t1, t2, phi,  delta, np.array([qx, qy])))
         eiglist[xi,yi] = eigs
-        eigveclist[xi,yi] = evecs[:,n]
+        eigveclist[xi,yi] = evecs[:,0] #only taking ground band
         
 eiglist = np.real(eiglist)
 X, Y = np.meshgrid(qlist, qlist)
 
-fig = plt.figure()
-ax = plt.axes(projection='3d')
-groundband = ax.contour3D(X, Y, eiglist[:,:,0], 50,cmap=cmap, norm=normaliser)
-firstband = ax.contour3D(X, Y, eiglist[:,:,1], 50,cmap=cmap, norm=normaliser)
-ax.set_zlabel("E")
-ax.set_xlabel(r"$k_x$")
-ax.set_ylabel(r"$k_y$")
-ax.set_xticks([-pi, 0, pi])
-ax.set_xticklabels([r"$-\pi$", 0, r"$\pi$"])
-ax.set_yticks([-pi, 0, pi])
-ax.set_yticklabels([r"$-\pi$", 0, r"$\pi$"])
-fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
-fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str(t2)+r"$")
-#plt.savefig(sh + "graphene_topangle_m_-t2.pdf", format="pdf")
-plt.show()
-
+#    fig = plt.figure()
+#    ax = plt.axes(projection='3d')
+#    groundband = ax.contour3D(X, Y, eiglist[:,:,0], 50,cmap=cmap, norm=normaliser)
+#    firstband = ax.contour3D(X, Y, eiglist[:,:,1], 50,cmap=cmap, norm=normaliser)
+#    ax.set_zlabel("E")
+#    ax.set_xlabel(r"$k_x$")
+#    ax.set_ylabel(r"$k_y$")
+#    ax.set_xticks([-pi, 0, pi])
+#    ax.set_xticklabels([r"$-\pi$", 0, r"$\pi$"])
+#    ax.set_yticks([-pi, 0, pi])
+#    ax.set_yticklabels([r"$-\pi$", 0, r"$\pi$"])
+#    fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
+#    fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str(t2)+r"$")
+#    #plt.savefig(sh + "graphene_topangle_m_-t2.pdf", format="pdf")
+#    plt.show()
+#    
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 ax.view_init(5, 45)
@@ -110,43 +128,79 @@ fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str
 #plt.savefig(sh + "graphene_sideangle_m_-t2.pdf", format="pdf")
 plt.show()
 
+#%%
+"""Plot lowest band only"""
+
+fig, ax = plt.subplots(nrows=1, ncols=2, constrained_layout=True, figsize=(8,4))
+img = ax[0].imshow(np.real(np.transpose(eiglist[:,:,0])), cmap="RdBu", aspect="auto", norm=normaliser,interpolation='none', extent=[-pi,pi,-pi,pi])
+img1 = ax[1].imshow(np.real(np.transpose(eiglist[:,:,1])), cmap="RdBu", aspect="auto",norm=normaliser, interpolation='none', extent=[-pi,pi,-pi,pi])
+ax[0].set_title(r"Lowest Band")
+ax[0].set_xlabel(r"$k_x$")
+label_list = [r'$-\pi$', r"$0$", r"$\pi$"]
+ax[0].set_xticks([-pi,0,pi])
+ax[0].set_yticks([-pi,0,pi])
+ax[0].set_xticklabels(label_list)
+ax[0].set_yticklabels(label_list)
+ax[0].set_ylabel(r"$k_y$")
+ax[1].set_title(r"First Excited Band")
+ax[1].set_xlabel(r"$k_x$")
+ax[1].set_xticks([-pi,0,pi])
+ax[1].set_yticks([-pi,0,pi])
+ax[1].set_xticklabels(label_list)
+ax[1].set_yticklabels(label_list)
+
+
+def phistring(phi):
+    if phi == 0:
+        return "0"
+    else:
+        return  r'\pi /' + str(int(1/(phi/pi)))
+
+fig.colorbar(img, cax = plt.axes([1.03, 0.155, 0.01, 0.66]))
+
+fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str(t2)+r" \quad \phi = "+phistring(phi)+r"$")
+
+
+
+plt.show()
+
+#fig, ax = plt.subplots()
+#img = ax.imshow(np.real(np.transpose(eiglist[:,:,1])), cmap="RdBu", aspect="auto",norm=normaliser, interpolation='none', extent=[-pi,pi,-pi,pi])
+#ax.set_title(r"Lowest Band")
+#ax.set_xlabel(r"$k_x$")
+#label_list = [r'$-\pi$', r"$0$", r"$\pi$"]
+#ax.set_xticks([-pi,0,pi])
+#ax.set_yticks([-pi,0,pi])
+#ax.set_xticklabels(label_list)
+#ax.set_yticklabels(label_list)
+#ax.set_ylabel(r"$k_y$")
+#fig.colorbar(img)
+#plt.show()
 
 
 #%% 
 
+dq = qlist[1] - qlist[0]
+
 psi_A = eigveclist[:,:,0]
 psi_B = eigveclist[:,:,1]
 
-psi_A_dqy = np.diff(psi_A)/dq
-psi_A_dqx = np.diff(psi_A, axis=0)/dq
-psi_B_dqy = np.diff(psi_B)/dq
-psi_B_dqx = np.diff(psi_B, axis=0)/dq
+psi_A_dqx, psi_A_dqy = np.gradient(psi_A, dq)
+psi_B_dqx, psi_B_dqy = np.gradient(psi_B, dq)
 
-#remove end parts 
-psi_A_dqx = psi_A_dqy[:qpoints-1, :qpoints-1]
-psi_A_dqy = psi_A_dqy[:qpoints-1, :qpoints-1]
-psi_B_dqx = psi_A_dqy[:qpoints-1, :qpoints-1]
-psi_B_dqy = psi_A_dqy[:qpoints-1, :qpoints-1]
-
-Omega = 1j*(psi_A_dqx*psi_A_dqy + psi_B_dqx*psi_B_dqy - psi_A_dqy*psi_A_dqx - psi_B_dqy*psi_B_dqx)
-
-X, Y = np.meshgrid(qlist[:-1], qlist[:-1])
-fig = plt.figure()
-ax = plt.axes(projection='3d')
-ax.set_xticks([-pi, 0, pi])
-ax.set_xticklabels([r"$-\pi$", 0, r"$\pi$"])
-ax.set_yticks([-pi, 0, pi])
-ax.set_yticklabels([r"$-\pi$", 0, r"$\pi$"])
-groundband = ax.contour3D(X, Y, np.real(Omega),cmap=cmap, norm=normaliser)
-ax.set_zlabel(r"$\Omega$")
-fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
-# fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str(t2)+r"$")
-#plt.savefig(sh + "graphene_sideangle_m_t2.pdf", format="pdf")
+Omega1 = 2*np.imag(psi_A_dqx*psi_A_dqy + psi_B_dqx*psi_B_dqy)
+fig, ax = plt.subplots()
+img = ax.imshow(np.real(Omega1), cmap="RdBu", aspect="auto", interpolation='none', extent=[-pi,pi,-pi,pi])
+ax.set_title(r"$\Omega_{-}$")
+ax.set_xlabel(r"$k_x$")
+label_list = [r'$-\pi$', r"$0$", r"$\pi$"]
+ax.set_xticks([-pi,0,pi])
+ax.set_yticks([-pi,0,pi])
+ax.set_xticklabels(label_list)
+ax.set_yticklabels(label_list)
+ax.set_ylabel(r"$k_y$")
+fig.colorbar(img)
 plt.show()
-
-
-np.nonzero(Omega)
-
 
 
 
