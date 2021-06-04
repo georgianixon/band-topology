@@ -39,8 +39,6 @@ PauliZ = np.array([[1,0], [0,-1]])
 Identity = np.array([[1,0],[0,1]])
 
 
-
-
 A = np.array([[1,0], [-0.5, sqrt(3)/2], [-0.5,-sqrt(3)/2]])
 B = np.array([[0,sqrt(3)], [-1.5,-sqrt(3)/2], [1.5,-sqrt(3)/2]])
          
@@ -87,7 +85,7 @@ t1 = 1
 delta = 0.4
 t2 = -0.075
 phi = pi/2
-qpoints = 200
+qpoints = 1000
     
 qlist = np.linspace(-pi,pi, qpoints, endpoint=True)
 
@@ -103,6 +101,7 @@ for xi, qx in enumerate(qlist):
 
 eiglist = np.real(eiglist)
 
+normed = np.linalg.norm(eigveclist, axis=2)
 #%%
 #plot 3d bands
 X, Y = np.meshgrid(qlist, qlist)
@@ -204,7 +203,7 @@ plt.show()
 
 #%% rectangle
 
-qpoints = 200
+
 BZ = np.zeros((qpoints,qpoints))
 qlist = np.linspace(-pi,pi, qpoints, endpoint=True)
 for xi, qx in enumerate(qlist):
@@ -283,3 +282,17 @@ fig.suptitle(r"$t="+str(t1) + r" \quad t_2 = "
              +str(t2)+r"$", y=1.05)
 plt.savefig(sh + "chern_number.pdf", format="pdf")
 plt.show()
+
+#%%
+
+
+
+#%%
+import plotly.graph_objects as go
+# Download data set from plotly repo
+pts = np.loadtxt(np.DataSource().open('https://raw.githubusercontent.com/plotly/datasets/master/mesh_dataset.txt'))
+x, y, z = pts.T
+
+fig = go.Figure(data=[go.Mesh3d(x=x, y=y, z=z, color='lightpink', opacity=0.50)])
+print(fig)
+fig.show()

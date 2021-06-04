@@ -84,10 +84,6 @@ for xcnt=1:length(u10);
         
         ux=vx(:,1);
         ux=conj(ux(2))/abs(ux(2))*ux;
-        if xcnt ==140 && ycnt == 140
-            disp('ux=')
-            disp(ux)
-        end
         
         %%%%%%%% y direction
         
@@ -108,38 +104,23 @@ for xcnt=1:length(u10);
         H(2,1)=conj(H(1,2));
         
         
-        
         [vy,dy]=eig(H);
         
         uy=vy(:,1);
         uy=conj(uy(2))/abs(uy(2))*uy;
-        
-        if xcnt ==140 && ycnt == 140
-            disp('uy=')
-            disp(uy)
-        end
         
         %%%%%%%  derivatives
         
         xder=(ux-u0)/h;
         yder=(uy-u0)/h;
         
-        if xcnt ==140 && ycnt == 140
-            disp('xder=')
-            disp(xder)
-        end
-        if xcnt ==140 && ycnt == 140
-            disp('yder=')
-            disp(yder)
-            disp('u0=')
-            disp(u0)
-        end
-        
         berrycurve(xcnt,ycnt)=-1i*(xder'*yder-yder'*xder);
         
-    end;
+    end,
     
-end;
+    xcnt,
+    
+end,
 
 figure(1);clf;
 mesh(kx/pi,ky/pi,berrycurve);
@@ -151,6 +132,7 @@ xlabel('k_x/\pi')
 ylabel('k_y/\pi')
         
 figure(2);clf
+
  meshc(kx/pi,ky/pi,lowerband);
  title('Lower band fully occupied');
 xlabel('k_x/\pi')
