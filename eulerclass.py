@@ -75,7 +75,7 @@ GM6 = np.array([[0, 0, 0], [0, 0, 1], [0, 1, 0]])
 GM7 = np.array([[0, 0, 0], [0, 0, -1j], [0, 1j, 0]])
 GM8 = (1/sqrt(3))*np.array([[1, 0, 0], [0, 1, 0], [0, 0, -2]])
 
-def getevalsandevecs(HF):
+def GetEvalsAndEvecs(HF):
     #order by evals, also order corresponding evecs
     evals, evecs = eig(HF)
     idx = np.real(evals).argsort()
@@ -91,15 +91,22 @@ def getevalsandevecs(HF):
         
         #nurs normalisation
         evecs[:,vec] = np.conj(evecs[1,vec])/np.abs(evecs[1,vec])*evecs[:,vec]
-    return evals, evecs
- 
+    
+    if np.all((np.round(np.imag(evals),7) == 0)) == True:
+        return np.real(evals), evecs
+    else:
+        print('evals are imaginary!')
+        return evals, evecs
+
+        
+
  #%%
  
 Nx = 2;
 Ny = 2;
 lx = np.linspace(-Nx, Nx, 2*Nx+1)
 ly = np.linspace(-Ny, Ny, 2*Nx+1)
-Nnx = len(lx)
+Nnx = 2*Nx + 1
 Nny = len(ly)
 
 def h1N(kx, ky):
@@ -126,10 +133,23 @@ def EulerHamiltonian(kx,ky):
 
 
 #%%
-
+sh = "/Users/Georgia/OneDrive - University of Cambridge/MBQD-MBQD-WS-1/Notes/Topology Bloch Bands/"
 import matplotlib.pyplot as plt 
 import matplotlib as mpl
 from mpl_toolkits import mplot3d
+
+size=25
+params = {
+        'legend.fontsize': size*0.75,
+          'axes.labelsize': size,
+          'axes.titlesize': size,
+          'xtick.labelsize': size*0.75,
+          'ytick.labelsize': size*0.75,
+          'font.size': size,
+          'font.family': 'STIXGeneral',
+          'mathtext.fontset': 'stix',
+          }
+mpl.rcParams.update(params)
 
 normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
 cmapstring = 'twilight'
@@ -143,7 +163,7 @@ eiglist = np.zeros((qpoints,qpoints,3), dtype=np.complex128) # for both bands
 
 for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
-        eigs, evecs = getevalsandevecs(EulerHamiltonian(qx,qy))
+        eigs, evecs = GetEvalsAndEvecs(EulerHamiltonian(qx,qy))
         eiglist[xi,yi] = eigs
 
 #eiglist = np.real(eiglist)
@@ -151,12 +171,23 @@ for xi, qx in enumerate(K1):
 
 
 X, Y = np.meshgrid(K1, K2)
-fig = plt.figure()
+
+sz = 15
+fig, ax = plt.subplots(figsize=(sz,sz/4))
 ax = plt.axes(projection='3d')
-ax.view_init(0, 45)
-groundband = ax.contour3D(X, Y, eiglist[:,:,0], 50,cmap=cmap, norm=normaliser)
-firstband = ax.contour3D(X, Y, eiglist[:,:,1], 50,cmap=cmap, norm=normaliser)
-secondband = ax.contour3D(X, Y, eiglist[:,:,2], 50,cmap=cmap, norm=normaliser)
+ax.view_init(-10, 45)
+groundband = ax.contour3D(X, Y, np.real(eiglist[:,:,0]), 50,cmap=cmap, norm=normaliser)
+firstband = ax.contour3D(X, Y, np.real(eiglist[:,:,1]), 50,cmap=cmap, norm=normaliser)
+secondband = ax.contour3D(X, Y, np.real(eiglist[:,:,2]), 50,cmap=cmap, norm=normaliser)
+fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
+ax.set_xticks([-1, 0, 1])
+ax.set_yticks([-1, 0, 1])
+ax.set_zlabel("E")
+ax.set_zlabel("E")
+ax.set_xlabel(r"$k_x$", labelpad=25)
+ax.set_ylabel(r"$k_y$", labelpad=25)
+ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure")
+# plt.savefig(sh + "Euler2BS.pdf", format="pdf")
 plt.show()
 
 

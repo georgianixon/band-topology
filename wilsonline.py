@@ -4,6 +4,7 @@ Created on Fri Jun  4 09:29:05 2021
 
 @author: Georgia Nixon
 """
+place = "Georgia"
 
 import numpy as np
 from numpy import sin, cos, pi, sqrt, exp
@@ -17,7 +18,7 @@ from scipy.linalg import expm
 cmapstring = 'twilight'
 cmap = mpl.cm.get_cmap(cmapstring)
 
-sh = "/Users/Georgia Nixon/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
+sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD-MBQD-WS-1/Notes/Topology Bloch Bands/"
 
 def getevalsandevecs(HF):
     #order by evals, also order corresponding evecs
@@ -182,12 +183,12 @@ for i, kend in enumerate(np.linspace(0,3,nline, endpoint=True)):
 
 
 fig, ax = plt.subplots(figsize=(8,6))
-ax.plot(np.linspace(0,3,31, endpoint=True), wilsonline00abelian, label='abelian')
-ax.plot(np.linspace(0,3,31, endpoint=True), wilsonline00abelian, label='non abelian')
-ax.set_ylabel("W[0,0]")
+ax.plot(np.linspace(0,3,31, endpoint=True), np.square(np.abs(wilsonline00abelian)), label=r"abelian $<u_{q_i}^n | u_{q_f}^m>$")
+ax.plot(np.linspace(0,3,31, endpoint=True), np.square(np.abs(wilsonline00)), label=r'non abelian $\Pi_{n=1}^{N} \exp [ i \Delta_q \cdot \mathbf{A}(\mathbf{q}_n)]$')
+ax.set_ylabel(r"$|W[0,0]|^2$")
 ax.set_xlabel(r"Final quasimomentum (in units of $\vec{G}$ away from $\Gamma$ )")
 plt.legend()
-#plt.savefig(sh+ "WilsonLine.pdf", format="pdf")
+plt.savefig(sh+ "WilsonLine.pdf", format="pdf")
 plt.show()    
 
  
