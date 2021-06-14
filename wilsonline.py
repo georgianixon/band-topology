@@ -122,11 +122,22 @@ qpoints=201
 
 jacobian = dlt**2*(4*pi/3)**2*sin(pi/3)/2/pi
 
-wilsonline00 =  np.zeros([31], dtype=np.complex128)
+nline = 31
+wilsonline00 =  np.zeros([nline], dtype=np.complex128)
+wilsonline00abelian = np.zeros([nline], dtype=np.complex128)
 
-for i, kend in enumerate(np.linspace(0,3,31, endpoint=True)):
+#step for abelian version
+#find u at first k
+H = hamiltonian(np.array([0,0]), phi, M, t1, t2)
+_, evecs = getevalsandevecs(H)
+uInitial = evecs[:,0]
     
-    u10 = np.linspace(0, kend, int(1/dlt + 1), endpoint=True)
+# go through possible end points for k
+for i, kend in enumerate(np.linspace(0,3,nline, endpoint=True)):
+    
+    # u10 is amout we are going down the line from \Gamma to \Gamma + 3G
+    u10 = np.linspace(0, kend, qpoints, endpoint=True)
+    # kline is q values for various points between \Gamma and kend (max being \Gamma + 3G)
     kline = np.outer(u10,c1)
     
     berryconnect00 = np.zeros([qpoints, 2], dtype=np.complex128)
@@ -134,13 +145,16 @@ for i, kend in enumerate(np.linspace(0,3,31, endpoint=True)):
     berryconnect10 = np.zeros([qpoints, 2], dtype=np.complex128)
     berryconnect11 = np.zeros([qpoints, 2], dtype=np.complex128)
     
+    
 
     for cnt, k in enumerate(kline):
-    
+        #calculate berry connection at each of the k points on the k line
         berryconnect00[cnt] = calculateberryconnect(k, phi, M, t1, t2, 0, 0)
         berryconnect01[cnt] = calculateberryconnect(k, phi, M, t1, t2, 0, 1)
         berryconnect10[cnt] = calculateberryconnect(k, phi, M, t1, t2, 1, 0)
         berryconnect11[cnt] = calculateberryconnect(k, phi, M, t1, t2, 1, 1)
+        
+       
     
     
     
@@ -152,17 +166,28 @@ for i, kend in enumerate(np.linspace(0,3,31, endpoint=True)):
     wilsonline[1,1] = np.sum(1j*np.dot(berryconnect11, dq))
     
     wilsonline = expm(wilsonline)
-    evals, _ = getevalsandevecs(wilsonline)
+#    evals, _ = getevalsandevecs(wilsonline)
     wilsonline00[i]=wilsonline[0,0]
+    
+    #do abeliean version,
+    #find u at other k down the line
+    H = hamiltonian(kline[-1], phi, M, t1, t2)
+    _, evecs = getevalsandevecs(H)
+    uFinal = evecs[:,0]
+    wilsonline00abelian[i] = np.dot(np.conj(uFinal), uInitial)
+
+
 
 #%%
 
 
 fig, ax = plt.subplots(figsize=(8,6))
-ax.plot(np.linspace(0,3,31, endpoint=True), wilsonline00)
+ax.plot(np.linspace(0,3,31, endpoint=True), wilsonline00abelian, label='abelian')
+ax.plot(np.linspace(0,3,31, endpoint=True), wilsonline00abelian, label='non abelian')
 ax.set_ylabel("W[0,0]")
 ax.set_xlabel(r"Final quasimomentum (in units of $\vec{G}$ away from $\Gamma$ )")
-plt.savefig(sh+ "WilsonLine.pdf", format="pdf")
+plt.legend()
+#plt.savefig(sh+ "WilsonLine.pdf", format="pdf")
 plt.show()    
 
  

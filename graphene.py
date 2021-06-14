@@ -103,25 +103,8 @@ eiglist = np.real(eiglist)
 
 normed = np.linalg.norm(eigveclist, axis=2)
 #%%
-#plot 3d bands
+"""Plot bands in 3D"""
 X, Y = np.meshgrid(qlist, qlist)
-
-#    fig = plt.figure()
-#    ax = plt.axes(projection='3d')
-#    groundband = ax.contour3D(X, Y, eiglist[:,:,0], 50,cmap=cmap, norm=normaliser)
-#    firstband = ax.contour3D(X, Y, eiglist[:,:,1], 50,cmap=cmap, norm=normaliser)
-#    ax.set_zlabel("E")
-#    ax.set_xlabel(r"$k_x$")
-#    ax.set_ylabel(r"$k_y$")
-#    ax.set_xticks([-pi, 0, pi])
-#    ax.set_xticklabels([r"$-\pi$", 0, r"$\pi$"])
-#    ax.set_yticks([-pi, 0, pi])
-#    ax.set_yticklabels([r"$-\pi$", 0, r"$\pi$"])
-#    fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
-#    fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+str(t2)+r"$")
-#    #plt.savefig(sh + "graphene_topangle_m_-t2.pdf", format="pdf")
-#    plt.show()
-#    
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 ax.view_init(5, 45)
@@ -142,7 +125,7 @@ fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+
 plt.show()
 
 #%%
-"""Plot bands"""
+"""Plot bands in 2D"""
 
 fig, ax = plt.subplots(nrows=1, ncols=2, constrained_layout=True, figsize=(8,4))
 img = ax[0].imshow(np.real(np.flip(np.transpose(eiglist[:,:,0]), axis=0)), cmap=cmap, aspect="auto",
@@ -166,14 +149,14 @@ ax[1].set_yticklabels(label_list)
 fig.colorbar(img, cax = plt.axes([1.03, 0.155, 0.02, 0.66]))
 fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "+
              str(t2)+r" \quad \phi = "+phistring(phi)+r"$")
-
-plt.savefig(sh + "graphene_bands_m_-t2.pdf", format="pdf")
+#plt.savefig(sh + "graphene_bands_m_-t2.pdf", format="pdf")
 plt.show()
 
 
 
 #%% 
 
+"""Plot Berry curvature"""
 dq = qlist[1] - qlist[0]
 
 psi_A = eigveclist[:,:,0]
@@ -197,7 +180,7 @@ fig.colorbar(img)
 fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "
              +str(t2)+r" \quad \phi = "+phistring(phi)+r"\quad \Delta / t_2 = "+str(np.round(delta/t2, 2))+r"$", y=0.99)
 
-plt.savefig(sh + "BerryCurvature1.pdf", format="pdf")
+#plt.savefig(sh + "BerryCurvature1.pdf", format="pdf")
 
 plt.show()
 
@@ -218,7 +201,7 @@ print(Chern)
 
 #%%
 
-#Just get to chern number
+""" Calculate chern num at different points """
 
 t1 = 1
 t2 = 0.1
@@ -280,7 +263,7 @@ ax.set_ylabel(r"$\frac{\Delta}{ t_2}$",  rotation=0, fontsize = 23, labelpad=0)
 fig.colorbar(img)
 fig.suptitle(r"$t="+str(t1) + r" \quad t_2 = "
              +str(t2)+r"$", y=1.05)
-plt.savefig(sh + "chern_number.pdf", format="pdf")
+#plt.savefig(sh + "chern_number.pdf", format="pdf")
 plt.show()
 
 #%%
