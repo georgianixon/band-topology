@@ -4,19 +4,22 @@ Created on Mon Jun 14 20:37:33 2021
 
 @author: Georgia
 """
+place = "Georgia Nixon"
 import numpy as np
 import sys
-sys.path.append('/Users/Georgia/Code/MBQD/band-topology')
+sys.path.append('/Users/'+place+'/Code/MBQD/band-topology')
 from eulerclass import  EulerHamiltonian, GetEvalsAndEvecs
 import matplotlib.pyplot as plt
 from numpy.linalg import norm
 
-place = "Georgia"
-sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD-MBQD-WS-1/Notes/Topology Bloch Bands/"
+""" should u(\Gamma) have only first eigenstate in it?"""
+
+
+sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
 
 def Normalise(v):
-    norm=np.linalg.norm(v)
-    return v/norm
+    norm1=np.linalg.norm(v)
+    return v/norm1
 
 def CalculatebBerryConnect(kx,ky, band0, band1):
     H =EulerHamiltonian(kx,ky)

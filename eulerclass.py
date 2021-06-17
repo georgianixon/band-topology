@@ -133,7 +133,8 @@ def EulerHamiltonian(kx,ky):
 
 
 #%%
-sh = "/Users/Georgia/OneDrive - University of Cambridge/MBQD-MBQD-WS-1/Notes/Topology Bloch Bands/"
+place = "Georgia Nixon"
+sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
 import matplotlib.pyplot as plt 
 import matplotlib as mpl
 from mpl_toolkits import mplot3d
@@ -173,9 +174,9 @@ for xi, qx in enumerate(K1):
 X, Y = np.meshgrid(K1, K2)
 
 sz = 15
-fig, ax = plt.subplots(figsize=(sz,sz/4))
+fig, ax = plt.subplots(figsize=(sz,sz/2))
 ax = plt.axes(projection='3d')
-ax.view_init(-10, 45)
+ax.view_init(0, 45)
 groundband = ax.contour3D(X, Y, np.real(eiglist[:,:,0]), 50,cmap=cmap, norm=normaliser)
 firstband = ax.contour3D(X, Y, np.real(eiglist[:,:,1]), 50,cmap=cmap, norm=normaliser)
 secondband = ax.contour3D(X, Y, np.real(eiglist[:,:,2]), 50,cmap=cmap, norm=normaliser)
@@ -187,7 +188,7 @@ ax.set_zlabel("E")
 ax.set_xlabel(r"$k_x$", labelpad=25)
 ax.set_ylabel(r"$k_y$", labelpad=25)
 ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure")
-# plt.savefig(sh + "Euler2BS.pdf", format="pdf")
+plt.savefig(sh + "Euler3BS.pdf", format="pdf")
 plt.show()
 
 
