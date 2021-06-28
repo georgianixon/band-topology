@@ -8,6 +8,7 @@ import numpy as np
 from numpy import sqrt, exp, pi
 from numpy.linalg import eig
 
+
 t1 = np.array([
  [0.00885997 - 0.0151357 *1j, -0.0761286 + 0.0309107 *1j, -0.0025 - 
    0.00756786 *1j, 0.0811286 - 0.015775 *1j, -0.01386],
@@ -22,6 +23,7 @@ t1 = np.array([
   0.0811286 + 0.015775 *1j, -0.0025 + 0.00756786 *1j, -0.0761286 - 
    0.0309107 *1j, 0.00885997 + 0.0151357*1j]])
  
+
 t3 = np.array([
  [-0.0025, -0.0883399, -0.172664, -0.0883399, -0.0025],
  [0.0833399, -0.0025, 0.0375061, -0.0025, 0.0833399],
@@ -110,20 +112,17 @@ Nnx = 2*Nx + 1
 Nny = len(ly)
 
 def h1N(kx, ky):
-    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*t1[i,j] for i in range(Nnx) for j in range(Nny)])
+    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*-t1[i,j] for i in range(Nnx) for j in range(Nny)])
 def h3N(kx, ky):
-    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*t3[i,j] for i in range(Nnx) for j in range(Nny)])
+    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*-t3[i,j] for i in range(Nnx) for j in range(Nny)])
 def h4N(kx, ky):
-    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*t4[i,j] for i in range(Nnx) for j in range(Nny)])
+    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*-t4[i,j] for i in range(Nnx) for j in range(Nny)])
 def h6N(kx, ky):
-    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*t6[i,j] for i in range(Nnx) for j in range(Nny)])
+    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*-t6[i,j] for i in range(Nnx) for j in range(Nny)])
 def h8N(kx, ky):
-    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*t8[i,j] for i in range(Nnx) for j in range(Nny)])
+    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*-t8[i,j] for i in range(Nnx) for j in range(Nny)])
 
-def hjk(kx,ky):
-    return np.array([0, h1N(kx,ky), h3N(kx,ky), h4N(kx,ky), h6N(kx,ky), h8N(kx,ky)])
 
- 
 def EulerHamiltonian(kx,ky):
     hjk = np.array([0, h1N(kx,ky), h3N(kx,ky), h4N(kx,ky), h6N(kx,ky), h8N(kx,ky)])
     gellManns = np.array([GM0, GM1, GM3, GM4, GM6, GM8])
@@ -188,9 +187,18 @@ ax.set_zlabel("E")
 ax.set_xlabel(r"$k_x$", labelpad=25)
 ax.set_ylabel(r"$k_y$", labelpad=25)
 ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure")
-plt.savefig(sh + "Euler3BS.pdf", format="pdf")
+# plt.savefig(sh + "Euler3BS.pdf", format="pdf")
 plt.show()
 
+#%%
+"""
+Find dirac points
+"""
+eigdiff = eiglist[:,:,2] - eiglist[:,:,1]
+
+fig, ax = plt.subplots()
+pos = plt.imshow(np.abs(eigdiff), cmap='viridis')
+fig.colorbar(pos)
 
 
 
