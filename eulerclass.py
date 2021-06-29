@@ -7,6 +7,9 @@ Created on Mon Jun 14 15:23:03 2021
 import numpy as np
 from numpy import sqrt, exp, pi
 from numpy.linalg import eig
+import matplotlib.pyplot as plt 
+import matplotlib as mpl
+from mpl_toolkits import mplot3d
 
 
 t1 = np.array([
@@ -112,15 +115,15 @@ Nnx = 2*Nx + 1
 Nny = 2*Ny + 1
 
 def h1N(kx, ky):
-    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*-t1[i,j] for i in range(Nnx) for j in range(Nny)])
+    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*t1[i,j] for i in range(Nnx) for j in range(Nny)])
 def h3N(kx, ky):
-    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*-t3[i,j] for i in range(Nnx) for j in range(Nny)])
+    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*t3[i,j] for i in range(Nnx) for j in range(Nny)])
 def h4N(kx, ky):
-    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*-t4[i,j] for i in range(Nnx) for j in range(Nny)])
+    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*t4[i,j] for i in range(Nnx) for j in range(Nny)])
 def h6N(kx, ky):
-    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*-t6[i,j] for i in range(Nnx) for j in range(Nny)])
+    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*t6[i,j] for i in range(Nnx) for j in range(Nny)])
 def h8N(kx, ky):
-    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*-t8[i,j] for i in range(Nnx) for j in range(Nny)])
+    return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*t8[i,j] for i in range(Nnx) for j in range(Nny)])
 
 
 def EulerHamiltonian(kx,ky):
@@ -129,14 +132,8 @@ def EulerHamiltonian(kx,ky):
     HFn = np.array([hjk[i]*gellManns[i] for i in range(len(hjk))])
     return np.sum(HFn, axis=0)
 
-
-
-#%%
 place = "Georgia Nixon"
 sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
-import matplotlib.pyplot as plt 
-import matplotlib as mpl
-from mpl_toolkits import mplot3d
 
 size=25
 params = {
@@ -151,50 +148,66 @@ params = {
           }
 mpl.rcParams.update(params)
 
-normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
-cmapstring = 'twilight'
-cmap = mpl.cm.get_cmap(cmapstring)
 
-qpoints = 41 # easier for meshgrid when this is odd
-K1 = np.linspace(-1, 1, qpoints, endpoint=True)
-K2 = np.linspace(-1, 1, qpoints, endpoint=True)
 
-eiglist = np.zeros((qpoints,qpoints,3), dtype=np.complex128) # for both bands
+#%%
+
+
+
+kmin = -1
+kmax = 3
+qpoints = 201 # easier for meshgrid when this is odd
+K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
+K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
+
+eiglist = np.zeros((qpoints,qpoints,3)) # for three bands
 
 for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
         eigs, evecs = GetEvalsAndEvecs(EulerHamiltonian(qx,qy))
         eiglist[xi,yi] = eigs
+        
+        
 
-#eiglist = np.real(eiglist)
-#normed = np.linalg.norm(eigveclist, axis=2)
+#%%
 
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
+cmapstring = 'twilight'
+cmap = mpl.cm.get_cmap(cmapstring)
 
 X, Y = np.meshgrid(K1, K2)
 
 sz = 15
-fig, ax = plt.subplots(figsize=(sz,sz/2))
+fig, ax = plt.subplots(figsize=(15,10))
 ax = plt.axes(projection='3d')
-ax.view_init(0, 45)
+ax.view_init(0, 225)
 groundband = ax.contour3D(X, Y, np.real(eiglist[:,:,0]), 50,cmap=cmap, norm=normaliser)
 firstband = ax.contour3D(X, Y, np.real(eiglist[:,:,1]), 50,cmap=cmap, norm=normaliser)
 secondband = ax.contour3D(X, Y, np.real(eiglist[:,:,2]), 50,cmap=cmap, norm=normaliser)
-fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
+# fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
 ax.set_xticks([-1, 0, 1])
 ax.set_yticks([-1, 0, 1])
 ax.set_zlabel("E")
 ax.set_zlabel("E")
 ax.set_xlabel(r"$k_x$", labelpad=25)
 ax.set_ylabel(r"$k_y$", labelpad=25)
-ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure")
-# plt.savefig(sh + "Euler3BS.pdf", format="pdf")
+ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
+
+# create an axes on the right side of ax. The width of cax will be 5%
+# of ax and the padding between cax and ax will be fixed at 0.05 inch.
+# divider = make_axes_locatable(ax)
+# cax = divider.append_axes("right", size="5%", pad=0.05)
+
+plt.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser), fraction=0.026, pad=0.04)
+plt.savefig(sh + "Euler2BS.pdf", format="pdf")
 plt.show()
 
 #%%
 """
 Find dirac points
 """
-eigdiff = eiglist[:,:,2] - eiglist[:,:,1]
+eigdiff = eiglist[:,:,1] - eiglist[:,:,0]
 eigdiff = np.abs(eigdiff)
 #align eigdiff with a usual plot, x alog bottom, y along LHS.
 # =============================================================================
@@ -209,26 +222,43 @@ eigdiff = np.abs(eigdiff)
 # =============================================================================
 eigdiff =  np.flip(eigdiff.T, axis=0)
 
-norm = mpl.colors.Normalize(vmin=eigdiff.min(), vmax=eigdiff.max())
-# linthresh = 1e-3
-# norm=mpl.colors.SymLogNorm(linthresh=linthresh, linscale=1, vmin=-1.0, vmax=1.0, base=10)
+
+# find min 4 values (dirac points)?
+idx = np.argsort(eigdiff, axis=None)
+idx = idx[:120]
+verticalEl_upToDown, horizontalEl_leftToRight = np.unravel_index(idx, np.shape(eigdiff))
+verticalEl_downToUp = len(eigdiff[:,0])-1-verticalEl_upToDown
+diracPoints = list(zip( horizontalEl_leftToRight, verticalEl_upToDown))
+
+# norm = mpl.colors.Normalize(vmin=eigdiff.min(), vmax=eigdiff.max())
 norm=mpl.colors.LogNorm(vmin=eigdiff.min(), vmax=eigdiff.max())
 
-
+sz = 15
 fig, ax = plt.subplots(figsize=(sz,sz/2))
 pos = plt.imshow(eigdiff, cmap='viridis', norm=norm)
 ax.set_xticks([0, (qpoints-1)/2, qpoints-1])
 ax.set_yticks([0, (qpoints-1)/2, qpoints-1])
-ax.set_xticklabels([-1, 0, 1])
-ax.set_yticklabels([1, 0, -1])
+ax.set_xticklabels([kmin, int((kmin+kmax)/2), kmax])
+ax.set_yticklabels([kmax, int((kmin+kmax)/2), kmin])
 ax.set_xlabel(r"$k_x$")
 ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
+for xd, yd in diracPoints:
+    circ = mpl.patches.Circle((xd, yd), 2, fill=0, edgecolor='1')
+    ax.add_patch(circ)
 fig.colorbar(pos)
+plt.savefig(sh + "EigDif-1,3Log120LowestPoints.pdf", format="pdf")
+plt.show()
 
 #%%
-newlist = np.array([[0,1,2], [3,4,5]])
-plt.imshow(newlist)
 
 
+
+lst = np.array([[10, 12, 8], [50, 7, 15]])
+idx = np.argsort(np.log(lst), axis=None)
+idx = idx[:4]
+verticalEl_uptodown, horizontalEl_lefttoright = np.unravel_index(idx, np.shape(lst))
+diracPoints = list(zip(verticalEl_uptodown, horizontalEl_lefttoright))
+print(lst)
+print(diracPoints)
 
 
