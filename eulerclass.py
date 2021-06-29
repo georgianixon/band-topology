@@ -109,7 +109,7 @@ Ny = 2;
 lx = np.linspace(-Nx, Nx, 2*Nx+1)
 ly = np.linspace(-Ny, Ny, 2*Nx+1)
 Nnx = 2*Nx + 1
-Nny = len(ly)
+Nny = 2*Ny + 1
 
 def h1N(kx, ky):
     return np.sum([exp(1j*pi*(kx*lx[i] + ky*ly[j]))*-t1[i,j] for i in range(Nnx) for j in range(Nny)])
@@ -155,7 +155,7 @@ normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
 cmapstring = 'twilight'
 cmap = mpl.cm.get_cmap(cmapstring)
 
-qpoints = 40
+qpoints = 41 # easier for meshgrid when this is odd
 K1 = np.linspace(-1, 1, qpoints, endpoint=True)
 K2 = np.linspace(-1, 1, qpoints, endpoint=True)
 
@@ -195,10 +195,40 @@ plt.show()
 Find dirac points
 """
 eigdiff = eiglist[:,:,2] - eiglist[:,:,1]
+eigdiff = np.abs(eigdiff)
+#align eigdiff with a usual plot, x alog bottom, y along LHS.
+# =============================================================================
+# eigdiff = [[{kx=min, ky=min},... , {kx=min,ky=max}],
+#               ...
+#             {kx=max, ky=min},... , {kx=max, ky=max}]]
+# but, to plot accuratly in imshow with kx along horizontal axis, ky along vertical axis, we want
+# np.flip(eigdiff.T, axis=0)
+#         = [[{kx=min, ky=max},... , {kx=max,ky=max}],
+#               ...
+#             {kx=min, ky=min},... , {kx=max, ky=min}]]
+# =============================================================================
+eigdiff =  np.flip(eigdiff.T, axis=0)
 
-fig, ax = plt.subplots()
-pos = plt.imshow(np.abs(eigdiff), cmap='viridis')
+norm = mpl.colors.Normalize(vmin=eigdiff.min(), vmax=eigdiff.max())
+# linthresh = 1e-3
+# norm=mpl.colors.SymLogNorm(linthresh=linthresh, linscale=1, vmin=-1.0, vmax=1.0, base=10)
+norm=mpl.colors.LogNorm(vmin=eigdiff.min(), vmax=eigdiff.max())
+
+
+fig, ax = plt.subplots(figsize=(sz,sz/2))
+pos = plt.imshow(eigdiff, cmap='viridis', norm=norm)
+ax.set_xticks([0, (qpoints-1)/2, qpoints-1])
+ax.set_yticks([0, (qpoints-1)/2, qpoints-1])
+ax.set_xticklabels([-1, 0, 1])
+ax.set_yticklabels([1, 0, -1])
+ax.set_xlabel(r"$k_x$")
+ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 fig.colorbar(pos)
+
+#%%
+newlist = np.array([[0,1,2], [3,4,5]])
+plt.imshow(newlist)
+
 
 
 
