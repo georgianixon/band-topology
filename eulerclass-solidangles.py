@@ -7,7 +7,7 @@ Created on Tue Jun 15 09:03:44 2021
 
 place = "Georgia Nixon"
 import numpy as np
-from numpy import cos, sin, exp
+from numpy import cos, sin, exp, pi
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology')
 from eulerclass import  EulerHamiltonian, GetEvalsAndEvecs
@@ -15,6 +15,19 @@ import matplotlib.pyplot as plt
 from numpy.linalg import norm
 
 sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
+
+def CreateCircleLineIntVals(r, points, centre=[0,0]):
+    CircleLine =  [(int(np.round(cos(2*pi/points*x)*r+centre[0])),int(np.round(sin(2*pi/points*x)*r+centre[1]))) for x in range(0,int(np.ceil(points+1)))]
+    #get rid of duplicates
+    CircleLine = list(dict.fromkeys(CircleLine) )
+    return CircleLine
+
+def CreateCircleLine(r, points, centre=[0,0]):
+    CircleLine =  [(cos(x)*r+centre[0],sin(x)*r+centre[1]) for x in np.linspace(0, 2*pi, points, endpoint=True)]
+    #get rid of duplicates
+    CircleLine = list(dict.fromkeys(CircleLine) )
+    return CircleLine
+
 
 #reciprocal lattice vectors
 c1 = 1*np.array([1, 0])
@@ -33,8 +46,10 @@ _, evecs = GetEvalsAndEvecs(H)
 u1 = evecs[:,0]
 u2 = evecs[:,1]
 u3 = evecs[:,2]
-multiplier = np.linspace(0, 2, qpoints, endpoint=True)
-kline = np.outer(multiplier, cvec)
+multiplier = np.linspace(0, 1, qpoints, endpoint=True)
+# kline = np.outer(multiplier, cvec)
+
+kline = CreateCircleLine(0.5, qpoints, centre = [0, 0])
 
 thetasLine = np.zeros(qpoints, dtype=np.complex128)
 alphasLine = np.zeros(qpoints, dtype=np.complex128)
@@ -69,7 +84,17 @@ for i, kpoint in enumerate(kline):
 
 
 #%%
-fs = (8,6)
+#plot kline
+fs = (8,6)s
+x,y = zip(*kline)
+fig, ax = plt.subplots(figsize=fs)
+ax.plot(x, y, label=r"k line")
+# ax.set_xlabel(r"Final quasimomentum (in units of $\mathbf{v} = (1,-1)$ away from $\Gamma$ )")
+plt.legend()
+# plt.savefig(sh+ "thetas-v=(1,-1).pdf", format="pdf")
+plt.show()    
+
+
 fig, ax = plt.subplots(figsize=fs)
 ax.plot(multiplier, thetasLine, label=r"$\theta$")
 ax.set_xlabel(r"Final quasimomentum (in units of $\mathbf{v} = (1,-1)$ away from $\Gamma$ )")

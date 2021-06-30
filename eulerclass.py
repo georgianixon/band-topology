@@ -5,7 +5,7 @@ Created on Mon Jun 14 15:23:03 2021
 @author: Georgia Nixon
 """
 import numpy as np
-from numpy import sqrt, exp, pi
+from numpy import sqrt, exp, pi, cos, sin
 from numpy.linalg import eig
 import matplotlib.pyplot as plt 
 import matplotlib as mpl
@@ -132,6 +132,12 @@ def EulerHamiltonian(kx,ky):
     HFn = np.array([hjk[i]*gellManns[i] for i in range(len(hjk))])
     return np.sum(HFn, axis=0)
 
+def CreateCircleLine(r, points, centre=[0,0]):
+    CircleLine =  [(int(np.round(cos(2*pi/points*x)*r+centre[0])),int(np.round(sin(2*pi/points*x)*r+centre[1]))) for x in range(0,int(np.ceil(points+1)))]
+    #get rid of duplicates
+    CircleLine = list(dict.fromkeys(CircleLine) )
+    return CircleLine
+
 place = "Georgia Nixon"
 sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
 
@@ -242,11 +248,19 @@ ax.set_xticklabels([kmin, int((kmin+kmax)/2), kmax])
 ax.set_yticklabels([kmax, int((kmin+kmax)/2), kmin])
 ax.set_xlabel(r"$k_x$")
 ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
-for xd, yd in diracPoints:
-    circ = mpl.patches.Circle((xd, yd), 2, fill=0, edgecolor='1')
+
+klineCircle = CreateCircleLine(qpoints/8, 2*pi*qpoints/8, centre = [qpoints/4, qpoints/4])
+
+for i, (xd, yd) in enumerate(klineCircle):
+    if i == 0 or i == len(klineCircle):
+        ec = '0'
+    else:
+        ec = '1'
+    circ = mpl.patches.Circle((xd, -yd+qpoints), 2, fill=0, edgecolor=ec)
     ax.add_patch(circ)
+
 fig.colorbar(pos)
-plt.savefig(sh + "EigDif-1,3Log120LowestPoints.pdf", format="pdf")
+# plt.savefig(sh + "CirclePath.pdf", format="pdf")
 plt.show()
 
 #%%
