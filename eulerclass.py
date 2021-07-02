@@ -132,11 +132,14 @@ def EulerHamiltonian(kx,ky):
     HFn = np.array([hjk[i]*gellManns[i] for i in range(len(hjk))])
     return np.sum(HFn, axis=0)
 
-def CreateCircleLine(r, points, centre=[0,0]):
+def CreateCircleLineIntVals(r, points, centre=[0,0]):
     CircleLine =  [(int(np.round(cos(2*pi/points*x)*r+centre[0])),int(np.round(sin(2*pi/points*x)*r+centre[1]))) for x in range(0,int(np.ceil(points+1)))]
     #get rid of duplicates
     CircleLine = list(dict.fromkeys(CircleLine) )
     return CircleLine
+
+
+
 
 place = "Georgia Nixon"
 sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
@@ -177,6 +180,9 @@ for xi, qx in enumerate(K1):
 
 #%%
 
+"""
+Calculate Bandstructure
+"""
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
 cmapstring = 'twilight'
@@ -206,7 +212,7 @@ ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
 # cax = divider.append_axes("right", size="5%", pad=0.05)
 
 plt.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser), fraction=0.026, pad=0.04)
-plt.savefig(sh + "Euler2BS.pdf", format="pdf")
+# plt.savefig(sh + "Euler2BS.pdf", format="pdf")
 plt.show()
 
 #%%
@@ -249,10 +255,32 @@ ax.set_yticklabels([kmax, int((kmin+kmax)/2), kmin])
 ax.set_xlabel(r"$k_x$")
 ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 
-klineCircle = CreateCircleLine(qpoints/8, 2*pi*qpoints/8, centre = [qpoints/4, qpoints/4])
 
-for i, (xd, yd) in enumerate(klineCircle):
-    if i == 0 or i == len(klineCircle):
+def CreateCircleLineIntVals(r, points, centre=[0,0]):
+    CircleLine =  [(int(np.round(cos(2*pi/points*x)*r+centre[0])),int(np.round(sin(2*pi/points*x)*r+centre[1]))) for x in range(0,int(np.ceil(points+1)))]
+    #get rid of duplicates
+    CircleLine = list(dict.fromkeys(CircleLine) )
+    return CircleLine
+
+def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
+    kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
+    kline = np.around(kline)
+    kline = kline.astype(int)
+    # kline = list(dict.fromkeys(kline) )
+    return kline
+
+npoints = 100
+kline0 = CreateLinearLine(3*qpoints/8, qpoints/4, 3*qpoints/8, 3*qpoints/4,  npoints)
+kline1 = CreateLinearLine(3*qpoints/8, 3*qpoints/4, 5*qpoints/8, 3*qpoints/4, npoints)
+kline2 = CreateLinearLine(5*qpoints/8, 3*qpoints/4, 5*qpoints/8, qpoints/4, npoints)
+kline3 = CreateLinearLine(5*qpoints/8, qpoints/4, 3*qpoints/8, qpoints/4, npoints)
+kline =np.vstack((kline0,kline1,kline2, kline3))
+
+
+# klineCircle = CreateCircleLineIntVals(qpoints/8, 2*pi*qpoints/8, centre = [qpoints/4, qpoints/4])
+
+for i, (xd, yd) in enumerate(kline):
+    if i == 0 or i == len(kline):
         ec = '0'
     else:
         ec = '1'
@@ -260,19 +288,15 @@ for i, (xd, yd) in enumerate(klineCircle):
     ax.add_patch(circ)
 
 fig.colorbar(pos)
-# plt.savefig(sh + "CirclePath.pdf", format="pdf")
+plt.savefig(sh + "SquarePath.pdf", format="pdf")
 plt.show()
 
 #%%
 
+x = np.linspace(0, 1, num=100)
+plt.plot(x, np.arcsin(x))
+plt.xlabel(r"$\sin ( \theta / 2)$")
+plt.show()
 
-
-lst = np.array([[10, 12, 8], [50, 7, 15]])
-idx = np.argsort(np.log(lst), axis=None)
-idx = idx[:4]
-verticalEl_uptodown, horizontalEl_lefttoright = np.unravel_index(idx, np.shape(lst))
-diracPoints = list(zip(verticalEl_uptodown, horizontalEl_lefttoright))
-print(lst)
-print(diracPoints)
-
-
+theta = np.linspace(0, 2*pi, 100)
+plt.plot(theta, np.tan(theta/2))

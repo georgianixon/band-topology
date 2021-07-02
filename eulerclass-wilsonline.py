@@ -27,29 +27,27 @@ def CreateCircleLine(r, points, centre=[0,0]):
     CircleLine =  [(cos(x)*r+centre[0],sin(x)*r+centre[1]) for x in np.linspace(0, 2*pi, points, endpoint=True)]
     return CircleLine
 
-def CreateLinearLine(qxEnd, qyEndm,  multiplier):
-    c1 = qxEnd*np.array([1, 0])
-    c2 = qyEnd*np.array([0, 1])
-    cvec = c1 + c2
-    kline = np.outer(multiplier, cvec)
+def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
+    kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
     return kline
-    
+
 #energy levels we are considering to calculate W^{n0,n1}
-n0 = 2
-n1 = 2
+n0 = 1
+n1 = 1
 
-#reciprocal lattice vectors
+#num of points to calculate the wilson Line of
+qpoints = 201
 
-#think u are qpoints?
-qpoints=201
 
-wilsonline00abelian = np.zeros(qpoints, dtype=np.complex128)
+kline0 = CreateLinearLine(0.5, 0, 0.5, 2,  qpoints)
+kline1 = CreateLinearLine(0.5, 2, 1.5, 2, qpoints)
+kline2 = CreateLinearLine(1.5, 2, 1.5, 0, qpoints)
+kline3 = CreateLinearLine(1.5, 0, 0.5, 0, qpoints)
+kline =np.vstack((kline0,kline1,kline2, kline3))
 
-#step for abelian version
-#find u at first k
-multiplier = np.linspace(0, 2*pi, qpoints, endpoint=True)
-kline = CreateCircleLine(0.5, qpoints)
-kline = CreateLinearLine()
+# kline = CreateCircleLine(0.5, qpoints)
+
+totalPoints = len(kline)
 k0 = kline[0]
 H = EulerHamiltonian(k0[0],k0[1])
 _, evecs = GetEvalsAndEvecs(H)
@@ -60,6 +58,10 @@ uInitial = evecs[:,n0]
 
 
 #%%
+'''
+Calculate Wilson Line
+'''
+wilsonline00abelian = np.zeros(totalPoints, dtype=np.complex128)
 # go through possible end points for k
 for i, kpoint in enumerate(kline):
     
@@ -70,17 +72,18 @@ for i, kpoint in enumerate(kline):
     uFinal = evecs[:,n1]
     wilsonline00abelian[i] = np.dot(np.conj(uFinal), uInitial)
 
-#%%
 
+#%%
+'''
+Plot
+'''
+multiplier = np.linspace(0,4,totalPoints, endpoint=True)
 fig, ax = plt.subplots(figsize=(9,6))
 ax.plot(multiplier, np.square(np.abs(wilsonline00abelian)))
 ax.set_ylabel(r"$|W["+str(n0) +","+str(n1)+"]|^2 = |<\Phi_{q_f}^"+str(n1)+" | \Phi_{q_i}^"+str(n0)+">|^2$")
-ax.set_xticks([0, pi, 2*pi])
-ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
-ax.set_xlabel(r"Final quasimomentum point (going around a circle)")
-# ax.set_xlabel(r"Final quasimomentum (in units of $\mathbf{v} = (\1,-1)$ away from $\Gamma$ )")
-# ax.set_xlabel(r"Final quasimomentum (in units of $\mathbf{G}_2 = (0,1)$ away from $\Gamma$ )")
-# plt.legend()
-plt.savefig(sh+ "WilsonLineEulerCircle22.pdf", format="pdf")
-# plt.savefig(sh+ "WilsonLineEuler2.pdf", format="pdf")
+# ax.set_xticks([0, pi, 2*pi])
+# ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
+ax.set_xlabel(r"Final quasimomentum point (going around square)")
+plt.savefig(sh+ "WilsonLineEulerRectangle11.pdf", format="pdf")
+# plt.savefig(sh+ "WilsonLineEulerCircle22.pdf", format="pdf")
 plt.show()    
