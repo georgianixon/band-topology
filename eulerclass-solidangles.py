@@ -10,7 +10,7 @@ import numpy as np
 from numpy import cos, sin, exp, pi
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology')
-from eulerclass import  EulerHamiltonian, GetEvalsAndEvecs
+from eulerclass import  EulerHamiltonian
 import matplotlib.pyplot as plt
 from numpy.linalg import norm
 
@@ -38,6 +38,33 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
     return kline
 
+def GetEvalsAndEvecs(HF, realPositive = 0):
+    """
+    Get e-vals and e-vecs of Haniltonian HF
+    Order Evals and correspoinding evecs by smallest eval first
+    Set the gauge according to realPositive; if realpositive=0, the first element is set to be real and positive
+    """
+    #order by evals, also order corresponding evecs
+    evals, evecs = eig(HF)
+    idx = np.real(evals).argsort()
+    evals = evals[idx]
+    evecs = evecs[:,idx]
+    
+    #make first element of evecs real and positive
+    for vec in range(np.size(HF[0])):
+        # phi = np.angle(evecs[0,vec])
+        # evecs[:,vec] = exp(-1j*phi)*evecs[:,vec]
+#        evecs[:,vec] = np.conj(evecs[0,vec])/np.abs(evecs[0,vec])*evecs[:,vec]
+        
+        #nurs normalisation
+        evecs[:,vec] = np.conj(evecs[realPositive,vec])/np.abs(evecs[realPositive,vec])*evecs[:,vec]
+    
+    if np.all((np.round(np.imag(evals),7) == 0)) == True:
+        return np.real(evals), evecs
+    else:
+        print('evals are imaginary!')
+        return evals, evecs
+
 
 qpoints=51
 
@@ -56,9 +83,9 @@ totalPoints = len(kline)
 k0 = kline[0]
 H = EulerHamiltonian(k0[0],k0[1])
 _, evecs = GetEvalsAndEvecs(H)
-u1 = evecs[:,0]
-u2 = evecs[:,1]
-u3 = evecs[:,2]
+u0 = evecs[:,0]
+u1 = evecs[:,1]
+u2 = evecs[:,2]
 
 thetasLine = np.zeros(totalPoints, dtype=np.complex128)
 alphasLine = np.zeros(totalPoints, dtype=np.complex128)
@@ -74,7 +101,7 @@ for i, kpoint in enumerate(kline):
     uFinal = evecs[:,2]
     
     #get theta
-    theta = 2*np.arcsin(round(np.real(np.dot(np.conj(u1), uFinal)), 8))
+    theta = 2*np.arcsin(np.real(np.dot(np.conj(u2), uFinal)), 8)
     alpha = 2*np.arccos(np.linalg.norm(np.dot(np.conj(u2), uFinal)/(cos(theta/2))))
     g = np.dot(np.conj(u2), uFinal)/(cos(theta/2)*cos(alpha/2))
     g1 = np.dot(np.conj(u3), uFinal)/(cos(theta/2)*sin(alpha/2))
