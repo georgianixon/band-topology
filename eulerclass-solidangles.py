@@ -5,13 +5,14 @@ Created on Tue Jun 15 09:03:44 2021
 @author: Georgia Nixon
 """
 
-place = "Georgia Nixon"
+place = "Georgia"
 import numpy as np
-from numpy import cos, sin, exp, pi
+from numpy import cos, sin, exp, pi, tan
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology')
 from eulerclass import  EulerHamiltonian
 import matplotlib.pyplot as plt
+from numpy.linalg import eig
 from numpy.linalg import norm
 
 sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
@@ -97,16 +98,18 @@ for i, kpoint in enumerate(kline):
     #do abeliean version,
     #find u at other k down the line
     H = EulerHamiltonian(kpoint[0], kpoint[1])
-    _, evecs = GetEvalsAndEvecs(H)
+    _, evecs = GetEvalsAndEvecs(H, realPositive=2)
     uFinal = evecs[:,2]
     
     #get theta
-    theta = 2*np.arcsin(np.real(np.dot(np.conj(u2), uFinal)), 8)
-    alpha = 2*np.arccos(np.linalg.norm(np.dot(np.conj(u2), uFinal)/(cos(theta/2))))
-    g = np.dot(np.conj(u2), uFinal)/(cos(theta/2)*cos(alpha/2))
-    g1 = np.dot(np.conj(u3), uFinal)/(cos(theta/2)*sin(alpha/2))
-    psi = -np.angle(g/g1)
-    phi = np.angle(g1/(exp(1j*psi/2)))
+    # check right element is real and positive
+    assert(np.imag(np.dot(np.conj(u2), uFinal))==0)
+    theta = 2*np.arcsin(np.real(np.dot(np.conj(u2), uFinal)))
+    alpha = 2*np.arcsin(np.linalg.norm(np.dot(np.conj(u1), uFinal)/(cos(theta/2))))
+    expIPsi = np.dot(np.conj(u1), uFinal)/(np.dot(np.conj(u0), uFinal)*tan(alpha/2))
+    psi = np.angle(expIPsi)
+    expIPhi = np.dot(np.conj(u0), uFinal)*exp(1j*psi/2)/(cos(theta/2)*cos(alpha/2))
+    phi = np.angle(expIPhi)
 
     
     thetasLine[i] = theta
