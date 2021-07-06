@@ -10,7 +10,7 @@ import numpy as np
 from numpy import cos, sin, exp, pi, tan
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology')
-from EulerClassHamiltonian import  EulerHamiltonian
+from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecs
 import matplotlib.pyplot as plt
 from numpy.linalg import eig
 from numpy.linalg import norm
@@ -28,53 +28,6 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
     return kline
 
-def GetEvalsAndEvecs(HF, realPositive = 0):
-    """
-    Get e-vals and e-vecs of Haniltonian HF.
-    Order Evals and correspoinding evecs by smallest eval first.
-    Set the gauge for each evec; choosing the first non-zero element to be real and positive.
-    Note that the gauge may be changed later by multiplying any vec arbitrarily by a phase. 
-    """
-    #order by evals, also order corresponding evecs
-    evals, evecs = eig(HF)
-    idx = np.real(evals).argsort()
-    evals = evals[idx]
-    evecs = evecs[:,idx]
-    
-    #make first element of evecs real and positive
-    for vec in range(np.size(HF[0])):
-        
-        # Find first element of the first eigenvector that is not zero
-        firstNonZero = (evecs[:,vec]!=0).argmax()
-        #find the conjugate phase of this element
-        phase = np.conj(evecs[firstNonZero,vec])/np.abs(evecs[firstNonZero,vec])
-        #multiply all elements by the conjugate phase
-        evecs[:,vec] = phase*evecs[:,vec]
-
-    
-    if np.all((np.round(np.imag(evals),7) == 0)) == True:
-        return np.real(evals), evecs
-    else:
-        print('evals are imaginary!')
-        return evals, evecs
-
-def AlignEvecs(evecs0, evecsP, N):
-    """
-    """
-    return evecsP
-
-def OrderEvecs(evecs0, N):
-    """
-    Make first nonzero element of evecs real and positive
-    """
-    evecs0_R = roundcomplex(evecs0, 5)
-    for vec in range(N):
-        #index of first non zero element of this vector
-        firstnonzero = (evecs0_R[:,vec]!=0).argmax()
-        #make this value real and positive, so arg(this value)=2*pi*n for integer n
-        angle = np.angle(evecs0[firstnonzero,vec])
-        evecs0[:,vec] = evecs0[:,vec]*exp(-1j*angle)
-    return evecs0
 
 
 qpoints=51

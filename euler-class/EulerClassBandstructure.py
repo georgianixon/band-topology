@@ -9,14 +9,13 @@ import numpy as np
 from numpy import sqrt, exp, pi, cos, sin
 import matplotlib.pyplot as plt 
 import matplotlib as mpl
+from numpy.linalg import eig
 from mpl_toolkits import mplot3d
 
-place = "Georgia"
+place = "Georgia Nixon"
 import sys
-sys.path.append('/Users/'+place+'/Code/MBQD/band-topology')
+sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecs
-
-
 
 def CreateCircleLineIntVals(r, points, centre=[0,0]):
     CircleLine =  [(int(np.round(cos(2*pi/points*x)*r+centre[0])),int(np.round(sin(2*pi/points*x)*r+centre[1]))) for x in range(0,int(np.ceil(points+1)))]
@@ -43,6 +42,8 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
 #     CircleLine = list(dict.fromkeys(CircleLine) )
 #     return CircleLine
 
+
+
 sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
 
 size=25
@@ -63,6 +64,9 @@ mpl.rcParams.update(params)
 #%%
 
 
+import time
+start = time.time()
+
 
 kmin = -1
 kmax = 1
@@ -77,7 +81,9 @@ for xi, qx in enumerate(K1):
         eigs, evecs = GetEvalsAndEvecs(EulerHamiltonian(qx,qy))
         eiglist[xi,yi] = eigs
         
-        
+ 
+end = time.time()
+print("Time consumed in working: ",end - start)       
 
 #%%
 
