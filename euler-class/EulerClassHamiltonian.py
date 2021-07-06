@@ -146,33 +146,3 @@ def GetEvalsAndEvecs(HF):
         print('evals are imaginary!')
         return evals, evecs
 
-def AlignEvecs(evec, evecsBasis, i):
-    """
-    evecsBasis is a basis for the system
-    Find evec in this basis
-    Make overlap between evec and evecsBasis[i] real and positive
-    This ensures evec, written in the basis given by evecsBasis, 
-        has coefficient evec = a evecsBasis[i] + ... where a is real and positive
-    """
-    
-    u0 # evecBasis
-    u1
-    u2
-    uFinal #evec
-    a = np.dot(np.conj(u0), uFinal)
-    b = np.dot(np.conj(u1), uFinal)
-    c = np.dot(np.conj(u2), uFinal)#
-    
-    while  np.imag(np.dot(np.conj(u2), uFinal))!=0:
-        phase = np.conj(np.angle(c))
-        conjugatePhase = np.conj(c)/np.abs(c)
-
-    #multiply state evec by the conjugate phase
-    uFinal = conjugatePhase*uFinal
-    uFinal = phase*uFinal
-    
-    np.imag(np.dot(np.conj(u2), uFinal))
-    
-    return evecsP
-
-

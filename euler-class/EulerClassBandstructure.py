@@ -70,7 +70,7 @@ start = time.time()
 
 kmin = -1
 kmax = 1
-qpoints = 601 # easier for meshgrid when this is odd
+qpoints = 10001 # easier for meshgrid when this is odd
 K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 
@@ -98,7 +98,7 @@ cmap = mpl.cm.get_cmap(cmapstring)
 X, Y = np.meshgrid(K1, K2)
 
 sz = 15
-fig, ax = plt.subplots(figsize=(15,10))
+fig, ax = plt.subplots(figsize=(10,10))
 ax = plt.axes(projection='3d')
 ax.view_init(0, 225)
 groundband = ax.contour3D(X, Y, np.real(eiglist[:,:,0]), 50,cmap=cmap, norm=normaliser)
@@ -119,7 +119,7 @@ ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
 # cax = divider.append_axes("right", size="5%", pad=0.05)
 
 plt.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser), fraction=0.026, pad=0.04)
-# plt.savefig(sh + "Euler2BS.pdf", format="pdf")
+plt.savefig(sh + "EulerBS.pdf", format="pdf")
 plt.show()
 
 #%%
@@ -128,7 +128,7 @@ Find dirac points
 """
 eigdiff = eiglist[:,:,1] - eiglist[:,:,0]
 eigdiff = np.abs(eigdiff)
-#align eigdiff with a usual plot, x alog bottom, y along LHS.
+#align eigdiff with a usual plot, x along bottom, y along LHS.
 # =============================================================================
 # eigdiff = [[{kx=min, ky=min},... , {kx=min,ky=max}],
 #               ...
@@ -142,12 +142,13 @@ eigdiff = np.abs(eigdiff)
 eigdiff =  np.flip(eigdiff.T, axis=0)
 
 
-# find min 4 values (dirac points)?
+# find min values (dirac points)?
 idx = np.argsort(eigdiff, axis=None)
-idx = idx[:120]
+mins = np.sort(eigdiff, axis=None)
+idx = idx[:10]
 verticalEl_upToDown, horizontalEl_leftToRight = np.unravel_index(idx, np.shape(eigdiff))
 verticalEl_downToUp = len(eigdiff[:,0])-1-verticalEl_upToDown
-diracPoints = list(zip( horizontalEl_leftToRight, verticalEl_upToDown))
+diracPoints = list(zip(horizontalEl_leftToRight, verticalEl_upToDown))
 
 # norm = mpl.colors.Normalize(vmin=eigdiff.min(), vmax=eigdiff.max())
 norm=mpl.colors.LogNorm(vmin=eigdiff.min(), vmax=eigdiff.max())
@@ -162,29 +163,32 @@ ax.set_yticklabels([kmax, int((kmin+kmax)/2), kmin])
 ax.set_xlabel(r"$k_x$")
 ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 
-
-
-
-npoints = 100
-kline0 = CreateLinearLine(3*qpoints/8, qpoints/4, 3*qpoints/8, 3*qpoints/4,  npoints)
-kline1 = CreateLinearLine(3*qpoints/8, 3*qpoints/4, 5*qpoints/8, 3*qpoints/4, npoints)
-kline2 = CreateLinearLine(5*qpoints/8, 3*qpoints/4, 5*qpoints/8, qpoints/4, npoints)
-kline3 = CreateLinearLine(5*qpoints/8, qpoints/4, 3*qpoints/8, qpoints/4, npoints)
-kline =np.vstack((kline0,kline1,kline2, kline3))
-
-
-# klineCircle = CreateCircleLineIntVals(qpoints/8, 2*pi*qpoints/8, centre = [qpoints/4, qpoints/4])
-
-for i, (xd, yd) in enumerate(kline):
-    if i == 0 or i == len(kline):
-        ec = '0'
-    else:
-        ec = '1'
-    circ = mpl.patches.Circle((xd, -yd+qpoints), 2, fill=0, edgecolor=ec)
+# circle lowest points
+for i, (xd, yd) in enumerate(diracPoints):
+    circ = mpl.patches.Circle((xd, yd), 2, fill=0, edgecolor="1")
     ax.add_patch(circ)
 
+# add path part
+# npoints = 100
+# kline0 = CreateLinearLine(3*qpoints/8, qpoints/4, 3*qpoints/8, 3*qpoints/4,  npoints)
+# kline1 = CreateLinearLine(3*qpoints/8, 3*qpoints/4, 5*qpoints/8, 3*qpoints/4, npoints)
+# kline2 = CreateLinearLine(5*qpoints/8, 3*qpoints/4, 5*qpoints/8, qpoints/4, npoints)
+# kline3 = CreateLinearLine(5*qpoints/8, qpoints/4, 3*qpoints/8, qpoints/4, npoints)
+# kline =np.vstack((kline0,kline1,kline2, kline3))
+
+
+# # klineCircle = CreateCircleLineIntVals(qpoints/8, 2*pi*qpoints/8, centre = [qpoints/4, qpoints/4])
+
+# for i, (xd, yd) in enumerate(kline):
+#     if i == 0 or i == len(kline):
+#         ec = '0'
+#     else:
+#         ec = '1'
+#     circ = mpl.patches.Circle((xd, -yd+qpoints), 2, fill=0, edgecolor=ec)
+#     ax.add_patch(circ)
+
 fig.colorbar(pos)
-plt.savefig(sh + "SquarePath.pdf", format="pdf")
+# plt.savefig(sh + "SquarePath.pdf", format="pdf")
 plt.show()
 
 #%%

@@ -8,7 +8,7 @@ place = "Georgia Nixon"
 import numpy as np
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology')
-from eulerclass import  EulerHamiltonian, GetEvalsAndEvecs
+from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecs
 import matplotlib.pyplot as plt
 from numpy.linalg import norm
 from numpy import pi, cos, sin
@@ -32,20 +32,19 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     return kline
 
 #energy levels we are considering to calculate W^{n0,n1}
-n0 = 1
-n1 = 1
+n0 = 0
+n1 = 0
 
 #num of points to calculate the wilson Line of
 qpoints = 201
 
+# kline0 = CreateLinearLine(0.5, 0, 0.5, 2,  qpoints)
+# kline1 = CreateLinearLine(0.5, 2, 1.5, 2, qpoints)
+# kline2 = CreateLinearLine(1.5, 2, 1.5, 0, qpoints)
+# kline3 = CreateLinearLine(1.5, 0, 0.5, 0, qpoints)
+# kline =np.vstack((kline0,kline1,kline2, kline3))
 
-kline0 = CreateLinearLine(0.5, 0, 0.5, 2,  qpoints)
-kline1 = CreateLinearLine(0.5, 2, 1.5, 2, qpoints)
-kline2 = CreateLinearLine(1.5, 2, 1.5, 0, qpoints)
-kline3 = CreateLinearLine(1.5, 0, 0.5, 0, qpoints)
-kline =np.vstack((kline0,kline1,kline2, kline3))
-
-# kline = CreateCircleLine(0.5, qpoints)
+kline = CreateCircleLine(0.5, qpoints)
 
 totalPoints = len(kline)
 k0 = kline[0]
