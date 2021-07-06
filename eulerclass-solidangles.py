@@ -10,24 +10,13 @@ import numpy as np
 from numpy import cos, sin, exp, pi, tan
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology')
-from eulerclass import  EulerHamiltonian
+from EulerClassHamiltonian import  EulerHamiltonian
 import matplotlib.pyplot as plt
 from numpy.linalg import eig
 from numpy.linalg import norm
 
 sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
 
-def CreateCircleLineIntVals(r, points, centre=[0,0]):
-    CircleLine =  [(int(np.round(cos(2*pi/points*x)*r+centre[0])),int(np.round(sin(2*pi/points*x)*r+centre[1]))) for x in range(0,int(np.ceil(points+1)))]
-    #get rid of duplicates
-    CircleLine = list(dict.fromkeys(CircleLine) )
-    return CircleLine
-
-def CreateRectLineIntVals(r, points, centre=[0,0]):
-    CircleLine =  [(int(np.round(cos(2*pi/points*x)*r+centre[0])),int(np.round(sin(2*pi/points*x)*r+centre[1]))) for x in range(0,int(np.ceil(points+1)))]
-    #get rid of duplicates
-    CircleLine = list(dict.fromkeys(CircleLine) )
-    return CircleLine
 
 def CreateCircleLine(r, points, centre=[0,0]):
     CircleLine =  [(cos(x)*r+centre[0],sin(x)*r+centre[1]) for x in np.linspace(0, 2*pi, points, endpoint=True)]
@@ -41,9 +30,10 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
 
 def GetEvalsAndEvecs(HF, realPositive = 0):
     """
-    Get e-vals and e-vecs of Haniltonian HF
-    Order Evals and correspoinding evecs by smallest eval first
-    Set the gauge according to realPositive; if realpositive=0, the first element is set to be real and positive
+    Get e-vals and e-vecs of Haniltonian HF.
+    Order Evals and correspoinding evecs by smallest eval first.
+    Set the gauge for each evec; choosing the first non-zero element to be real and positive.
+    Note that the gauge may be changed later by multiplying any vec arbitrarily by a phase. 
     """
     #order by evals, also order corresponding evecs
     evals, evecs = eig(HF)
@@ -53,12 +43,14 @@ def GetEvalsAndEvecs(HF, realPositive = 0):
     
     #make first element of evecs real and positive
     for vec in range(np.size(HF[0])):
-        # phi = np.angle(evecs[0,vec])
-        # evecs[:,vec] = exp(-1j*phi)*evecs[:,vec]
-#        evecs[:,vec] = np.conj(evecs[0,vec])/np.abs(evecs[0,vec])*evecs[:,vec]
         
-        #nurs normalisation
-        evecs[:,vec] = np.conj(evecs[realPositive,vec])/np.abs(evecs[realPositive,vec])*evecs[:,vec]
+        # Find first element of the first eigenvector that is not zero
+        firstNonZero = (evecs[:,vec]!=0).argmax()
+        #find the conjugate phase of this element
+        phase = np.conj(evecs[firstNonZero,vec])/np.abs(evecs[firstNonZero,vec])
+        #multiply all elements by the conjugate phase
+        evecs[:,vec] = phase*evecs[:,vec]
+
     
     if np.all((np.round(np.imag(evals),7) == 0)) == True:
         return np.real(evals), evecs
@@ -66,16 +58,34 @@ def GetEvalsAndEvecs(HF, realPositive = 0):
         print('evals are imaginary!')
         return evals, evecs
 
+def AlignEvecs(evecs0, evecsP, N):
+    """
+    """
+    return evecsP
+
+def OrderEvecs(evecs0, N):
+    """
+    Make first nonzero element of evecs real and positive
+    """
+    evecs0_R = roundcomplex(evecs0, 5)
+    for vec in range(N):
+        #index of first non zero element of this vector
+        firstnonzero = (evecs0_R[:,vec]!=0).argmax()
+        #make this value real and positive, so arg(this value)=2*pi*n for integer n
+        angle = np.angle(evecs0[firstnonzero,vec])
+        evecs0[:,vec] = evecs0[:,vec]*exp(-1j*angle)
+    return evecs0
+
 
 qpoints=51
 
-# kline = CreateCircleLine(0.5, qpoints)
+kline = CreateCircleLine(0.5, qpoints)
 
-kline0 = CreateLinearLine(0.5, 0, 0.5, 2,  qpoints)
-kline1 = CreateLinearLine(0.5, 2, 1.5, 2, qpoints)
-kline2 = CreateLinearLine(1.5, 2, 1.5, 0, qpoints)
-kline3 = CreateLinearLine(1.5, 0, 0.5, 0, qpoints)
-kline =np.vstack((kline0,kline1,kline2, kline3))
+# kline0 = CreateLinearLine(0.5, 0, 0.5, 2,  qpoints)
+# kline1 = CreateLinearLine(0.5, 2, 1.5, 2, qpoints)
+# kline2 = CreateLinearLine(1.5, 2, 1.5, 0, qpoints)
+# kline3 = CreateLinearLine(1.5, 0, 0.5, 0, qpoints)
+# kline =np.vstack((kline0,kline1,kline2, kline3))
 
 totalPoints = len(kline)
 

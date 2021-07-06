@@ -5,9 +5,16 @@ Created on Mon Jul  5 12:24:35 2021
 @author: Georgia
 """
 
+import numpy as np
+from numpy import sqrt, exp, pi, cos, sin
+import matplotlib.pyplot as plt 
+import matplotlib as mpl
+from mpl_toolkits import mplot3d
+
+place = "Georgia"
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology')
-from eulerclass import  EulerHamiltonian
+from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecs
 
 
 
@@ -17,10 +24,25 @@ def CreateCircleLineIntVals(r, points, centre=[0,0]):
     CircleLine = list(dict.fromkeys(CircleLine) )
     return CircleLine
 
+def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
+    kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
+    kline = np.around(kline)
+    kline = kline.astype(int)
+    # kline = list(dict.fromkeys(kline) )
+    return kline
 
+# def CreateCircleLineIntVals(r, points, centre=[0,0]):
+#     CircleLine =  [(int(np.round(cos(2*pi/points*x)*r+centre[0])),int(np.round(sin(2*pi/points*x)*r+centre[1]))) for x in range(0,int(np.ceil(points+1)))]
+#     #get rid of duplicates
+#     CircleLine = list(dict.fromkeys(CircleLine) )
+#     return CircleLine
 
+# def CreateRectLineIntVals(r, points, centre=[0,0]):
+#     CircleLine =  [(int(np.round(cos(2*pi/points*x)*r+centre[0])),int(np.round(sin(2*pi/points*x)*r+centre[1]))) for x in range(0,int(np.ceil(points+1)))]
+#     #get rid of duplicates
+#     CircleLine = list(dict.fromkeys(CircleLine) )
+#     return CircleLine
 
-place = "Georgia Nixon"
 sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
 
 size=25
@@ -43,7 +65,7 @@ mpl.rcParams.update(params)
 
 
 kmin = -1
-kmax = 3
+kmax = 1
 qpoints = 201 # easier for meshgrid when this is odd
 K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
@@ -135,18 +157,7 @@ ax.set_xlabel(r"$k_x$")
 ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 
 
-def CreateCircleLineIntVals(r, points, centre=[0,0]):
-    CircleLine =  [(int(np.round(cos(2*pi/points*x)*r+centre[0])),int(np.round(sin(2*pi/points*x)*r+centre[1]))) for x in range(0,int(np.ceil(points+1)))]
-    #get rid of duplicates
-    CircleLine = list(dict.fromkeys(CircleLine) )
-    return CircleLine
 
-def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
-    kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
-    kline = np.around(kline)
-    kline = kline.astype(int)
-    # kline = list(dict.fromkeys(kline) )
-    return kline
 
 npoints = 100
 kline0 = CreateLinearLine(3*qpoints/8, qpoints/4, 3*qpoints/8, 3*qpoints/4,  npoints)
