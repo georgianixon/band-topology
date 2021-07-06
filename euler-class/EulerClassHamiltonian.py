@@ -118,7 +118,7 @@ def EulerHamiltonian(kx,ky):
 
 def GetEvalsAndEvecs(HF):
     """
-    Get e-vals and e-vecs of Haniltonian HF.
+    Get e-vals and e-vecs of Hamiltonian HF.
     Order Evals and correspoinding evecs by smallest eval first.
     Set the gauge for each evec; choosing the first non-zero element to be real and positive.
     Note that the gauge may be changed later by multiplying any vec arbitrarily by a phase. 

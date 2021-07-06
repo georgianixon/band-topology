@@ -45,6 +45,8 @@ params = {
 
 mpl.rcParams.update(params)
 
+def RoundComplex(num, dp):
+    return np.round(num.real, dp) + np.round(num.imag, dp) * 1j
 
 def CreateCircleLine(r, points, centre=[0,0]):
     CircleLine =  [(cos(x)*r+centre[0],sin(x)*r+centre[1]) for x in np.linspace(0, 2*pi, points, endpoint=True)]
@@ -56,16 +58,18 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
     return kline
 
+#band that we looking at eigenstate trajectory
+n1 = 2
 
 qpoints=51
 
-kline = CreateCircleLine(0.5, qpoints)
+# kline = CreateCircleLine(0.5, qpoints)
 
-# kline0 = CreateLinearLine(0.5, 0, 0.5, 2,  qpoints)
-# kline1 = CreateLinearLine(0.5, 2, 1.5, 2, qpoints)
-# kline2 = CreateLinearLine(1.5, 2, 1.5, 0, qpoints)
-# kline3 = CreateLinearLine(1.5, 0, 0.5, 0, qpoints)
-# kline =np.vstack((kline0,kline1,kline2, kline3))
+kline0 = CreateLinearLine(0.5, 0, 0.5, 2, qpoints)
+kline1 = CreateLinearLine(0.5, 2, 1.5, 2, qpoints)
+kline2 = CreateLinearLine(1.5, 2, 1.5, 0, qpoints)
+kline3 = CreateLinearLine(1.5, 0, 0.5, 0, qpoints)
+kline =np.vstack((kline0,kline1,kline2, kline3))
 
 totalPoints = len(kline)
 
@@ -89,7 +93,7 @@ for i, kpoint in enumerate(kline):
     #find evecs at other k down the line
     H = EulerHamiltonian(kpoint[0], kpoint[1])
     _, evecs = GetEvalsAndEvecs(H)
-    uFinal = evecs[:,2]
+    uFinal = evecs[:,n1]
 
     #multiply state evec by the conjugate phase
     c = np.dot(np.conj(u2), uFinal)
@@ -98,10 +102,19 @@ for i, kpoint in enumerate(kline):
     
     # make sure uFinal is in the right gauge, to 20dp
     c = np.dot(np.conj(u2), uFinal)
-    assert(round(np.imag(c), 20)==0)
+    
+    #try again:
+    if round(np.imag(c), 30)!=0:
+        conjPhase = np.conj(c)/np.abs(c)
+        uFinal = conjPhase*uFinal
+        c = np.dot(np.conj(u2), uFinal)
+        assert(round(np.imag(c), 30)==0)
+    
+    
     
     # get params
     theta = 2*np.arcsin(np.dot(np.conj(u2), uFinal))
+    #sometimes you will get nans for these, if theta = pi
     alpha = 2*np.arcsin(np.linalg.norm(np.dot(np.conj(u1), uFinal)/(cos(theta/2))))
     expIPsi = np.dot(np.conj(u1), uFinal)/(np.dot(np.conj(u0), uFinal)*tan(alpha/2))
     psi = np.angle(expIPsi)
@@ -120,8 +133,8 @@ for i, kpoint in enumerate(kline):
 
 #%%
 # #plot kline
-# multiplier = np.linspace(0, 4, tot~alPoints)
-# fs = (8,6)
+multiplier = np.linspace(0, 4, totalPoints)
+fs = (12,9)
 # x,y = zip(*kline)
 # fig, ax = plt.subplots(figsize=fs)
 # ax.plot(x, y, label=r"k line")
@@ -130,31 +143,29 @@ for i, kpoint in enumerate(kline):
 # ax.set_facecolor('1')
 # ax.grid(b=1, color='0.6')
 # # plt.savefig(sh+ "CircleTrajectory.pdf", format="pdf")
-# plt.show()    
+# plt.show()
 
 
 fig, ax = plt.subplots(figsize=fs)
 ax.plot(multiplier, np.real(thetasLine), label=r"$\theta$")
-ax.set_xlabel(r"Final quasimomentum, square trajectory, $2^{\mathrm{nd}}$ excited band")
-# plt.legend()
-# ax.set_xticks([0, pi, 2*pi])
-# ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
+ax.set_xlabel(r"final quasimomentum, $\mathbf{k}$, square trajectory")
+# ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
+# ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
 ax.set_yticks([0, pi/2, pi])
 ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
 ax.set_ylabel(r"$\theta$", rotation=0, labelpad=15)
-# plt.savefig(sh+ "thetasSquareTrajectory2ndExcitedBand.pdf", format="pdf")
+plt.savefig(sh+ "thetasSquareTrajectory.pdf", format="pdf")
 plt.show()    
 
 fig, ax = plt.subplots(figsize=fs)
 ax.plot(multiplier, np.real(alphasLine), label=r"$\alpha$")
-ax.set_xlabel(r"Final quasimomentum, square trajectory, $2^{\mathrm{nd}}$ excited band")
-# plt.legend()
-# ax.set_xticks([0, pi, 2*pi])
-# ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
+ax.set_xlabel(r"Final quasimomentum, $\mathbf{k}$, square trajectory")
+# ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
+# ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
 ax.set_yticks([0, pi/2, pi])
 ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
 ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
-# plt.savefig(sh+ "alphasSquareTrajectory2ndExcitedBand.pdf", format="pdf")
+plt.savefig(sh+ "alphasSquareTrajectory.pdf", format="pdf")
 plt.show()    
 
 # fig, ax = plt.subplots(figsize=fs)

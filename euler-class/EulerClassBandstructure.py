@@ -69,8 +69,8 @@ start = time.time()
 
 
 kmin = -1
-kmax = 1
-qpoints = 10001 # easier for meshgrid when this is odd
+kmax = 3
+qpoints = 201 # easier for meshgrid when this is odd
 K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 
@@ -156,39 +156,39 @@ norm=mpl.colors.LogNorm(vmin=eigdiff.min(), vmax=eigdiff.max())
 sz = 15
 fig, ax = plt.subplots(figsize=(sz,sz/2))
 pos = plt.imshow(eigdiff, cmap='viridis', norm=norm)
-ax.set_xticks([0, (qpoints-1)/2, qpoints-1])
-ax.set_yticks([0, (qpoints-1)/2, qpoints-1])
-ax.set_xticklabels([kmin, int((kmin+kmax)/2), kmax])
-ax.set_yticklabels([kmax, int((kmin+kmax)/2), kmin])
+ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
+ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
+ax.set_xticklabels([kmin, int(round((kmin+kmax)/4)), int((kmin+kmax)/2), int(round(3*(kmin+kmax)/4)), kmax])
+ax.set_yticklabels([kmax, int(round(3*(kmin+kmax)/4)), int((kmin+kmax)/2), int(round((kmin+kmax)/4)), kmin])
 ax.set_xlabel(r"$k_x$")
 ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 
 # circle lowest points
-for i, (xd, yd) in enumerate(diracPoints):
-    circ = mpl.patches.Circle((xd, yd), 2, fill=0, edgecolor="1")
-    ax.add_patch(circ)
+# for i, (xd, yd) in enumerate(diracPoints):
+#     circ = mpl.patches.Circle((xd, yd), 2, fill=0, edgecolor="1")
+#     ax.add_patch(circ)
 
 # add path part
-# npoints = 100
-# kline0 = CreateLinearLine(3*qpoints/8, qpoints/4, 3*qpoints/8, 3*qpoints/4,  npoints)
-# kline1 = CreateLinearLine(3*qpoints/8, 3*qpoints/4, 5*qpoints/8, 3*qpoints/4, npoints)
-# kline2 = CreateLinearLine(5*qpoints/8, 3*qpoints/4, 5*qpoints/8, qpoints/4, npoints)
-# kline3 = CreateLinearLine(5*qpoints/8, qpoints/4, 3*qpoints/8, qpoints/4, npoints)
-# kline =np.vstack((kline0,kline1,kline2, kline3))
+npoints = 100
+kline0 = CreateLinearLine(3*qpoints/8, qpoints/4, 3*qpoints/8, 3*qpoints/4,  npoints)
+kline1 = CreateLinearLine(3*qpoints/8, 3*qpoints/4, 5*qpoints/8, 3*qpoints/4, npoints)
+kline2 = CreateLinearLine(5*qpoints/8, 3*qpoints/4, 5*qpoints/8, qpoints/4, npoints)
+kline3 = CreateLinearLine(5*qpoints/8, qpoints/4, 3*qpoints/8, qpoints/4, npoints)
+kline =np.vstack((kline0,kline1,kline2, kline3))
 
 
 # # klineCircle = CreateCircleLineIntVals(qpoints/8, 2*pi*qpoints/8, centre = [qpoints/4, qpoints/4])
 
-# for i, (xd, yd) in enumerate(kline):
-#     if i == 0 or i == len(kline):
-#         ec = '0'
-#     else:
-#         ec = '1'
-#     circ = mpl.patches.Circle((xd, -yd+qpoints), 2, fill=0, edgecolor=ec)
-#     ax.add_patch(circ)
+for i, (xd, yd) in enumerate(kline):
+    if i == 0 or i == len(kline):
+        ec = '0'
+    else:
+        ec = '1'
+    circ = mpl.patches.Circle((xd, -yd+qpoints), 2, fill=0, edgecolor=ec)
+    ax.add_patch(circ)
 
 fig.colorbar(pos)
-# plt.savefig(sh + "SquarePath.pdf", format="pdf")
+plt.savefig(sh + "SquarePath.pdf", format="pdf")
 plt.show()
 
 #%%
