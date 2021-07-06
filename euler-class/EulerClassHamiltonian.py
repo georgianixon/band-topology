@@ -146,28 +146,33 @@ def GetEvalsAndEvecs(HF):
         print('evals are imaginary!')
         return evals, evecs
 
-def AlignEvecs(evecs0, evecs1, i):
+def AlignEvecs(evec, evecsBasis, i):
     """
-    evecs0 is a basis for the system
-    Find evecs1 in this basis
-    Make overlap between evec1 and evec0[i] real and positive
-    This ensures evec1, written in the basis given by evec0, 
-        has coefficient evec1 = a evec0[i] + ... where a is real and positive
+    evecsBasis is a basis for the system
+    Find evec in this basis
+    Make overlap between evec and evecsBasis[i] real and positive
+    This ensures evec, written in the basis given by evecsBasis, 
+        has coefficient evec = a evecsBasis[i] + ... where a is real and positive
     """
     
+    u0 # evecBasis
+    u1
+    u2
+    uFinal #evec
+    a = np.dot(np.conj(u0), uFinal)
+    b = np.dot(np.conj(u1), uFinal)
+    c = np.dot(np.conj(u2), uFinal)#
     
-    evecs0_R = roundcomplex(evecs0, 5)
-    evecsP_R = roundcomplex(evecsP, 5)
-    
-    for vec in range(N):
+    while  np.imag(np.dot(np.conj(u2), uFinal))!=0:
+        phase = np.conj(np.angle(c))
+        conjugatePhase = np.conj(c)/np.abs(c)
 
-        # else, make them start at the same value
-        elif evecs0_R[0,vec] != evecsP_R[0,vec]:
-            frac = evecs0[0,vec] / evecsP[0,vec]
-            evecsP[:,vec] = evecsP[:,vec] * frac
-            #redefine evecsP_R
-            evecsP_R[:,vec] = roundcomplex(evecsP[:,vec], 5)
-            
+    #multiply state evec by the conjugate phase
+    uFinal = conjugatePhase*uFinal
+    uFinal = phase*uFinal
+    
+    np.imag(np.dot(np.conj(u2), uFinal))
+    
     return evecsP
 
 

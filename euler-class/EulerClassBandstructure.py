@@ -70,7 +70,7 @@ start = time.time()
 
 kmin = -1
 kmax = 1
-qpoints = 201 # easier for meshgrid when this is odd
+qpoints = 601 # easier for meshgrid when this is odd
 K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 
