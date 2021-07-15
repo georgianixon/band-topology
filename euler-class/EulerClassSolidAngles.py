@@ -58,6 +58,32 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
     return kline
 
+
+def AlignGaugeBetweenVecs(vec1, vec2):
+    """
+    Make <vec1|vec2> real and positive by shifting overall phase of vec2
+    Return phase shifted vec2
+    """
+    #overlap between vec1 and vec2
+    c = np.dot(np.conj(vec1), vec2)
+    #find conj phase of overlap
+    conjPhase = np.conj(c)/np.abs(c)
+    #remove phase, so overlap is real and positive
+    vec2 = conjPhase*vec2
+    
+    # make sure vec1 is in the right gauge, to 20dp
+    c = np.dot(np.conj(vec1), vec2)
+    
+    #try again if still not within..
+    if round(np.imag(c), 30)!=0:
+        conjPhase = np.conj(c)/np.abs(c)
+        vec2 = conjPhase*vec2
+        c = np.dot(np.conj(vec1), vec2)
+        assert(round(np.imag(c), 28)==0)
+    
+    return vec2
+
+#%%
 #band that we looking at eigenstate trajectory
 n1 = 2
 
@@ -94,24 +120,10 @@ for i, kpoint in enumerate(kline):
     H = EulerHamiltonian(kpoint[0], kpoint[1])
     _, evecs = GetEvalsAndEvecs(H)
     uFinal = evecs[:,n1]
+    
+    #get correct overall phase for uFinal
+    uFinal = AlignGaugeBetweenVecs(u2, uFinal)
 
-    #multiply state evec by the conjugate phase
-    c = np.dot(np.conj(u2), uFinal)
-    conjPhase = np.conj(c)/np.abs(c)
-    uFinal = conjPhase*uFinal
-    
-    # make sure uFinal is in the right gauge, to 20dp
-    c = np.dot(np.conj(u2), uFinal)
-    
-    #try again:
-    if round(np.imag(c), 30)!=0:
-        conjPhase = np.conj(c)/np.abs(c)
-        uFinal = conjPhase*uFinal
-        c = np.dot(np.conj(u2), uFinal)
-        assert(round(np.imag(c), 30)==0)
-    
-    
-    
     # get params
     theta = 2*np.arcsin(np.dot(np.conj(u2), uFinal))
     #sometimes you will get nans for these, if theta = pi
@@ -127,8 +139,6 @@ for i, kpoint in enumerate(kline):
     psisLine[i] = psi
     phisLine[i] = phi
     
-
-
 
 
 #%%
@@ -190,4 +200,81 @@ plt.show()
 # plt.show()    
 
 
+#%% 
+"""
+Theta over the BZ
+"""
+#band that we looking to describe
+n1 = 2
 
+#points in the line
+qpoints=51
+
+# arbitrary point I guess, but not a diract point
+gammaPoint = np.array([0.01,0])
+
+#get evecs at gamma point
+H = EulerHamiltonian(gammaPoint[0],gammaPoint[1])
+_, evecs = GetEvalsAndEvecs(H)
+u0 = evecs[:,0]
+u1 = evecs[:,1]
+u2 = evecs[:,2]
+#check it is not a dirac point
+assert(np.linalg.norm(u2)==1)
+
+#Go through all other points in BZ;
+kmin = -1
+kmax = 1
+qpoints = 201 # easier for meshgrid when this is odd
+K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
+K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
+thetas = np.zeros((qpoints,qpoints))
+
+eiglist = np.empty((qpoints,qpoints,3)) # for three bands
+
+for xi, qx in enumerate(K1):
+    for yi, qy in enumerate(K2):
+        eigs, evecs = GetEvalsAndEvecs(EulerHamiltonian(qx,qy))
+        
+        uFinal = evecs[:,n1]
+    
+        #get correct overall phase for uFinal
+        uFinal = AlignGaugeBetweenVecs(u2, uFinal)
+    
+        # get params
+        argument = np.dot(np.conj(u2), uFinal)
+        assert(round(np.imag(argument), 27)==0)
+        argument = np.real(argument)
+        theta = 2*np.arcsin(argument)
+        assert(round(np.imag(theta), 27)==0)
+        theta = np.real(theta)
+        
+        thetas[xi,yi] = theta
+        
+#%%
+"""
+Plot theta over BZ
+"""
+
+params = {
+          'axes.grid':False,
+          }
+
+mpl.rcParams.update(params)
+
+# turn x -> along bottom, y |^ along LHS
+thetas =  np.flip(thetas.T, axis=0)
+
+# plot 
+sz = 15
+fig, ax = plt.subplots(figsize=(sz,sz/2))
+pos = plt.imshow(thetas, cmap='plasma')
+ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
+ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
+ax.set_xticklabels([kmin, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmax])
+ax.set_yticklabels([kmax, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmin])
+ax.set_xlabel(r"$k_x$")
+ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
+fig.colorbar(pos)
+plt.savefig(sh+"ThetaOverBZSecondBand,Gamma=(0p01,0).pdf", format="pdf")
+plt.show()

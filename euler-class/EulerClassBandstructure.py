@@ -62,11 +62,12 @@ mpl.rcParams.update(params)
 
 
 #%%
-
+"""
+Calculate Bandstructure
+"""
 
 import time
 start = time.time()
-
 
 kmin = -1
 kmax = 3
@@ -88,7 +89,7 @@ print("Time consumed in working: ",end - start)
 #%%
 
 """
-Calculate Bandstructure
+Plot Bandstructure
 """
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
@@ -119,7 +120,7 @@ ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
 # cax = divider.append_axes("right", size="5%", pad=0.05)
 
 plt.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser), fraction=0.026, pad=0.04)
-plt.savefig(sh + "EulerBS.pdf", format="pdf")
+# plt.savefig(sh + "EulerBS.pdf", format="pdf")
 plt.show()
 
 #%%
@@ -188,8 +189,9 @@ for i, (xd, yd) in enumerate(kline):
     ax.add_patch(circ)
 
 fig.colorbar(pos)
-plt.savefig(sh + "SquarePath.pdf", format="pdf")
+# plt.savefig(sh + "SquarePath.pdf", format="pdf")
 plt.show()
+
 
 #%%
 

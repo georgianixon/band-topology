@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jun 14 20:37:33 2021
+Created on Thu Jul 15 16:55:37 2021
 
-@author: Georgia
+@author: Georgia Nixon
 """
+
+
 place = "Georgia Nixon"
 import numpy as np
 import sys
@@ -13,6 +15,7 @@ import matplotlib.pyplot as plt
 from numpy.linalg import norm
 from numpy import pi, cos, sin
 import matplotlib as mpl
+from scipy.linalg import expm
 
 
 size=25
@@ -47,69 +50,146 @@ def RoundComplex(num, dp):
     return np.round(num.real, dp) + np.round(num.imag, dp) * 1j
 
 def Normalise(v):
-    norm1=np.linalg.norm(v)
-    return v/norm1
+    norm_=np.linalg.norm(v)
+    return v/norm_
 
 def CreateCircleLine(r, points, centre=[0,0]):
-    CircleLine =  [(cos(x)*r+centre[0],sin(x)*r+centre[1]) for x in np.linspace(0, 2*pi, points, endpoint=True)]
+    CircleLine =  np.array([[cos(x)*r+centre[0],sin(x)*r+centre[1]] for x in np.linspace(0, 2*pi, points, endpoint=True)])
     return CircleLine
 
 def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
-    kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
+    kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints, endpoint=False)
     return kline
 
-#energy levels we are considering to calculate W^{n0,n1}
-n0 = 2
-n1 = 2
+def CalculateBerryConnect(k, n0, n1):
+    
+    h = 0.0001;
+    
+    kx = k[0]
+    ky = k[1]
+    H = EulerHamiltonian(kx,ky)
+    evals,evecs = GetEvalsAndEvecs(H)
+    
+    #first eigenvector
+    u0=evecs[:,n0]
+    u1=evecs[:,n1]
+    
+    #dx direction
+
+    H = EulerHamiltonian(kx+h,ky)
+    _,evecsX = GetEvalsAndEvecs(H)
+    ux1 = evecsX[:,n1]
+ 
+    #dy direction
+
+    H = EulerHamiltonian(kx,ky+h)
+    _,evecsY = GetEvalsAndEvecs(H)
+    uy1=evecsY[:,n1]
+    
+
+    xder = (ux1-u1)/h
+    yder = (uy1-u1)/h
+    
+    berryConnect = 1j*np.array([np.dot(np.conj(u0),xder),np.dot(np.conj(u0),yder)])
+
+    return berryConnect
+
+def CalculateBerryConnectMatrix(k):
+    dgbands = 3
+    berryConnect = np.zeros((dgbands,dgbands, 2), dtype=np.complex128)
+    for n0 in range(dgbands):
+        for n1 in range(dgbands):
+            berryConnect[n0,n1] = CalculateBerryConnect(k, n0, n1)
+    return berryConnect
+            
+def AbelianCalcWilsonLine(evecsFinal, evecsInitial):
+    dgbands = 3
+    wilsonLineAbelian = np.zeros([dgbands, dgbands], dtype=np.complex128)
+    
+    for n0 in range(dgbands):
+        for n1 in range(dgbands):
+            wilsonLineAbelian[n0,n1] = np.dot(np.conj(evecsFinal[:,n1]), evecsInitial[:,n0])
+    return wilsonLineAbelian
+
+
+#%%
+"""
+Define Wilson Line path (kline)
+"""
 
 #num of points to calculate the wilson Line of
-qpoints = 201
+qpoints = 1000
 
+# create rectangle line
 # kline0 = CreateLinearLine(0.5, 0, 0.5, 2,  qpoints)
 # kline1 = CreateLinearLine(0.5, 2, 1.5, 2, qpoints)
 # kline2 = CreateLinearLine(1.5, 2, 1.5, 0, qpoints)
 # kline3 = CreateLinearLine(1.5, 0, 0.5, 0, qpoints)
 # kline =np.vstack((kline0,kline1,kline2, kline3))
 
+# create circle line
 kline = CreateCircleLine(0.5, qpoints)
-
 totalPoints = len(kline)
-k0 = kline[0]
-H = EulerHamiltonian(k0[0],k0[1])
-evals, evecs = GetEvalsAndEvecs(H)
-uInitial = evecs[:,n0]
 
-for vec in range(3):
-    for entry in range(3):
-        assert(RoundComplex(np.dot(EulerHamiltonian(k0[0], k0[1]), evecs[:,vec])[entry],
-                            12) == RoundComplex((evals[vec]*evecs[:,vec])[entry], 12))
 
 
 #%%
 '''
-Calculate Wilson Line
+Calculate Wilson Line - Abelian
 '''
-wilsonLineAbelian = np.zeros(totalPoints, dtype=np.complex128)
+
+k0 = kline[0]
+H = EulerHamiltonian(k0[0],k0[1])
+_, evecsInitial = GetEvalsAndEvecs(H)
+
+wilsonLineAbelian = np.zeros([totalPoints, 3, 3], dtype=np.complex128)
 # go through possible end points for k
 for i, kpoint in enumerate(kline):
     #Find evec at k point, calculate Wilson Line abelian method
     H = EulerHamiltonian(kpoint[0], kpoint[1])
-    _, evecs = GetEvalsAndEvecs(H)
-    uFinal = evecs[:,n1]
-    wilsonLineAbelian[i] = np.dot(np.conj(uFinal), uInitial)
+    _, evecsFinal = GetEvalsAndEvecs(H)
+    wilsonLineAbelian[i] = AbelianCalcWilsonLine(evecsFinal, evecsInitial)
 
+    
+
+#%%
+"""
+Calculate Wilson Line - Non Abelian
+"""
+
+wilsonLineNonAbelian = np.zeros([totalPoints, 3, 3], dtype=np.complex128)
+currentArgument = np.zeros([3,3], dtype=np.complex128)
+
+for i, kpoint in enumerate(kline):
+    berryConnect = CalculateBerryConnectMatrix(kpoint)
+    dq = np.array([kline[i,0] - kline[i-1,0], kline[i,1] - kline[i-1,1]])
+    berryConnectAlongKLine =  1j*np.dot(berryConnect, dq) 
+    currentArgument = currentArgument + berryConnectAlongKLine
+    wilsonLineNonAbelian[i] = expm(currentArgument)
+    
+    
 
 #%%
 '''
 Plot
 '''
+m1 = 2
+m2 = 2
 multiplier = np.linspace(0,4,totalPoints, endpoint=True)
 fig, ax = plt.subplots(figsize=(12,9))
-ax.plot(multiplier, np.square(np.abs(wilsonLineAbelian)))
-ax.set_ylabel(r"$|W["+str(n0) +","+str(n1)+"]|^2 = |<\Phi_{q_f}^"+str(n1)+" | \Phi_{q_i}^"+str(n0)+">|^2$")
+
+ax.plot(multiplier, np.square(np.abs(wilsonLineNonAbelian[:,m1,m2])), label="NA")
+ax.plot(multiplier, np.square(np.abs(wilsonLineAbelian[:,m1,m2])), label="A")
+
+ax.set_ylabel(r"$|W["+str(m1) +","+str(m2)+"]|^2 = |<\Phi_{q_f}^"+str(m1)+" | \Phi_{q_i}^"+str(m2)+">|^2$")
 # ax.set_xticks([0, pi, 2*pi])
 # ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
-ax.set_xlabel(r"Final quasimomentum point (going around square)")
+ax.set_xticks([0, 1, 2, 3, 4])
+
+ax.set_ylim([0,1.01])
+# ax.set_xlabel(r"Final quasimomentum point (going around square)")
 # plt.savefig(sh+ "WilsonLineEulerRectangle00.pdf", format="pdf")
-plt.savefig(sh+ "WilsonLineEulerCircle22.pdf", format="pdf")
+# plt.savefig(sh+ "WilsonLineEulerCircle22.pdf", format="pdf")
+ax.set_title("2nd Way NOn Abelian")
+plt.legend()
 plt.show()    
