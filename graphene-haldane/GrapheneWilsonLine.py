@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 """
 Created on Fri Jun  4 09:29:05 2021
@@ -56,6 +57,14 @@ params = {
 mpl.rcParams.update(params)
 
 alength = 1
+
+def AbelianCalcWilsonLine(evecsFinal, evecsInitial, dgbands=2):
+    wilsonLineAbelian = np.zeros([dgbands, dgbands], dtype=np.complex128)
+    
+    for n0 in range(dgbands):
+        for n1 in range(dgbands):
+            wilsonLineAbelian[n0,n1] = np.dot(np.conj(evecsFinal[:,n1]), evecsInitial[:,n0])
+    return wilsonLineAbelian
 
 def DifferenceLine(array2D):
     X = np.append(np.append(array2D[[-2]], array2D, axis=0), array2D[[1]], axis=0)
@@ -130,7 +139,7 @@ def CalculateBerryConnectMatrixGraphene(k, phi, M, t1, t2):
 phi = pi/3
 t1=1
 t2=0.6
-M = t2*3*sqrt(3) * sin(phi)-0.1
+M = 0#t2*3*sqrt(3) * sin(phi)
 
 #reciprocal lattice vectors
 c1 = (2*pi/(3*alength))*np.array([1, sqrt(3)])
@@ -138,69 +147,55 @@ c2 = (2*pi/(3*alength))*np.array([1, -sqrt(3)])
 
 #think u are qpoints?
 dlt = 0.005
-qpoints=51
+qpoints=200
 
-nline = 51
-wilsonline00 =  np.zeros([nline], dtype=np.complex128)
-wilsonline00abelian = np.zeros([nline], dtype=np.complex128)
+wilsonline00abelian = np.zeros(qpoints, dtype=np.complex128)
 
 #step for abelian version
 #find u at first k
 H = GrapheneHamiltonian(np.array([0,0]), phi, M, t1, t2)
 _, evecs = GetEvalsAndEvecs(H)
 uInitial = evecs[:,0]
-    
-# go through possible end points for k
-for i, kend in enumerate(np.linspace(0,3,nline, endpoint=True)):
-    
-    # u10 is amout we are going down the line from \Gamma to \Gamma + 3G
-    u10 = np.linspace(0, kend, qpoints, endpoint=True)
-    # kline is q values for various points between \Gamma and kend (max being \Gamma + 3G)
-    kline = np.outer(u10,c1)
-    
-    berryconnect00 = np.zeros([qpoints, 2], dtype=np.complex128)
-    berryconnect01 = np.zeros([qpoints, 2], dtype=np.complex128)
-    berryconnect10 = np.zeros([qpoints, 2], dtype=np.complex128)
-    berryconnect11 = np.zeros([qpoints, 2], dtype=np.complex128)
-    
-    
-
-    for cnt, k in enumerate(kline):
-        #calculate berry connection at each of the k points on the k line
-        berryconnect00[cnt] = CalculateBerryConnectGraphene(k, phi, M, t1, t2, 0, 0)
-        berryconnect01[cnt] = CalculateBerryConnectGraphene(k, phi, M, t1, t2, 0, 1)
-        berryconnect10[cnt] = CalculateBerryConnectGraphene(k, phi, M, t1, t2, 1, 0)
-        berryconnect11[cnt] = CalculateBerryConnectGraphene(k, phi, M, t1, t2, 1, 1)
-        
-       
-    
-    dq = kline[1]-kline[0]
-    wilsonline = np.zeros([2,2], dtype=np.complex128)
-    wilsonline[0,0] = np.sum(1j*np.dot(berryconnect00, dq))
-    wilsonline[0,1] = np.sum(1j*np.dot(berryconnect01, dq))
-    wilsonline[1,0] = np.sum(1j*np.dot(berryconnect10, dq))
-    wilsonline[1,1] = np.sum(1j*np.dot(berryconnect11, dq))
-    
-    wilsonline = expm(wilsonline)
-#    evals, _ = getevalsandevecs(wilsonline)
-    wilsonline00[i]=wilsonline[0,0]
-    
-    #do abeliean version,
-    #find u at other k down the line
-    H = GrapheneHamiltonian(kline[-1], phi, M, t1, t2)
-    _, evecs = GetEvalsAndEvecs(H)
-    uFinal = evecs[:,0]
-    wilsonline00abelian[i] = np.dot(np.conj(uFinal), uInitial)
-
-#%%
-
-# new way
-wilsonLineNonAbelian = np.zeros([qpoints, 2, 2], dtype=np.complex128)
-currentArgument = np.zeros([2,2], dtype=np.complex128)
 
 u10 = np.linspace(0,3,qpoints)
 kline = np.outer(u10,c1)
 dq = kline[1] - kline[0]
+    
+# go through possible end points for k
+for i, kpoint in enumerate(kline):
+    
+    #do abeliean version,
+    #find u at other k down the line
+    H = GrapheneHamiltonian(kpoint, phi, M, t1, t2)
+    _, evecs = GetEvalsAndEvecs(H)
+    uFinal = evecs[:,0]
+    wilsonline00abelian[i] = np.dot(np.conj(uFinal), uInitial)
+    
+    
+#%%
+'''
+Calculate Wilson Line - Abelian
+'''
+
+k0 = kline[0]
+H = GrapheneHamiltonian(kline[0], phi, M, t1, t2)
+_, evecsInitial = GetEvalsAndEvecs(H)
+
+wilsonLineAbelian = np.zeros([qpoints, 2, 2], dtype=np.complex128)
+# go through possible end points for k
+for i, kpoint in enumerate(kline):
+    #Find evec at k point, calculate Wilson Line abelian method
+    H =GrapheneHamiltonian(kpoint, phi, M, t1, t2)
+    _, evecsFinal = GetEvalsAndEvecs(H)
+    wilsonLineAbelian[i] = AbelianCalcWilsonLine(evecsFinal, evecsInitial)
+
+#%%
+
+'''
+Calculate Wilson Line - Non Abelian
+'''
+wilsonLineNonAbelian = np.zeros([qpoints, 2, 2], dtype=np.complex128)
+currentArgument = np.zeros([2,2], dtype=np.complex128)
 
 for i, kpoint in enumerate(kline):
     berryConnect = CalculateBerryConnectMatrixGraphene(kpoint, phi, M, t1, t2)
@@ -215,8 +210,8 @@ for i, kpoint in enumerate(kline):
 
 fig, ax = plt.subplots(figsize=(8,6))
 ax.plot(np.linspace(0,3,qpoints, endpoint=True), np.square(np.abs(wilsonline00abelian)), label=r"abelian $<u_{q_i}^n | u_{q_f}^m>$")
-ax.plot(np.linspace(0,3,qpoints, endpoint=True), np.square(np.abs(wilsonLineNonAbelian[:,0,0])),  'x', label=r"non abelian simple method")
-ax.plot(np.linspace(0,3,qpoints, endpoint=True), np.square(np.abs(wilsonline00)), label=r'non abelian $ \exp [\Pi_{n=1}^{N} i \Delta_{\mathbf{q}} \cdot \mathbf{A}(\mathbf{q}_n)]$')
+ax.plot(np.linspace(0,3,qpoints, endpoint=True), np.square(np.abs(wilsonLineNonAbelian[:,0,0])),   label=r'non abelian $ \exp [\Pi_{n=1}^{N} i \Delta_{\mathbf{q}} \cdot \mathbf{A}(\mathbf{q}_n)]$')
+ax.plot(np.linspace(0,3,qpoints, endpoint=True), np.square(np.abs(wilsonLineAbelian[:,0,0])), label="abelian 2")
 ax.set_ylabel(r"$|W[0,0]|^2$")
 ax.set_xlabel(r"Final quasimomentum (in units of $\vec{G}$ away from $\Gamma$ )")
 plt.legend()
