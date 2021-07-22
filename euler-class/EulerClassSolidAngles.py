@@ -5,7 +5,7 @@ Created on Tue Jun 15 09:03:44 2021
 @author: Georgia Nixon
 """
 
-place = "Georgia Nixon"
+place = "Georgia"
 import numpy as np
 from numpy import cos, sin, exp, pi, tan
 import sys
@@ -49,10 +49,19 @@ def RoundComplex(num, dp):
     return np.round(num.real, dp) + np.round(num.imag, dp) * 1j
 
 def CreateCircleLine(r, points, centre=[0,0]):
-    CircleLine =  [(cos(x)*r+centre[0],sin(x)*r+centre[1]) for x in np.linspace(0, 2*pi, points, endpoint=True)]
-    #get rid of duplicates
-    CircleLine = list(dict.fromkeys(CircleLine) )
+    CircleLine =  np.array([[cos(x)*r+centre[0],sin(x)*r+centre[1]] for x in np.linspace(0, 2*pi, points, endpoint=True)])
     return CircleLine
+
+def CircleDiff(points, radius):
+    """
+    Gives vectors tangent to the circle for various theta between 0 and 2*pi
+    Vector size = distance between points on the circle
+    """
+    circleDiffNormalised = np.array([[-sin(theta),cos(theta)] for theta in np.linspace(0, 2*pi, points, endpoint=True)])
+    dtheta = 2*pi/(points-1)
+    dqlength = 2*radius*sin(dtheta)
+    circleDiff = circleDiffNormalised*dqlength
+    return circleDiff
 
 def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
@@ -87,16 +96,18 @@ def AlignGaugeBetweenVecs(vec1, vec2):
 #band that we looking at eigenstate trajectory
 n1 = 2
 
-qpoints=51
+"""
+Define path (kline)
+"""
 
-# kline = CreateCircleLine(0.5, qpoints)
+#num of points to calculate the wilson Line of
+qpoints = 1000
+radius=0.5
+centre = [1,1]
 
-kline0 = CreateLinearLine(0.5, 0, 0.5, 2, qpoints)
-kline1 = CreateLinearLine(0.5, 2, 1.5, 2, qpoints)
-kline2 = CreateLinearLine(1.5, 2, 1.5, 0, qpoints)
-kline3 = CreateLinearLine(1.5, 0, 0.5, 0, qpoints)
-kline =np.vstack((kline0,kline1,kline2, kline3))
-
+# create circle line
+kline = CreateCircleLine(radius, qpoints, centre = centre)
+dqs = CircleDiff(qpoints, radius)
 totalPoints = len(kline)
 
 #step for abelian version
@@ -143,7 +154,7 @@ for i, kpoint in enumerate(kline):
 
 #%%
 # #plot kline
-multiplier = np.linspace(0, 4, totalPoints)
+multiplier = np.linspace(0, 2*pi, totalPoints)
 fs = (12,9)
 # x,y = zip(*kline)
 # fig, ax = plt.subplots(figsize=fs)
@@ -158,35 +169,35 @@ fs = (12,9)
 
 fig, ax = plt.subplots(figsize=fs)
 ax.plot(multiplier, np.real(thetasLine), label=r"$\theta$")
-ax.set_xlabel(r"final quasimomentum, $\mathbf{k}$, square trajectory")
-# ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
-# ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
+ax.set_xlabel(r"final quasimomentum, going around circle with centre (1,1), $2^{\mathrm{nd}}$ excited band")
+ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
+ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
 ax.set_yticks([0, pi/2, pi])
 ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
 ax.set_ylabel(r"$\theta$", rotation=0, labelpad=15)
-plt.savefig(sh+ "thetasSquareTrajectory.pdf", format="pdf")
-plt.show()    
-
-fig, ax = plt.subplots(figsize=fs)
-ax.plot(multiplier, np.real(alphasLine), label=r"$\alpha$")
-ax.set_xlabel(r"Final quasimomentum, $\mathbf{k}$, square trajectory")
-# ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
-# ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
-ax.set_yticks([0, pi/2, pi])
-ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
-ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
-plt.savefig(sh+ "alphasSquareTrajectory.pdf", format="pdf")
+plt.savefig(sh+ "thetasCircle2Trajectory.pdf", format="pdf")
 plt.show()    
 
 # fig, ax = plt.subplots(figsize=fs)
-# ax.plot(multiplier, np.real(phisLine), label=r"$\phi$")
-# ax.set_xlabel(r"Final quasimomentum, square trajectory, $2^{\mathrm{nd}}$ excited band")
-# # plt.legend()
-# # ax.set_xticks([0, pi, 2*pi])
-# # ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
-# ax.set_ylabel(r"$\phi$")
-# # plt.savefig(sh+ "phisSquareTrajectory2ndExcitedBand.pdf", format="pdf")
+# ax.plot(multiplier, np.real(alphasLine), label=r"$\alpha$")
+# ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), 2^{\mathrm{nd}}$ excited band")
+# ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
+# ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
+# ax.set_yticks([0, pi/2, pi])
+# ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
+# ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
+# plt.savefig(sh+ "alphasCircle1Trajectory.pdf", format="pdf")
 # plt.show()    
+
+fig, ax = plt.subplots(figsize=fs)
+ax.plot(multiplier, np.real(phisLine), label=r"$\phi$")
+ax.set_xlabel(r"final quasimomentum, going around circle with centre (1,1), $2^{\mathrm{nd}}$ excited band")
+# plt.legend()
+ax.set_xticks([0, pi, 2*pi])
+ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
+ax.set_ylabel(r"$\phi$")
+plt.savefig(sh+ "phisCircle2Trajectory.pdf", format="pdf")
+plt.show()    
 
 
 # fig, ax = plt.subplots(figsize=fs)

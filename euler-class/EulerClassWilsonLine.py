@@ -6,7 +6,8 @@ Created on Thu Jul 15 16:55:37 2021
 """
 
 
-place = "Georgia Nixon"
+place = "Georgia"
+
 import numpy as np
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
@@ -64,12 +65,16 @@ def CreateCircleLine(r, points, centre=[0,0]):
     CircleLine =  np.array([[cos(x)*r+centre[0],sin(x)*r+centre[1]] for x in np.linspace(0, 2*pi, points, endpoint=True)])
     return CircleLine
 
-def CircleDiff(points):
+def CircleDiff(points, radius):
     """
-    Gives normalised vectors tangent to the circle for various theta between 0 and 2*pi
+    Gives vectors tangent to the circle for various theta between 0 and 2*pi
+    Vector size = distance between points on the circle
     """
-    CircleDiff = np.array([[-sin(theta),cos(theta)] for theta in np.linspace(0, 2*pi, points, endpoint=True)])
-    return CircleDiff
+    circleDiffNormalised = np.array([[-sin(theta),cos(theta)] for theta in np.linspace(0, 2*pi, points, endpoint=True)])
+    dtheta = 2*pi/(points-1)
+    dqlength = 2*radius*sin(dtheta)
+    circleDiff = circleDiffNormalised*dqlength
+    return circleDiff
 
 def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints, endpoint=False)
@@ -118,6 +123,7 @@ def AbelianCalcWilsonLine(evecsFinal, evecsInitial, dgbands=3):
     for n0 in range(dgbands):
         for n1 in range(dgbands):
             wilsonLineAbelian[n0,n1] = np.dot(np.conj(evecsFinal[:,n1]), evecsInitial[:,n0])
+        
     return wilsonLineAbelian
 
 
@@ -130,10 +136,7 @@ Define Wilson Line path (kline)
 #num of points to calculate the wilson Line of
 qpoints = 1000
 radius=0.5
-centre = [0,0]
-
-dtheta = 2*pi/(qpoints-1)
-dqlength = 2*radius*sin(dtheta)
+centre = [1,1]
 
 # create rectangle line
 # kline0 = CreateLinearLine(0.5, 0, 0.5, 2,  qpoints)
@@ -144,9 +147,7 @@ dqlength = 2*radius*sin(dtheta)
 
 # create circle line
 kline = CreateCircleLine(radius, qpoints, centre = centre)
-# dqs = DifferenceLine(kline)
-dqs1 = CircleDiff( qpoints)*dqlength
-dqs2 = DifferenceLine(kline)
+dqs = CircleDiff(qpoints, radius)
 totalPoints = len(kline)
 
 
@@ -175,22 +176,16 @@ for i, kpoint in enumerate(kline):
 Calculate Wilson Line - Non Abelian
 """
 
-wilsonLineNonAbelian1 = np.zeros([totalPoints, 3, 3], dtype=np.complex128)
-wilsonLineNonAbelian2 = np.zeros([totalPoints, 3, 3], dtype=np.complex128)
-currentArgument1 = np.zeros([3,3], dtype=np.complex128)
-currentArgument2 = np.zeros([3,3], dtype=np.complex128)
+wilsonLineNonAbelian = np.zeros([totalPoints, 3, 3], dtype=np.complex128)
+currentArgument = np.zeros([3,3], dtype=np.complex128)
 
 
 for i, kpoint in enumerate(kline):
     berryConnect = CalculateBerryConnectMatrix(kpoint)
-    dq1 = dqs1[i]
-    dq2 = dqs2[i]
-    berryConnectAlongKLine1 =  1j*np.dot(berryConnect, dq1)
-    berryConnectAlongKLine2 =  1j*np.dot(berryConnect, dq2) 
-    currentArgument1 = currentArgument1 + berryConnectAlongKLine1
-    currentArgument2 = currentArgument2 + berryConnectAlongKLine2
-    wilsonLineNonAbelian1[i] = expm(currentArgument1)
-    wilsonLineNonAbelian2[i] = expm(currentArgument2)
+    dq = dqs[i]
+    berryConnectAlongKLine =  1j*np.dot(berryConnect, dq)
+    currentArgument = currentArgument + berryConnectAlongKLine
+    wilsonLineNonAbelian[i] = expm(currentArgument)
     
     
 
@@ -204,8 +199,7 @@ m2 = 2
 multiplier = np.linspace(0,2*pi,totalPoints, endpoint=True)
 fig, ax = plt.subplots(figsize=(12,9))
 
-ax.plot(multiplier, np.square(np.abs(wilsonLineNonAbelian1[:,m1,m2])), label="Non Abelian differentiation")
-ax.plot(multiplier, np.square(np.abs(wilsonLineNonAbelian2[:,m1,m2])), 'x', label="Non Abelian difference")
+ax.plot(multiplier, np.square(np.abs(wilsonLineNonAbelian[:,m1,m2])), label="Non Abelian")
 ax.plot(multiplier, np.square(np.abs(wilsonLineAbelian[:,m1,m2])), label="Abelian")
 
 ax.set_ylabel(r"$|W["+str(m1) +","+str(m2)+"]|^2 = |<\Phi_{q_f}^"+str(m1)+" | \Phi_{q_i}^"+str(m2)+">|^2$")
@@ -214,9 +208,41 @@ ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
 
 
 # ax.set_ylim([0,1.01])
-# ax.set_xlabel(r"Final quasimomentum point (going around square)")
-# plt.savefig(sh+ "WilsonLineEulerRectangle00.pdf", format="pdf")
-# plt.savefig(sh+ "WilsonLineEulerCircle22.pdf", format="pdf")
-# ax.set_title("2nd Way NOn Abelian")
+ax.set_xlabel(r"Final quasimomentum point, going around circle with centre (1,1)")
 plt.legend(loc="upper right")
-plt.show()    
+# plt.savefig(sh+ "WilsonLineEulerRectangle00.pdf", format="pdf")
+plt.savefig(sh+ "WilsonLineEulerCircle2,"+str(m1)+str(m2)+".pdf", format="pdf")
+plt.show()   
+
+
+#%%
+"""
+Eigenvalue flow
+""" 
+
+evalsNonAbelian = np.empty((totalPoints, 3), dtype=np.complex128)
+evalsAbelian = np.empty((totalPoints, 3), dtype=np.complex128)
+for i in range(totalPoints):
+    evalsNA, _ = GetEvalsAndEvecs(wilsonLineNonAbelian[i,:,:])
+    evalsA, _ = GetEvalsAndEvecs(wilsonLineAbelian[i,:,:])
+    evalsNonAbelian[i] = evalsNA
+    evalsAbelian[i] = evalsA
+    
+
+#%%
+fig, ax = plt.subplots(figsize=(12,9))
+ax.plot(multiplier, np.real(evalsNonAbelian[:,0]), label="Non Abelian, first eigenvalue")
+ax.plot(multiplier, np.real(evalsAbelian[:,0]), label="Abelian, first eigenvalue")
+plt.legend()
+plt.show()
+
+
+
+
+
+
+
+
+
+
+

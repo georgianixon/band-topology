@@ -12,7 +12,7 @@ import matplotlib as mpl
 from numpy.linalg import eig
 from mpl_toolkits import mplot3d
 
-place = "Georgia Nixon"
+place = "Georgia"
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecs
@@ -70,8 +70,8 @@ import time
 start = time.time()
 
 kmin = -1
-kmax = 3
-qpoints = 201 # easier for meshgrid when this is odd
+kmax = 1
+qpoints = 1001 # easier for meshgrid when this is odd
 K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 
@@ -114,13 +114,14 @@ ax.set_xlabel(r"$k_x$", labelpad=25)
 ax.set_ylabel(r"$k_y$", labelpad=25)
 ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
 
+
 # create an axes on the right side of ax. The width of cax will be 5%
 # of ax and the padding between cax and ax will be fixed at 0.05 inch.
 # divider = make_axes_locatable(ax)
 # cax = divider.append_axes("right", size="5%", pad=0.05)
 
 plt.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser), fraction=0.026, pad=0.04)
-# plt.savefig(sh + "EulerBS.pdf", format="pdf")
+plt.savefig(sh + "EulerBS.pdf", format="pdf")
 plt.show()
 
 #%%
@@ -151,8 +152,8 @@ verticalEl_upToDown, horizontalEl_leftToRight = np.unravel_index(idx, np.shape(e
 verticalEl_downToUp = len(eigdiff[:,0])-1-verticalEl_upToDown
 diracPoints = list(zip(horizontalEl_leftToRight, verticalEl_upToDown))
 
-# norm = mpl.colors.Normalize(vmin=eigdiff.min(), vmax=eigdiff.max())
-norm=mpl.colors.LogNorm(vmin=eigdiff.min(), vmax=eigdiff.max())
+norm = mpl.colors.Normalize(vmin=eigdiff.min(), vmax=eigdiff.max())
+# norm=mpl.colors.LogNorm(vmin=eigdiff.min(), vmax=eigdiff.max())
 
 sz = 15
 fig, ax = plt.subplots(figsize=(sz,sz/2))
@@ -170,26 +171,26 @@ ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 #     ax.add_patch(circ)
 
 # add path part
-npoints = 100
-kline0 = CreateLinearLine(3*qpoints/8, qpoints/4, 3*qpoints/8, 3*qpoints/4,  npoints)
-kline1 = CreateLinearLine(3*qpoints/8, 3*qpoints/4, 5*qpoints/8, 3*qpoints/4, npoints)
-kline2 = CreateLinearLine(5*qpoints/8, 3*qpoints/4, 5*qpoints/8, qpoints/4, npoints)
-kline3 = CreateLinearLine(5*qpoints/8, qpoints/4, 3*qpoints/8, qpoints/4, npoints)
-kline =np.vstack((kline0,kline1,kline2, kline3))
+# npoints = 100
+# kline0 = CreateLinearLine(3*qpoints/8, qpoints/4, 3*qpoints/8, 3*qpoints/4,  npoints)
+# kline1 = CreateLinearLine(3*qpoints/8, 3*qpoints/4, 5*qpoints/8, 3*qpoints/4, npoints)
+# kline2 = CreateLinearLine(5*qpoints/8, 3*qpoints/4, 5*qpoints/8, qpoints/4, npoints)
+# kline3 = CreateLinearLine(5*qpoints/8, qpoints/4, 3*qpoints/8, qpoints/4, npoints)
+# kline =np.vstack((kline0,kline1,kline2, kline3))
 
 
 # # klineCircle = CreateCircleLineIntVals(qpoints/8, 2*pi*qpoints/8, centre = [qpoints/4, qpoints/4])
 
-for i, (xd, yd) in enumerate(kline):
-    if i == 0 or i == len(kline):
-        ec = '0'
-    else:
-        ec = '1'
-    circ = mpl.patches.Circle((xd, -yd+qpoints), 2, fill=0, edgecolor=ec)
-    ax.add_patch(circ)
+# for i, (xd, yd) in enumerate(kline):
+#     if i == 0 or i == len(kline):
+#         ec = '0'
+#     else:
+#         ec = '1'
+#     circ = mpl.patches.Circle((xd, -yd+qpoints), 2, fill=0, edgecolor=ec)
+#     ax.add_patch(circ)
 
 fig.colorbar(pos)
-# plt.savefig(sh + "SquarePath.pdf", format="pdf")
+plt.savefig(sh + "EigDif-1,1.pdf", format="pdf")
 plt.show()
 
 
