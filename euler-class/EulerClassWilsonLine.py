@@ -6,7 +6,7 @@ Created on Thu Jul 15 16:55:37 2021
 """
 
 
-place = "Georgia"
+place = "Georgia Nixon"
 
 import numpy as np
 import sys
