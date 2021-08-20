@@ -54,6 +54,10 @@ for xcnt=1:length(u10);
         H(1,2)=t1*(cosasum-1i*sinasum);
         H(2,1)=conj(H(1,2));
         
+        if xcnt ==100 && ycnt == 140
+            ctranspose(H)*H
+        end
+        
         [v0,d0]=eig(H);
         
         u0=v0(:,1);
@@ -84,10 +88,8 @@ for xcnt=1:length(u10);
         
         ux=vx(:,1);
         ux=conj(ux(2))/abs(ux(2))*ux;
-        if xcnt ==140 && ycnt == 140
-            disp('ux=')
-            disp(ux)
-        end
+        
+        
         
         %%%%%%%% y direction
         
@@ -107,33 +109,16 @@ for xcnt=1:length(u10);
         H(1,2)=t1*(cosasum-1i*sinasum);
         H(2,1)=conj(H(1,2));
         
-        
-        
         [vy,dy]=eig(H);
         
         uy=vy(:,1);
         uy=conj(uy(2))/abs(uy(2))*uy;
         
-        if xcnt ==140 && ycnt == 140
-            disp('uy=')
-            disp(uy)
-        end
         
         %%%%%%%  derivatives
         
         xder=(ux-u0)/h;
         yder=(uy-u0)/h;
-        
-        if xcnt ==140 && ycnt == 140
-            disp('xder=')
-            disp(xder)
-        end
-        if xcnt ==140 && ycnt == 140
-            disp('yder=')
-            disp(yder)
-            disp('u0=')
-            disp(u0)
-        end
         
         berrycurve(xcnt,ycnt)=-1i*(xder'*yder-yder'*xder);
         
@@ -144,11 +129,12 @@ end;
 figure(1);clf;
 mesh(kx/pi,ky/pi,berrycurve);
         
-sumchern=sum(sum(berrycurve(1:length(berrycurve)-1,1:length(berrycurve)-1)))*dlt^2*(4*pi/3)^2*sin(pi/3)/2/pi
+sumchern=sum(sum(berrycurve(1:length(berrycurve)-1,1:length(berrycurve)-1)))*dlt^2*(4*pi/3)^2*sin(pi/3)/2/pi;
 
 title(strcat('Total Chern number=',num2str(sumchern)));
 xlabel('k_x/\pi')
 ylabel('k_y/\pi')
+
         
 figure(2);clf
  meshc(kx/pi,ky/pi,lowerband);

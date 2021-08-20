@@ -51,6 +51,7 @@ phi = 3*pi/2
 t1=1
 t2=0.1
 M = t2*3*sqrt(3) * sin(phi)-0.1
+
 a1 = np.array([1/2, sqrt(3)/2])
 a2 = np.array([-1, 0])
 a3 = np.array([1/2, -sqrt(3)/2])
@@ -92,6 +93,9 @@ for xcnt in range(len(u10)):
         H[1,1] = -M+2*t2*cos(phi)*cosbsum+2*t2*sin(phi)*sinbsum
         H[0,1]= t1*(cosasum-1j*sinasum);
         H[1,0]=np.conj(H[0,1]);
+        
+        if xcnt == 139 and ycnt == 139:
+            print(np.dot(np.conj(H.T),H))
         
         d0,v0 = getevalsandevecs(H)
         

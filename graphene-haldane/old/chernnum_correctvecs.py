@@ -5,7 +5,7 @@ Created on Thu Jun  3 21:50:22 2021
 @author: Georgia Nixon
 """
 
-
+place = "Georgia Nixon"
 import numpy as np
 from numpy import sin, cos, pi, sqrt, exp
 from numpy.linalg import eig
@@ -13,10 +13,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from mpl_toolkits import mplot3d
 import matplotlib as mpl
+import sys
+sys.path.append("/Users/"+place+"/Code/MBQD/floquet-simulations/src")
+from hamiltonians import GetEvalsAndEvecs
 
 cmapstring = 'twilight'
 cmap = mpl.cm.get_cmap(cmapstring)
-normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
+# normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
 
 sh = "/Users/Georgia Nixon/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
 
@@ -57,23 +60,22 @@ params = {
           }
 mpl.rcParams.update(params)
 
-alength = 1
 
 
 def hamiltonian(k, phi, M, t1, t2):
     
     #nearest neighbor vectors
-    d1 = alength*np.array([1, 0])
-    d2 = alength*np.array([-1/2, sqrt(3)/2])
-    d3 = alength*np.array([-1/2, -sqrt(3)/2])
+    a1 = np.array([1, 0])
+    a2 = np.array([-1/2, sqrt(3)/2])
+    a3 = np.array([-1/2, -sqrt(3)/2])
     
     #second nearest neighbor vectors -> relative chirality important
-    b1 = alength*np.array([3/2, sqrt(3)/2])
-    b2 = alength*np.array([0,-sqrt(3)])
-    b3 = alength*np.array([-3/2, sqrt(3)/2])
+    b1 = np.array([3/2, sqrt(3)/2])
+    b2 = np.array([0,-sqrt(3)])
+    b3 = np.array([-3/2, sqrt(3)/2])
     
-    cosasum = cos(np.dot(d1,k)) + cos(np.dot(d2,k)) + cos(np.dot(d3,k))
-    sinasum = sin(np.dot(d1,k)) + sin(np.dot(d2, k)) + sin(np.dot(d3, k))
+    cosasum = cos(np.dot(a1,k)) + cos(np.dot(a2,k)) + cos(np.dot(a3,k))
+    sinasum = sin(np.dot(a1,k)) + sin(np.dot(a2, k)) + sin(np.dot(a3, k))
     cosbsum = cos(np.dot(b1, k)) + cos(np.dot(b2,k)) + cos(np.dot(b3,k))
     sinbsum = sin(np.dot(b1,k)) + sin(np.dot(b2, k)) + sin(np.dot(b3, k))
     
@@ -85,14 +87,14 @@ def hamiltonian(k, phi, M, t1, t2):
     return H
 
 
-phi = 0
-t1=1
-t2=0.1
-M = 0.42
+phi=3*pi/2;
+t1=1;
+t2=0.1;
+M=0.8#t2*3*sqrt(3)*sin(phi)-0.1;
 
 #reciprocal lattice vectors
-c1 = (2*pi/(3*alength))*np.array([1, sqrt(3)])
-c2 = (2*pi/(3*alength))*np.array([1, -sqrt(3)])
+c1 = (2*pi/(3))*np.array([1, sqrt(3)])
+c2 = (2*pi/(3))*np.array([1, -sqrt(3)])
 
 #think u are qpoints?
 dlt = 0.005
@@ -120,7 +122,11 @@ for xcnt in range(qpoints):
     
         H = hamiltonian(k, phi, M, t1, t2)
         
+
         d0,v0 = getevalsandevecs(H)
+        if xcnt == 139 and ycnt == 139:
+            print(np.dot(np.conj(H.T),H))
+            print(H)
         
         #first eigenvector
         u0=v0[:,0]
@@ -143,7 +149,6 @@ for xcnt in range(qpoints):
         yder = (uy-u0)/h
         
         berrycurve[xcnt,ycnt] = -1j*(np.dot(np.conj(xder), yder) - np.dot(np.conj(yder), xder))
-        berrycurve[xcnt,ycnt] = berrycurve[xcnt,ycnt]
 
 
 
@@ -159,33 +164,35 @@ ax.plot_surface(kx/pi, ky/pi, np.real(berrycurve), cmap=cmap)
 #ax.set_xticklabels([ -1,0, r"$1$"])
 #ax.set_yticks([-1, 0, 1])
 #ax.set_yticklabels([-1, 0, r"$1$"])
+ax.set_zlim([-5, 15])
 ax.set_title(r"$\Omega_{-}$" + " where total chern number="+str(np.round(np.real(sumchern), 6)))
 ax.set_xlabel(r'$k_x/\pi$', labelpad=5)
 ax.set_ylabel(r'$k_y/\pi$', labelpad=5)
 fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(np.round(M,2)) + r" \quad t_2 = "
              +str(t2)+r" \quad \phi = 0"+
-             r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))+r"$", y=0.99)
-plt.savefig(sh + "BerryCurvature3.pdf", format="pdf")
+             r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))+r"$", 
+             y=1.05)
+# plt.savefig(sh + "BerryCurvature3.pdf", format="pdf")
 plt.show()       
 
 
 
-fig = plt.figure(figsize=(8,6))
-ax = plt.axes(projection='3d')
-ax.view_init(35, -140)
-ax.plot_surface(kx/pi, ky/pi, np.real(lowerband), cmap=cmap, norm=normaliser)
-#ax.set_xticks([-1, 0, 1])
-#ax.set_xticklabels([1, 0, r"$1$"])
-#ax.set_yticks([-1, 0, 1])
-#ax.set_yticklabels([-1, 0, r"$1$"])
-ax.set_title('lowerband')
-ax.set_xlabel(r'$k_x/\pi$')
-ax.set_ylabel(r'$k_y/\pi$')
-fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(np.round(M,2)) + r" \quad t_2 = "
-             +str(t2)+r" \quad \phi = 0"+
-             r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))+r"$", y=0.99)
-plt.savefig(sh + "BerryCurvature3-lowerband.pdf", format="pdf")
-plt.show()    
+# fig = plt.figure(figsize=(8,6))
+# ax = plt.axes(projection='3d')
+# ax.view_init(35, -140)
+# ax.plot_surface(kx/pi, ky/pi, np.real(lowerband), cmap=cmap)#, norm=normaliser)
+# #ax.set_xticks([-1, 0, 1])
+# #ax.set_xticklabels([1, 0, r"$1$"])
+# #ax.set_yticks([-1, 0, 1])
+# #ax.set_yticklabels([-1, 0, r"$1$"])
+# ax.set_title('lowerband')
+# ax.set_xlabel(r'$k_x/\pi$')
+# ax.set_ylabel(r'$k_y/\pi$')
+# fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(np.round(M,2)) + r" \quad t_2 = "
+#              +str(t2)+r" \quad \phi = 0"+
+#              r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))+r"$", y=0.99)
+# # plt.savefig(sh + "BerryCurvature3-lowerband.pdf", format="pdf")
+# plt.show()    
 
 #%%
 
