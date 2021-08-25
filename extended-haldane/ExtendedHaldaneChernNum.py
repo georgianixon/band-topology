@@ -9,28 +9,27 @@ place = "Georgia Nixon"
 import numpy as np
 from numpy import sqrt, pi, sin
 import sys
+sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/')
+sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/graphene-haldane')
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/extended-haldane')
-from ExtendedHaldaneModel import  ExtendedHaldaneHamiltonian, ExtendedHaldaneHamiltonian0
-from ExtendedHaldaneModel import  HaldaneHamiltonian, BerryCurvature
+from ExtendedHaldaneModel import  ExtendedHaldaneHamiltonian
+from GrapheneFuncs import  HaldaneHamiltonian
+from Funcs import  BerryCurvature
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from numpy.linalg import eig
 
 #params for ExtendedHaldane
-# t1 = 1
-# t2 = 0.6
-# t3 = 0.9
-# m = 1
-# lambdaR = 0.3
-# params = [m, lambdaR, t1, t2, t3]
-
-# Params for Haldane
-phi = pi/2
 t1 = 1
 t2 = 0.6
+t3 = 0.6
 m = 1
-params = [phi, m, t1, t2]
+lambdaR = 0.3
+params = [m, lambdaR, t1, t2, t3]
 
+
+#%%
+"""Compute Hamiltonian and graph at some k point"""
 k = np.array([0.6,0.6])
 
 H = HaldaneHamiltonian(k, params)
@@ -38,7 +37,8 @@ U = np.dot(H, np.conj(H.T))
 
 apply = [
          np.abs, 
-         np.real, np.imag]
+         np.real, 
+         np.imag]
 # norm = mpl.colors.Normalize(vmin=-2, vmax=2)
 sz = 20
 fig, ax = plt.subplots(nrows=1, ncols=len(apply), sharey=True, constrained_layout=True, 
@@ -56,16 +56,13 @@ fig.colorbar(pcm)
 
 
 #%%
-""" Phase Diagram """
+""" Phase Diagram for varying t2 and t3"""
 
 #fixed params
 #Extended Haldane
 M = 1
 lambdaR = 0.3
 t1 = 1
-# Haldane
-# t1=1
-# t2=0.1
 
 #reciprocal lattice vectors
 r1 = (2*pi/3)*np.array([sqrt(3), 1])
@@ -80,7 +77,7 @@ u1, u2 = np.meshgrid(u10, u20)
 kx = u1*r1[0] + u2*r2[0]
 ky = u1*r1[1] + u2*r2[1]
 
-jacobian = dlt**2*(4*pi/3)**2*sin(pi/3)/2/pi
+jacobian = dlt**2*(4*pi/3)**2*sin(pi/3)
 
 
 # granularity of phase diagram
@@ -104,14 +101,21 @@ for pn, t2 in enumerate(np.linspace(0, 1, nt2s, endpoint=True)):
                 #calculate Berry Curvature at this point
                 # params = [phi, M, t1, t2]
                 params = [M, lambdaR, t1, t2, t3]
-                berrycurve[xcnt, ycnt] = BerryCurvature(ExtendedHaldaneHamiltonian0, k, params)
+                
+                bC, lB, uB = BerryCurvature(ExtendedHaldaneHamiltonian, k, params)
+                berrycurve[xcnt, ycnt] = bC
 
-        chernnumbers[pn,dn] = np.sum(berrycurve[:-1,:-1])*jacobian
+        chernnumbers[pn,dn] = (1/2/pi)*np.sum(berrycurve[:-1,:-1])*jacobian
 
 # plot chern num phase diagram for different params
+
+# changing t2 does not change the chernnum??
+
+
 fig, ax = plt.subplots()
 img = ax.imshow(np.real(np.flip(np.transpose(chernnumbers), axis=0)), cmap="RdBu", aspect="auto", 
-                interpolation='none', extent=[0,1,0, 1], norm = mpl.colors.Normalize(vmin=-6, vmax=0))
+                interpolation='none', extent=[0,1,0, 1], 
+                norm = mpl.colors.Normalize(vmin=np.min(chernnumbers), vmax=np.max(chernnumbers)))
 ax.set_title(r"Chern Number")
 ax.set_xlabel(r"$t_2$")
 x_label_list = [r"$0$", r"$1$"]

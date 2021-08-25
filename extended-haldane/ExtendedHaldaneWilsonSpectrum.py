@@ -31,7 +31,7 @@ def AbelianCalcWilsonLine(evecsFinal, evecsInitial, dgbands=4):
 
 def CalculateBerryConnect(k, params, n0, n1):
     
-    h = 0.00001;
+    h = 0.0001;
     
     H = ExtendedHaldaneHamiltonian(k, params)
     evals, evecs = GetEvalsAndEvecs(H)

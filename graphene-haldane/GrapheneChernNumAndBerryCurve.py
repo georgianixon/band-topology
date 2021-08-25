@@ -17,7 +17,7 @@ import sys
 sys.path.append("/Users/"+place+"/Code/MBQD/floquet-simulations/src")
 sys.path.append("/Users/"+place+"/Code/MBQD/band-topology/graphene-haldane")
 from hamiltonians import GetEvalsAndEvecs, PhiString, getevalsandevecs
-from GrapheneFuncs import HaldaneHamiltonian, BerryCurvature
+from GrapheneFuncs import HaldaneHamiltonian, HaldaneHamiltonianNur, BerryCurvature, HaldaneHamiltonianPaulis
 
 cmapstring = 'twilight'
 cmap = mpl.cm.get_cmap(cmapstring)
@@ -45,34 +45,48 @@ mpl.rcParams.update(params)
 #%%
 """print Hamiltonian, sometimes handy"""
 
-phi=3*pi/2;
-t1=1;
-t2=0.1;
-M=0.8#t2*3*sqrt(3)*sin(phi)-0.1;
+phi=pi/7;
+t1=3;
+t2=0.9;
+M=0.5#t2*3*sqrt(3)*sin(phi)-0.1;
 params = [phi, M, t1, t2]
 
 
 k = np.array([0.6,0.6])
 
-H = HaldaneHamiltonian(k, params)
-U = np.dot(H, np.conj(H.T))
+HN = HaldaneHamiltonianNur(k, params)
+HM = HaldaneHamiltonian(k, params)
+HP = HaldaneHamiltonianPaulis(k, params)
+# U = np.dot(H, np.conj(H.T))
 
 apply = [
          np.abs, 
          np.real, np.imag]
-# norm = mpl.colors.Normalize(vmin=-2, vmax=2)
-sz = 20
-fig, ax = plt.subplots(nrows=1, ncols=len(apply), sharey=True, constrained_layout=True, 
-                       figsize=(sz,sz/2))
-for n1, f in enumerate(apply):
-    # pcm = ax[n1].matshow(f(H), interpolation='none', cmap='PuOr',  norm=norm)
-    pcm = ax[n1].matshow(f(H), interpolation='none', cmap='PuOr')
-    ax[n1].tick_params(axis="x", bottom=True, top=False, labelbottom=True, 
-      labeltop=False)  
-    ax[n1].set_xlabel('m')
-ax[0].set_ylabel('n', rotation=0, labelpad=10)
-# cax = plt.axes([1.03, 0.1, 0.03, 0.8])
-fig.colorbar(pcm)
+
+
+hMax = np.max(np.stack((np.real(HN), np.imag(HN), np.abs(HN), 
+                        np.real(HM), np.imag(HM), np.abs(HM),
+                        np.real(HP), np.imag(HP), np.abs(HP))))
+hMin = np.min(np.stack((np.real(HN), np.imag(HN), np.abs(HN), 
+                        np.real(HM), np.imag(HM), np.abs(HM),
+                        np.real(HP), np.imag(HP), np.abs(HP))))
+
+
+for H in [HN, HM, HP]:
+    sz = 20
+    fig, ax = plt.subplots(nrows=1, ncols=len(apply), sharey=True, constrained_layout=True, 
+                           figsize=(sz,sz/2))
+
+    norm = mpl.colors.Normalize(vmin=hMin, vmax=hMax)
+    for n1, f in enumerate(apply):
+        pcm = ax[n1].matshow(f(H), interpolation='none', cmap='PuOr',  norm=norm)
+        ax[n1].tick_params(axis="x", bottom=True, top=False, labelbottom=True, 
+          labeltop=False)  
+        ax[n1].set_xlabel('m')
+    ax[0].set_ylabel('n', rotation=0, labelpad=10)
+    # cax = plt.axes([1.03, 0.1, 0.03, 0.8])
+    fig.colorbar(pcm)
+    plt.show()
 
 
 
@@ -102,8 +116,7 @@ u1, u2 = np.meshgrid(u10, u20)
 kx = u1*r1[0] + u2*r2[0]
 ky = u1*r1[1] + u2*r2[1]
 
-jacobian = dlt**2*(4*pi/3)**2*sin(pi/3)/2/pi
-
+jacobian = dlt**2*(4*pi/3)**2*sin(pi/3)
 
 berrycurve = np.zeros([qpoints, qpoints], dtype=np.complex128)
 lowerband = np.zeros([qpoints, qpoints], dtype=np.complex128)
@@ -121,7 +134,7 @@ for xcnt in range(len(u10)):
         lowerband[xcnt, ycnt] = lB
         upperband[xcnt, ycnt] = uB
 
-sumchern = np.sum(berrycurve[:-1,:-1])*jacobian
+sumchern = (1/2/pi)*np.sum(berrycurve[:-1,:-1])*jacobian
 
 
 
@@ -146,10 +159,10 @@ plt.show()
 
 
 
-normaliser = mpl.colors.Normalize(vmin=-110, vmax=110)
+# normaliser = mpl.colors.Normalize(vmin=-110, vmax=110)
 fig, ax = plt.subplots()
 img = ax.imshow(np.real(np.flip(np.transpose(berrycurve), axis=0)), 
-                norm=normaliser,cmap="RdBu", aspect="auto", 
+                cmap="RdBu", aspect="auto", #norm=normaliser,
                 interpolation='none', extent=[-pi,pi,-pi,pi])
 ax.set_title(r"$\Omega_{-}$")
 ax.set_xlabel(r"$k_x$")
