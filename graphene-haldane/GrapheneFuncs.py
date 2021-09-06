@@ -14,6 +14,9 @@ from hamiltonians import GetEvalsAndEvecs, PhiString, getevalsandevecs
 
 
 def HaldaneHamiltonianNur(k, params):
+    """
+    Can confirm these three methods are all the same Hamiltonian
+    """
     
     phi = params[0]
     M = params[1]
@@ -47,7 +50,7 @@ def HaldaneHamiltonianNur(k, params):
 
 def HaldaneHamiltonian(k, params):
     """
-    Can confirm this forms the same Hamiltonian as Nur's version above 
+    Can confirm these three methods are all the same Hamiltonian1
     """
     
     phi = params[0]
@@ -86,7 +89,7 @@ def HaldaneHamiltonian(k, params):
 
 def HaldaneHamiltonianPaulis(k, params):
     """
-    Same as in GrapheneFuncs.py
+    Can confirm these three methods are all the same Hamiltonian!
     """
     
     #params

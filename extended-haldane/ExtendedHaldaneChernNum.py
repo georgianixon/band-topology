@@ -13,44 +13,54 @@ sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/')
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/graphene-haldane')
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/extended-haldane')
 from ExtendedHaldaneModel import  ExtendedHaldaneHamiltonian
+from ExtendedHaldaneModel import  HaldaneHamiltonian1, HaldaneHamiltonian2
 from GrapheneFuncs import  HaldaneHamiltonian
 from Funcs import  BerryCurvature
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from numpy.linalg import eig
 
+
+#%%
+
 #params for ExtendedHaldane
 t1 = 1
 t2 = 0.6
-t3 = 0.6
-m = 1
+t3 = 1
+M = 0
 lambdaR = 0.3
-params = [m, lambdaR, t1, t2, t3]
+params = [M, lambdaR, t1, t2, t3]
 
 
-#%%
 """Compute Hamiltonian and graph at some k point"""
 k = np.array([0.6,0.6])
 
-H = HaldaneHamiltonian(k, params)
+H = ExtendedHaldaneHamiltonian(k, params)
 U = np.dot(H, np.conj(H.T))
 
 apply = [
          np.abs, 
          np.real, 
          np.imag]
-# norm = mpl.colors.Normalize(vmin=-2, vmax=2)
+
+
+hMax = np.max(np.stack((np.real(H), np.imag(H), np.abs(H))))
+hMin = np.min(np.stack((np.real(H), np.imag(H), np.abs(H))))
+bound = np.max((np.abs(hMax), np.abs(hMin)))
+
+norm = mpl.colors.Normalize(vmin=-bound, vmax=bound)
+
 sz = 20
 fig, ax = plt.subplots(nrows=1, ncols=len(apply), sharey=True, constrained_layout=True, 
                        figsize=(sz,sz/2))
 for n1, f in enumerate(apply):
     # pcm = ax[n1].matshow(f(H), interpolation='none', cmap='PuOr',  norm=norm)
-    pcm = ax[n1].matshow(f(H), interpolation='none', cmap='PuOr')
+    pcm = ax[n1].matshow(f(H), interpolation='none', cmap='PuOr', norm=norm)
     ax[n1].tick_params(axis="x", bottom=True, top=False, labelbottom=True, 
       labeltop=False)  
     ax[n1].set_xlabel('m')
 ax[0].set_ylabel('n', rotation=0, labelpad=10)
-cax = plt.axes([1.03, 0.1, 0.03, 0.8])
+# cax = plt.axes([1.03, 0.1, 0.03, 0.8])
 fig.colorbar(pcm)
 
 
@@ -60,9 +70,13 @@ fig.colorbar(pcm)
 
 #fixed params
 #Extended Haldane
-M = 1
+M = 0.1
 lambdaR = 0.3
 t1 = 1
+
+#Haldane
+# t1=1
+# t2=0.1
 
 #reciprocal lattice vectors
 r1 = (2*pi/3)*np.array([sqrt(3), 1])
@@ -81,16 +95,24 @@ jacobian = dlt**2*(4*pi/3)**2*sin(pi/3)
 
 
 # granularity of phase diagram
-nt2s = 5; nt3s=5
+nt2s = 3; nt3s=3
 chernnumbers = np.zeros((nt2s, nt3s), dtype=float)
-    
+
+# granularity of phase diagram
+# nphis = 5; nMs=5
+# chernnumbers = np.zeros((nphis, nMs), dtype=float)
+
+
 
 #calculate chern num for various params
 for pn, t2 in enumerate(np.linspace(0, 1, nt2s, endpoint=True)):
     for dn, t3 in enumerate(np.linspace(0, 1, nt3s, endpoint=True)):
+# for pn, phi in enumerate(np.linspace(0, 2*pi, nphis, endpoint=True)):
+#     for dn, M in enumerate(np.linspace(-3*sqrt(3)*t2, 3*sqrt(3)*t2, nMs, endpoint=True)):
         print(pn,dn)
 
         berrycurve = np.zeros([len(kx), len(kx)])
+
         
         for xcnt in range(len(u10)):
             for ycnt in range(len(u10)):
@@ -99,23 +121,25 @@ for pn, t2 in enumerate(np.linspace(0, 1, nt2s, endpoint=True)):
                 k = np.array([kx[xcnt, ycnt], ky[xcnt,ycnt]])
                 
                 #calculate Berry Curvature at this point
-                # params = [phi, M, t1, t2]
                 params = [M, lambdaR, t1, t2, t3]
+                # params = [phi, M,  t1, t2]
                 
-                bC, lB, uB = BerryCurvature(ExtendedHaldaneHamiltonian, k, params)
+                bC, _, _ = BerryCurvature(ExtendedHaldaneHamiltonian, k, params)
+                # bC, _, _ = BerryCurvature(HaldaneHamiltonian, k, params)
+
                 berrycurve[xcnt, ycnt] = bC
+
 
         chernnumbers[pn,dn] = (1/2/pi)*np.sum(berrycurve[:-1,:-1])*jacobian
 
 # plot chern num phase diagram for different params
 
-# changing t2 does not change the chernnum??
 
-
+cn = chernnumbers
 fig, ax = plt.subplots()
-img = ax.imshow(np.real(np.flip(np.transpose(chernnumbers), axis=0)), cmap="RdBu", aspect="auto", 
+img = ax.imshow(np.real(np.flip(np.transpose(cn), axis=0)), cmap="RdBu", aspect="auto", 
                 interpolation='none', extent=[0,1,0, 1], 
-                norm = mpl.colors.Normalize(vmin=np.min(chernnumbers), vmax=np.max(chernnumbers)))
+                norm = mpl.colors.Normalize(vmin=np.min(cn), vmax=np.max(cn)))
 ax.set_title(r"Chern Number")
 ax.set_xlabel(r"$t_2$")
 x_label_list = [r"$0$", r"$1$"]
