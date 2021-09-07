@@ -51,7 +51,7 @@ c3 = np.array([0, -2])
 c = np.array([c1, c3, c2])
 
 
-def HaldaneHamiltonian1(k, params):
+def HaldaneHamiltonian(k, params):
     """
     Same as in GrapheneFuncs.py HaldaneHamiltonianPaulis
     Except all vecs are rotated
@@ -62,42 +62,20 @@ def HaldaneHamiltonian1(k, params):
     M = params[1]
     t1 = params[2]
     t2 = params[3]
+    t3 = params[4]
 
     cosasum = np.sum([cos(np.dot(a[i],k)) for i in range(3)])
     sinasum = np.sum([sin(np.dot(a[i],k)) for i in range(3)])
     cosbsum = np.sum([cos(np.dot(b[i],k)) for i in range(1,6,2)])
     sinbsum = np.sum([sin(np.dot(b[i],k)) for i in range(1,6,2)])
+    coscsum = np.sum([cos(np.dot(c[i], k)) for i in range(3)])
+    sincsum = np.sum([sin(np.dot(c[i], k)) for i in range(3)])
 
     H = np.zeros([2,2], dtype=np.complex128)
-    d0 = 2*t2*cos(phi)*cosbsum
-    d1 = - t1*cosasum
-    d2 = t1*sinasum
-    d3 = M - 2*t2*sin(phi)*sinbsum
-    H = H + d0*s0 + d1*s1 + d2*s2 + d3*s3
     
-    return H
-
-def HaldaneHamiltonian2(k, params):
-    """
-    Same as in GrapheneFuncs.py HaldaneHamiltonianPaulis
-    Except all vecs are rotated
-    """
-    
-    #params
-    phi = params[0]
-    M = params[1]
-    t1 = params[2]
-    t2 = params[3]
-
-    cosasum = np.sum([cos(np.dot(a[i],k)) for i in range(3)])
-    sinasum = np.sum([sin(np.dot(a[i],k)) for i in range(3)])
-    cosbsum = np.sum([cos(np.dot(b[i],k)) for i in range(1,6,2)])
-    sinbsum = np.sum([sin(np.dot(b[i],k)) for i in range(1,6,2)])
-
-    H = np.zeros([2,2], dtype=np.complex128)
     d0 = 2*t2*cos(phi)*cosbsum
-    d1 = t1*cosasum
-    d2 = - t1*sinasum
+    d1 = - t1*cosasum - t3*coscsum
+    d2 = t1*sinasum + t3*sincsum
     d3 = M - 2*t2*sin(phi)*sinbsum
     H = H + d0*s0 + d1*s1 + d2*s2 + d3*s3
     
@@ -106,6 +84,87 @@ def HaldaneHamiltonian2(k, params):
 
 
 def ExtendedHaldaneHamiltonian(k, params):
+    
+    phi = params[0]
+    M = params[1]
+    t1 = params[2]
+    t2 = params[3]
+    t3 = params[4]
+    
+    H = np.zeros((4,4), dtype=np.complex128)
+    
+    cosasum = np.sum([cos(np.dot(a[i], k)) for i in range(3)])
+    sinasum = np.sum([sin(np.dot(a[i], k)) for i in range(3)])
+    coscsum = np.sum([cos(np.dot(c[i], k)) for i in range(3)])
+    sincsum = np.sum([sin(np.dot(c[i], k)) for i in range(3)])
+    cosbsum = np.sum([cos(np.dot(b[i],k)) for i in range(1,6,2)])
+    sinbsum = np.sum([sin(np.dot(b[i],k)) for i in range(1,6,2)])
+    
+    H0 = np.zeros([2,2], dtype=np.complex128)
+    H1 = np.zeros([2,2], dtype=np.complex128)
+    
+    d0 = 2*t2*cos(phi)*cosbsum
+    d1 =  - t1*cosasum - t3*coscsum
+    d2 = + t1*sinasum + t3*sincsum
+    d3p = M - 2*t2*sin(phi)*sinbsum
+    d3m = M - 2*t2*sin(phi)*sinbsum
+    H0 = H0 + d0*s0 + d1*s1 + d2*s2 + d3p*s3
+    H1 = H1 + d0*s0 + d1*s1 + d2*s2 + d3m*s3
+
+    H[:2,:2] = H0
+    H[2:,2:] = H1
+    
+    return H
+
+
+def ExtendedHaldaneHamiltonianRashbaCoupling(k, params):
+    
+    phi = params[0]
+    M = params[1]
+    t1 = params[2]
+    t2 = params[3]
+    t3 = params[4]
+    lambdaR = params[5]
+    
+    H = np.zeros((4,4), dtype=np.complex128)
+    
+    cosasum = np.sum([cos(np.dot(a[i], k)) for i in range(3)])
+    coscsum = np.sum([cos(np.dot(c[i], k)) for i in range(3)])
+    sinasum = np.sum([sin(np.dot(a[i], k)) for i in range(3)])
+    sincsum = np.sum([sin(np.dot(c[i], k)) for i in range(3)])
+    cosbsum = np.sum([cos(np.dot(b[i],k)) for i in range(1,6,2)])
+    sinbsum = np.sum([sin(np.dot(b[i],k)) for i in range(1,6,2)])
+    
+    H0 = np.zeros([2,2], dtype=np.complex128)
+    H1 = np.zeros([2,2], dtype=np.complex128)
+    
+    d0 = 2*t2*cos(phi)*cosbsum
+    d1 =  t1*cosasum + t3*coscsum
+    d2 = - t1*sinasum - t3*sincsum
+    d3p = M + 2*t2*sin(phi)*sinbsum
+    d3m = M - 2*t2*sin(phi)*sinbsum
+    H0 = H0 + d0*s0 + d1*s1 + d2*s2 + d3p*s3
+    H1 = H1 + d0*s0 + d1*s1 + d2*s2 + d3m*s3
+
+    H[:2,:2] = H0
+    H[2:,2:] = H1
+    
+    HR = 1j*lambdaR*np.sum(np.array([(c[i,0]*s2 - c[i,1]*s1)*
+                                      exp(1j*np.dot(k, c[i])) for i in range(3)]), 
+                            axis=0)
+
+    H[0,1] = H[0,1] + HR[0,0]
+    H[1,0] = H[1,0] + np.conj(HR[0,0])
+    H[0,3] = H[0,3] + HR[0,1]
+    H[3,0] = H[3,0] + np.conj(HR[0,1])
+    H[2,1] = H[2,1] + HR[1,0]
+    H[1,2] = H[1,2] + np.conj(HR[1,0])
+    H[2,3] = H[2,3] + HR[1,1]
+    H[3,2] = H[3,2] + np.conj(HR[1,1])
+    
+    return H
+
+def ExtendedHaldaneHamiltonian2(k, params):
     
     M = params[0]
     lambdaR = params[1]
@@ -126,13 +185,13 @@ def ExtendedHaldaneHamiltonian(k, params):
     H0 = np.zeros([2,2], dtype=np.complex128)
     H1 = np.zeros([2,2], dtype=np.complex128)
     
-    d0 = 2*t2*cos(phi)*cosbsum
+    # d0 = 2*t2*cos(phi)*cosbsum
     d1 =  t1*cosasum + t3*coscsum
     d2 = - t1*sinasum - t3*sincsum
     d3p = M + 2*t2*sin(phi)*sinbsum
     d3m = M - 2*t2*sin(phi)*sinbsum
     H0 = H0 + d0*s0 + d1*s1 + d2*s2 + d3p*s3
-    H1 = H0 + d0*s0 + d1*s1 + d2*s2 + d3m*s3
+    H1 = H1 + d0*s0 + d1*s1 + d2*s2 + d3m*s3
 
     H[:2,:2] = H0
     H[2:,2:] = H1

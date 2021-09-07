@@ -46,6 +46,38 @@ def BerryCurvature(Hamiltonian, k, params):
     return berrycurve, lowerband, upperband
 
 
+def BerryCurvature2(Hamiltonian, k, params):
+    
+    h = 0.0001
+    
+    H = Hamiltonian(k,params)
+    
+    d0,v0 = getevalsandevecs(H)
+                
+    #first eigenvector
+    u0=v0[:,0]
+    lowerband = d0[0]
+    upperband = d0[1] 
+    
+    #dx direction
+    kxx = k + np.array([h,0])
+    H = Hamiltonian(kxx, params)
+    dx,vx = getevalsandevecs(H)
+    ux = vx[:,0]
+    
+    #dy direction
+    kyy = k+np.array([0,h])
+    H = Hamiltonian(kyy, params)
+    dy,vy = getevalsandevecs(H)
+    uy=vy[:,0]
+
+    xder = (ux-u0)/h
+    yder = (uy-u0)/h
+    
+    berrycurve = 2*np.imag(np.dot(np.conj(xder), yder))
+    
+    return berrycurve, lowerband, upperband
+
 
 def AbelianCalcWilsonLine(evecsFinal, evecsInitial, dgbands=2):
     wilsonLineAbelian = np.zeros([dgbands, dgbands], dtype=np.complex128)

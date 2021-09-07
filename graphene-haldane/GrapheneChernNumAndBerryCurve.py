@@ -137,7 +137,6 @@ for xcnt in range(len(u10)):
 sumchern = (1/2/pi)*np.sum(berrycurve[:-1,:-1])*jacobian
 
 
-
 fig = plt.figure(figsize=(8,6))
 ax = plt.axes(projection='3d')
 ax.view_init(35, -140)
@@ -239,7 +238,6 @@ ky = u1*r1[1] + u2*r2[1]
 
 jacobian = dlt**2*(4*pi/3)**2*sin(pi/3)/2/pi
 
-
 # granularity of phase diagram
 nphis = 5; nMs=5
 chernnumbers = np.zeros((nphis, nMs), dtype=float)
@@ -280,7 +278,7 @@ ax.set_xticks([0,pi,2*pi])
 ax.set_yticks([-3*sqrt(3), 0, 3*sqrt(3)])
 ax.set_xticklabels(x_label_list)
 ax.set_yticklabels(y_label_list)
-ax.set_ylabel(r"$\frac{\Delta}{ t_2}$",  rotation=0, fontsize = 23, labelpad=0)
+ax.set_ylabel(r"$\frac{\Delta}{ t_2}$",  rotation=0, labelpad=0)
 fig.colorbar(img)
 fig.suptitle(r"$t="+str(t1) + r" \quad t_2 = "
              +str(t2)+r"$", y=1.05)
