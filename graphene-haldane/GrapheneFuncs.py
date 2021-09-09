@@ -138,7 +138,7 @@ def CalculateBerryConnectGraphene(k, params, n0, n1):
     
     h = 0.0001;
 
-    H = HaldaneHamiltonian(k, params)
+    H = HaldaneHamiltonianPaulis(k, params)
     
     d0,v0 = GetEvalsAndEvecs(H)
     
@@ -148,13 +148,13 @@ def CalculateBerryConnectGraphene(k, params, n0, n1):
     
     #dx direction
     kxx = k + np.array([h,0])
-    H = HaldaneHamiltonian(kxx, params)
+    H = HaldaneHamiltonianPaulis(kxx, params)
     dx,vx = GetEvalsAndEvecs(H)
     ux1 = vx[:,n1]
     
     #dy direction
     kyy = k+np.array([0,h])
-    H = HaldaneHamiltonian(kyy, params)
+    H = HaldaneHamiltonianPaulis(kyy, params)
     dy,vy = GetEvalsAndEvecs(H)
     uy1=vy[:,n1]
 

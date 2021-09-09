@@ -18,8 +18,10 @@ from scipy.linalg import expm
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/graphene-haldane')
 sys.path.append("/Users/"+place+"/Code/MBQD/floquet-simulations/src")
+sys.path.append("/Users/"+place+"/Code/MBQD/band-topology")
 from hamiltonians import  PhiString, GetEvalsAndEvecs, getevalsandevecs
-from GrapheneFuncs import (AbelianCalcWilsonLine,  DifferenceLine, HaldaneHamiltonian,
+from Funcs import AbelianCalcWilsonLine, DifferenceLine
+from GrapheneFuncs import (HaldaneHamiltonian, HaldaneHamiltonianPaulis,
                            CalculateBerryConnectMatrixGraphene)
 
 cmapstring = 'twilight'
@@ -45,15 +47,15 @@ mpl.rcParams.update(params)
 
 
 
-phi = pi/3
+phi = pi/4
 t1=1
-t2=0.7
-M = 0#t2*3*sqrt(3) * sin(phi)
+t2=1
+M = 3.6#t2*3*sqrt(3) * sin(phi)
 params = [phi, M, t1, t2]
 
 #reciprocal lattice vectors
-c1 = (2*pi/(3))*np.array([1, sqrt(3)])
-c2 = (2*pi/(3))*np.array([1, -sqrt(3)])
+c1 = (2*pi/(3))*np.array([sqrt(3), 1])
+c2 = (2*pi/(3))*np.array([-sqrt(3), 1])
 
 #think u are qpoints?
 dlt = 0.005
@@ -63,8 +65,8 @@ wilsonline00abelian = np.zeros(qpoints, dtype=np.complex128)
 
 #step for abelian version
 #find u at first k
-H = HaldaneHamiltonian(np.array([0,0]), params)
-_, evecs = GetEvalsAndEvecs(H)
+H = HaldaneHamiltonianPaulis(np.array([0,0]), params)
+_, evecs = getevalsandevecs(H)
 uInitial = evecs[:,0]
 
 u10 = np.linspace(0,3,qpoints)
@@ -76,8 +78,8 @@ for i, kpoint in enumerate(kline):
     
     #do abeliean version,
     #find u at other k down the line
-    H = HaldaneHamiltonian(kpoint, params)
-    _, evecs = GetEvalsAndEvecs(H)
+    H = HaldaneHamiltonianPaulis(kpoint, params)
+    _, evecs = getevalsandevecs(H)
     uFinal = evecs[:,0]
     wilsonline00abelian[i] = np.dot(np.conj(uFinal), uInitial)
     
@@ -95,9 +97,10 @@ wilsonLineAbelian = np.zeros([qpoints, 2, 2], dtype=np.complex128)
 # go through possible end points for k
 for i, kpoint in enumerate(kline):
     #Find evec at k point, calculate Wilson Line abelian method
-    H =HaldaneHamiltonian(kpoint, params)
+    H =HaldaneHamiltonianPaulis(kpoint, params)
     _, evecsFinal = GetEvalsAndEvecs(H)
     wilsonLineAbelian[i] = AbelianCalcWilsonLine(evecsFinal, evecsInitial)
+
 
 '''
 Calculate Wilson Line - Non Abelian
@@ -118,6 +121,7 @@ m2 = 1
 multiplier = np.linspace(0,3,qpoints, endpoint=True)
 fig, ax = plt.subplots(figsize=(8,6))
 ax.plot(multiplier, np.square(np.abs(wilsonLineNonAbelian[:,0,0])),   label=r'non abelian $ \exp [\Pi_{n=1}^{N} i \Delta_{\mathbf{q}} \cdot \mathbf{A}(\mathbf{q}_n)]$')
+# ax.plot(multiplier, np.abs(wilsonline00abelian),   label=r'old abelian')
 ax.plot(multiplier, np.square(np.abs(wilsonLineAbelian[:,0,0])), label=r"abelian $<u_{q_i}^0 | u_{q_f}^0>$")
 ax.set_ylabel(r"$|W[0,0]|^2$")
 ax.set_xlabel(r"Final quasimomentum (in units of $\vec{G}$ away from $\Gamma$ )")
@@ -149,6 +153,7 @@ ax[1].plot(multiplier, np.imag(evalsAbelian[:,n1]), label="Abelian, eigenvalue "
 ax[0].set_title(r"real(eval)")
 ax[1].set_title(r"imag(eval)")
 plt.legend()
+plt.suptitle("e'value flow")
 plt.show()
 
 
