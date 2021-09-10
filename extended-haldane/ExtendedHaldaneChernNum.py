@@ -175,7 +175,7 @@ img = ax.imshow(np.real(np.flip(np.transpose(cn), axis=0)), cmap="RdBu", aspect=
                 # extent=[0,1,0, 1], 
                 extent=[0, 2*pi, -3*sqrt(3)*t2,3*sqrt(3)*t2], 
                 norm = mpl.colors.Normalize(vmin=np.min(cn), vmax=np.max(cn)))
-ax.set_title(r"Chern Number,"+"\n"+r"Extended Haldane model, "+ r"$t_1="+str(t1) + r",  t_3=0.35$")
+ax.set_title(r"Chern Number,"+"\n"+r"Extended Haldane model, "+ r"$t_1="+str(t1) + r",  t_3=0.35, \lambda_R = $"+str(lambdaR))
 # ax.set_xlabel(r"$t_2$")
 ax.set_xlabel(r"$\varphi$")
 # x_label_list = [r"$0$", r"$1$"]
