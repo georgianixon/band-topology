@@ -5,7 +5,7 @@ Created on Mon Aug 16 13:14:05 2021
 @author: Georgia Nixon
 """
 
-place = "Georgia Nixon"
+place = "Georgia"
 import numpy as np
 from numpy import sqrt, sin, cos, exp, pi
 
@@ -45,10 +45,10 @@ b = np.array([b1, b2, b3, b4, b5, b6])
 
 
 #n3 vecs
-c1 = np.array([-sqrt(3), 1])
-c2 = np.array([sqrt(3), 1])
-c3 = np.array([0, -2])
-c = np.array([c1, c3, c2])
+c1 = np.array([0, -2])
+c2 = np.array([-sqrt(3), 1])
+c3 = np.array([sqrt(3), 1])
+c = np.array([c1, c2, c3])
 
 
 def HaldaneHamiltonian(k, params):

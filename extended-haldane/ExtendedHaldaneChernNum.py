@@ -5,7 +5,7 @@ Created on Fri Aug 20 11:11:25 2021
 @author: Georgia Nixon
 """
 
-place = "Georgia Nixon"
+place = "Georgia"
 import numpy as np
 from numpy import sqrt, pi, sin
 import sys
