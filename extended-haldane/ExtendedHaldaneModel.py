@@ -20,19 +20,12 @@ s1 = np.array([[0,1],[1,0]])
 s2 = np.array([[0,-1j],[1j,0]])
 s3 = np.array([[1,0],[0,-1]])
 s = np.array([s1, s2, s3])
-
-    
-
+ 
 #nearest neighbor vecs
 a1 = np.array([0, 1])
 a2 = np.array([sqrt(3)/2, -1/2])
 a3 = np.array([-sqrt(3)/2, -1/2])
-a = np.array([a3, a1, a2])
-
-
-# rotation matrices
-Q6 = np.array([[1/2, -sqrt(3)/2], [sqrt(3)/2, 1/2]])
-Q3 = np.array([[-1/2, -sqrt(3)/2], [sqrt(3)/2, -1/2]])
+a = np.array([a1, a2, a3])
 
 #n2 vec
 b1 = np.array([sqrt(3), 0])
@@ -43,12 +36,12 @@ b5 = -b2
 b6 = -b3
 b = np.array([b1, b2, b3, b4, b5, b6])
 
-
 #n3 vecs
 c1 = np.array([0, -2])
 c2 = np.array([-sqrt(3), 1])
 c3 = np.array([sqrt(3), 1])
 c = np.array([c1, c2, c3])
+
 
 
 def HaldaneHamiltonian(k, params):
@@ -77,13 +70,13 @@ def HaldaneHamiltonian(k, params):
     d1 = - t1*cosasum - t3*coscsum
     d2 = t1*sinasum + t3*sincsum
     d3 = M - 2*t2*sin(phi)*sinbsum
-    H = H + d0*s0 + d1*s1 + d2*s2 + d3*s3
+    H = H  + d0*s0+ d1*s1 + d2*s2 + d3*s3
     
     return H
 
 
 
-def ExtendedHaldaneHamiltonian(k, params):
+def ExtendedHaldaneHamiltonianSpins(k, params):
     
     phi = params[0]
     M = params[1]
@@ -106,7 +99,7 @@ def ExtendedHaldaneHamiltonian(k, params):
     d0 = 2*t2*cos(phi)*cosbsum
     d1 =  - t1*cosasum - t3*coscsum
     d2 = + t1*sinasum + t3*sincsum
-    d3p = M - 2*t2*sin(phi)*sinbsum
+    d3p = M + 2*t2*sin(phi)*sinbsum
     d3m = M - 2*t2*sin(phi)*sinbsum
     H0 = H0 + d0*s0 + d1*s1 + d2*s2 + d3p*s3
     H1 = H1 + d0*s0 + d1*s1 + d2*s2 + d3m*s3
@@ -185,7 +178,7 @@ def ExtendedHaldaneHamiltonian2(k, params):
     H0 = np.zeros([2,2], dtype=np.complex128)
     H1 = np.zeros([2,2], dtype=np.complex128)
     
-    # d0 = 2*t2*cos(phi)*cosbsum
+    d0 = 2*t2*cos(phi)*cosbsum
     d1 =  t1*cosasum + t3*coscsum
     d2 = - t1*sinasum - t3*sincsum
     d3p = M + 2*t2*sin(phi)*sinbsum

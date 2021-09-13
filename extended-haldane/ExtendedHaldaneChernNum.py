@@ -12,10 +12,10 @@ import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/')
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/graphene-haldane')
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/extended-haldane')
-from ExtendedHaldaneModel import  ExtendedHaldaneHamiltonian, ExtendedHaldaneHamiltonianRashbaCoupling 
+from ExtendedHaldaneModel import  ExtendedHaldaneHamiltonianSpins, ExtendedHaldaneHamiltonianRashbaCoupling 
 from ExtendedHaldaneModel import  HaldaneHamiltonian
 # from GrapheneFuncs import  HaldaneHamiltonian
-from Funcs import  BerryCurvature2
+from Funcs import  BerryCurvature
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from numpy.linalg import eig
@@ -105,7 +105,7 @@ jacobian = dlt**2*(4*pi/3)**2*sin(pi/3)
 # chernnumbers = np.zeros((nt2s, nt3s), dtype=float)
 
 # granularity of phase diagram
-nphis = 5; nMs=5
+nphis = 30; nMs=30
 chernnumbers0 = np.zeros((nphis, nMs), dtype=float)
 chernnumbers1 = np.zeros((nphis, nMs), dtype=float)
 
@@ -120,11 +120,6 @@ for pn, phi in enumerate(np.linspace(0, 2*pi, nphis, endpoint=True)):
         berrycurve0 = np.zeros([len(kx), len(kx)])
         berrycurve1 = np.zeros([len(kx), len(kx)])
 
-        # lowerband0 = np.zeros([len(kx), len(kx)])
-        # lowerband1 = np.zeros([len(kx), len(kx)])
-        
-        # upperband0 = np.zeros([len(kx), len(kx)])
-        # upperband1 = np.zeros([len(kx), len(kx)])
 
         for xcnt in range(len(u10)):
             for ycnt in range(len(u10)):
@@ -133,17 +128,14 @@ for pn, phi in enumerate(np.linspace(0, 2*pi, nphis, endpoint=True)):
                 k = np.array([kx[xcnt, ycnt], ky[xcnt,ycnt]])
                 
                 #calculate Berry Curvature at this point
-                bC0, lB0, uB0 = BerryCurvature2(HaldaneHamiltonian, k, [phi, M, t1, t2, 0])
-                bC1, lB1, lB2 = BerryCurvature2(HaldaneHamiltonian, k, [phi, M, t1, t2, 0.35])
+                bC0, lB0, uB0 = BerryCurvature(HaldaneHamiltonian,
+                                               k, [phi, M, t1, t2, 0])
+                bC1, lB1, lB2 = BerryCurvature(HaldaneHamiltonian,
+                                               k, [phi, M, t1, t2, 0.35])
 
                 berrycurve0[xcnt, ycnt] = bC0
                 berrycurve1[xcnt, ycnt] = bC1
-                
-                # lowerband0[xcnt, ycnt] = lB0
-                # lowerband1[xcnt, ycnt] = lB1
-                
-                # upperband0[xcnt, ycnt] = lB0
-                # upperband1[xcnt, ycnt] = lB1
+
 
 
         chernnumbers0[pn,dn] = (1/2/pi)*np.sum(berrycurve0[:-1,:-1])*jacobian
@@ -159,7 +151,7 @@ img = ax.imshow(np.real(np.flip(np.transpose(cn), axis=0)), cmap="RdBu", aspect=
                 # extent=[0,1,0, 1], 
                 extent=[0, 2*pi, -3*sqrt(3)*t2,3*sqrt(3)*t2], 
                 norm = mpl.colors.Normalize(vmin=np.min(cn), vmax=np.max(cn)))
-ax.set_title(r"Chern Number, Haldane model, "+ r"$t_1="+str(t1) + r",  t_3=0$")
+ax.set_title(r"Chern Number,"+"\n"+r"Extended Haldane model, "+ r"$t_1="+str(t1) + r",  t_3=0.0$")
 # ax.set_xlabel(r"$t_2$")
 ax.set_xlabel(r"$\varphi$")
 # x_label_list = [r"$0$", r"$1$"]
@@ -183,7 +175,7 @@ img = ax.imshow(np.real(np.flip(np.transpose(cn), axis=0)), cmap="RdBu", aspect=
                 # extent=[0,1,0, 1], 
                 extent=[0, 2*pi, -3*sqrt(3)*t2,3*sqrt(3)*t2], 
                 norm = mpl.colors.Normalize(vmin=np.min(cn), vmax=np.max(cn)))
-ax.set_title(r"Chern Number, Haldane model, "+ r"$t_1="+str(t1) + r",  t_3=0.35$")
+ax.set_title(r"Chern Number,"+"\n"+r"Extended Haldane model, "+ r"$t_1="+str(t1) + r",  t_3=0.35, \lambda_R = $"+str(lambdaR))
 # ax.set_xlabel(r"$t_2$")
 ax.set_xlabel(r"$\varphi$")
 # x_label_list = [r"$0$", r"$1$"]
@@ -253,7 +245,8 @@ for xcnt in range(len(u10)):
         bC0, lB0, uB0 = BerryCurvature(HaldaneHamiltonian, k, [phi, M,  t1, t2, 0])
         bC1, lB1, uB1 = BerryCurvature(HaldaneHamiltonian, k, [phi, M, t1, t2, 0.35])
 
-        berrycurve0[xcnt, ycnt] = bC0
+
+#        berrycurve0[xcnt, ycnt] = bC0
         berrycurve1[xcnt, ycnt] = bC1
         
         lowerband0[xcnt, ycnt] = lB0

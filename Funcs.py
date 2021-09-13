@@ -87,6 +87,11 @@ def AbelianCalcWilsonLine(evecsFinal, evecsInitial, dgbands=2):
             wilsonLineAbelian[n0,n1] = np.dot(np.conj(evecsFinal[:,n1]), evecsInitial[:,n0])
     return wilsonLineAbelian
 
+
+
+
+
+
 def DifferenceLine(array2D):
     X = np.append(np.append(array2D[[-2]], array2D, axis=0), array2D[[1]], axis=0)
     xDiff = np.zeros((len(array2D), 2))
