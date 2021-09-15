@@ -23,6 +23,8 @@ def BerryCurvature(Hamiltonian, k, params):
                 
     #first eigenvector
     u0=v0[:,0]
+    
+    #eigenvalues
     lowerband = d0[0]
     upperband = d0[1] 
     
@@ -30,13 +32,13 @@ def BerryCurvature(Hamiltonian, k, params):
     kxx = k + np.array([h,0])
     H = Hamiltonian(kxx, params)
     dx,vx = GetEvalsAndEvecs(H)
-    ux = vx[:,0]
+    ux = vx[:,0] # first eigenvector
     
     #dy direction
     kyy = k+np.array([0,h])
     H = Hamiltonian(kyy, params)
     dy,vy = GetEvalsAndEvecs(H)
-    uy=vy[:,0]
+    uy=vy[:,0] # first eigenvector
 
     xder = (ux-u0)/h
     yder = (uy-u0)/h

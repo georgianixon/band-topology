@@ -13,23 +13,23 @@ sigmax = np.array([[0,1],[1,0]])
 sigmay = np.array([[0,-1j],[1j,0]])
 sigmaz = np.array([[1,0],[0,-1]])
 
-"Kronecker products of Pauli matrices"
-a00 = np.kron(np.eye(2), np.eye(2))
-a0x = np.kron(np.eye(2), sigmax)
-a0y = np.kron(np.eye(2), sigmay)
-a0z = np.kron(np.eye(2), sigmaz)
-ax0 = np.kron(sigmax, np.eye(2))
-axx = np.kron(sigmax, sigmax)
-axy = np.kron(sigmax, sigmay)
-axz = np.kron(sigmax, sigmaz)
-ay0 = np.kron(sigmay, np.eye(2))
-ayx = np.kron(sigmay, sigmax)
-ayy = np.kron(sigmay, sigmay)
-ayz = np.kron(sigmay, sigmaz)
-az0 = np.kron(sigmaz, np.eye(2))
-azx = np.kron(sigmaz, sigmax)
-azy = np.kron(sigmaz, sigmay)
-azz = np.kron(sigmaz, sigmaz)
+# "Kronecker products of Pauli matrices"
+# a00 = np.kron(np.eye(2), np.eye(2))
+# a0x = np.kron(np.eye(2), sigmax)
+# a0y = np.kron(np.eye(2), sigmay)
+# a0z = np.kron(np.eye(2), sigmaz)
+# ax0 = np.kron(sigmax, np.eye(2))
+# axx = np.kron(sigmax, sigmax)
+# axy = np.kron(sigmax, sigmay)
+# axz = np.kron(sigmax, sigmaz)
+# ay0 = np.kron(sigmay, np.eye(2))
+# ayx = np.kron(sigmay, sigmax)
+# ayy = np.kron(sigmay, sigmay)
+# ayz = np.kron(sigmay, sigmaz)
+# az0 = np.kron(sigmaz, np.eye(2))
+# azx = np.kron(sigmaz, sigmax)
+# azy = np.kron(sigmaz, sigmay)
+# azz = np.kron(sigmaz, sigmaz)
 
 f0001 = np.array([[0,0,0,1],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
 f0010 = np.array([[0,0,0,0],[0,0,1,0],[0,0,0,0],[0,0,0,0]])
@@ -215,4 +215,55 @@ def Z2_invariant(k_path, Hamil, var_vec, ns):
     WL = Wilson_loop(k_path, Hamil, var_vec, ns)
     return [np.angle(la.eigvals(WL)[i%(len(ns))])/(2*np.pi) for i in ns]        #taking the eigenvalues of Wilson loop
 
+
+#%%
+
+""" Georgia Contributions"""
+
+def Haldane3_2(kvec, var_vec):
+    """
+    This is a version of the Haldane Chern insulator, with a TRS copy.
+    I have now also added a third-nearest neighbour hopping (t3)! (https://arxiv.org/pdf/1605.04768.pdf)
+    The real-space unit cell used here is C3 symmetric, unlike in the arXiv above.
+    Note that I've set the primary hopping parameter t1 == 1, for simplicity.
+    I've also fixed phi to be pi/2.
+    Basic model explanation can be found at URL: https://topocondmat.org/w4_haldane/haldane_model.html
+    """ 
+
+    phi, m, t1, t2, t3 = var_vec
+    
+    "Lattice vectors"
+    a1 = np.array([0  , 1])
+    a2 = np.array([np.sqrt(3)/2 , -1/2])
+    a3 = -a1-a2
+    "Products of kvec with lattice vectors"
+    ka1 = np.dot(kvec,a1)
+    ka2 = np.dot(kvec,a2)
+    ka3 = np.dot(kvec,a3)
+    kb1 = np.dot(kvec,a2-a1)
+    kb2 = np.dot(kvec,a3-a2)
+    kb3 = np.dot(kvec,a1-a3)
+    kc1 = np.dot(kvec,a1+a2-a3)
+    kc2 = np.dot(kvec,-a1+a2+a3)
+    kc3 = np.dot(kvec,a1-a2+a3)
+    
+    d1 = np.cos(ka1) + np.cos(ka2) + np.cos(ka3) + t3*(np.cos(kc1) + np.cos(kc2) + np.cos(kc3))
+    d2 = - np.sin(ka1) - np.sin(ka2) - np.sin(ka3) + t3*(-np.sin(kc1) - np.sin(kc2) - np.sin(kc3)) 
+    d3 = m + 2*t2*(np.sin(kb1) + np.sin(kb2) + np.sin(kb3))
+    # d3_ = m - 2*t2*(np.sin(kb1) + np.sin(kb2) + np.sin(kb3)) #time-reversed copy
+    
+    H  = d1*sigmax + d2*sigmay + d3*sigmaz
+    # H2 = d1*sigmax + d2*sigmay + d3_*sigmaz 
+    
+    # Hupleft = np.kron(0.5*(sigma0+sigmaz), H)
+    # Hlowright = np.kron(0.5*(sigma0-sigmaz),H2)
+    
+    "Spin-orbit coupling that preserves TRS & C3 symmetry" 
+    "Third-nn Rashba SOC:"
+    # ras1 = (-1j+s3)*np.exp(1j*kc1) + 2*1j*np.exp(1j*kc2) + (-1j - s3)*np.exp(1j*kc3)
+    # ras2 = (-1j-s3)*np.exp(1j*kc1) + 2*1j*np.exp(1j*kc2) + (-1j + s3)*np.exp(1j*kc3)
+    #f0001 and others defined at beginning of this module!
+    # H_R3 = l_R*(ras1*f0001 + cc(ras2)*f0010 + ras2*f0100 + cc(ras1)*f1000) #3rd nn Rashba SOC
+    
+    return H
 

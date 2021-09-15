@@ -14,6 +14,8 @@ sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/graphene-haldane')
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/extended-haldane')
 from ExtendedHaldaneModel import  ExtendedHaldaneHamiltonianSpins, ExtendedHaldaneHamiltonianRashbaCoupling 
 from ExtendedHaldaneModel import  HaldaneHamiltonian
+from BhattacharyaModel import Haldane3Bhattacharya
+from JansFile import Haldane3_2
 # from GrapheneFuncs import  HaldaneHamiltonian
 from Funcs import  BerryCurvature
 import matplotlib as mpl
@@ -24,8 +26,8 @@ from numpy.linalg import eig
 #%%
 
 #params for ExtendedHaldane
-phi = 0
-M = 0
+phi = pi/2
+M = 0.1
 t1 = 1
 t2 = 0.6
 t3 = 1
@@ -37,7 +39,7 @@ params = [phi, M, t1, t2, t3]
 """Compute Hamiltonian and graph at some k point"""
 k = np.array([0.6,0.6])
 
-H = ExtendedHaldaneHamiltonian(k, params)
+H = Haldane3_2(k, params)
 U = np.dot(H, np.conj(H.T))
 
 apply = [
@@ -72,7 +74,7 @@ fig.colorbar(pcm)
 
 #fixed params
 #Extended Haldane
-# phi = 0
+phi = pi/2
 # M = 0.1
 t1 = 1
 t2 = 1/3
@@ -106,7 +108,7 @@ jacobian = dlt**2*(4*pi/3)**2*sin(pi/3)
 
 # granularity of phase diagram
 nphis = 30; nMs=30
-chernnumbers0 = np.zeros((nphis, nMs), dtype=float)
+# chernnumbers0 = np.zeros((nphis, nMs), dtype=float)
 chernnumbers1 = np.zeros((nphis, nMs), dtype=float)
 
 
@@ -117,7 +119,7 @@ for pn, phi in enumerate(np.linspace(0, 2*pi, nphis, endpoint=True)):
     for dn, M in enumerate(np.linspace(-3*sqrt(3)*t2, 3*sqrt(3)*t2, nMs, endpoint=True)):
         print(pn,dn)
 
-        berrycurve0 = np.zeros([len(kx), len(kx)])
+        # berrycurve0 = np.zeros([len(kx), len(kx)])
         berrycurve1 = np.zeros([len(kx), len(kx)])
 
 
@@ -128,54 +130,59 @@ for pn, phi in enumerate(np.linspace(0, 2*pi, nphis, endpoint=True)):
                 k = np.array([kx[xcnt, ycnt], ky[xcnt,ycnt]])
                 
                 #calculate Berry Curvature at this point
-                bC0, lB0, uB0 = BerryCurvature(HaldaneHamiltonian,
-                                               k, [phi, M, t1, t2, 0])
-                bC1, lB1, lB2 = BerryCurvature(HaldaneHamiltonian,
+                # bC0, lB0, uB0 = BerryCurvature(Haldane3Bhattacharya,
+                #                                k, [phi, M, t1, t2, 0])
+                bC1, lB1, lB2 = BerryCurvature(Haldane3Bhattacharya,
                                                k, [phi, M, t1, t2, 0.35])
 
-                berrycurve0[xcnt, ycnt] = bC0
+                # berrycurve0[xcnt, ycnt] = bC0
                 berrycurve1[xcnt, ycnt] = bC1
 
 
 
-        chernnumbers0[pn,dn] = (1/2/pi)*np.sum(berrycurve0[:-1,:-1])*jacobian
+        # chernnumbers0[pn,dn] = (1/2/pi)*np.sum(berrycurve0[:-1,:-1])*jacobian
         chernnumbers1[pn,dn] = (1/2/pi)*np.sum(berrycurve1[:-1,:-1])*jacobian
 
 # plot chern num phase diagram for different params
 
 
-cn = chernnumbers0
-fig, ax = plt.subplots()
-img = ax.imshow(np.real(np.flip(np.transpose(cn), axis=0)), cmap="RdBu", aspect="auto", 
-                interpolation='none', 
-                # extent=[0,1,0, 1], 
-                extent=[0, 2*pi, -3*sqrt(3)*t2,3*sqrt(3)*t2], 
-                norm = mpl.colors.Normalize(vmin=np.min(cn), vmax=np.max(cn)))
-ax.set_title(r"Chern Number,"+"\n"+r"Extended Haldane model, "+ r"$t_1="+str(t1) + r",  t_3=0.0$")
-# ax.set_xlabel(r"$t_2$")
-ax.set_xlabel(r"$\varphi$")
-# x_label_list = [r"$0$", r"$1$"]
-# y_label_list = [r"$0$", r"$1$"]
-x_label_list = [r"$0$", r"$\pi$", r"$2\pi$"]
-y_label_list = [r"$-3\sqrt{3}$", r"$0$", r"$3 \sqrt{3}$"]
-ax.set_xticks([0, pi, 2*pi])
-ax.set_yticks([-3*sqrt(3)*t2,0,3*sqrt(3)*t2])
-ax.set_xticklabels(x_label_list)
-ax.set_yticklabels(y_label_list)
-# ax.set_ylabel(r"$t_3$",  rotation=0, labelpad=0)
-ax.set_ylabel(r"$\frac{\Delta}{ t_2}$",  rotation=0, fontsize = 16, labelpad=0)
-fig.colorbar(img)
-# fig.suptitle(r"$t="+str(t1) + r" M = "+str(m)+r" \lambda_R = "+str(lambdaR)+r"$", y=1.05)
-plt.show()
+# cn = chernnumbers0
+# fig, ax = plt.subplots()
+# img = ax.imshow(np.real(np.flip(np.transpose(cn), axis=0)), cmap="RdBu", aspect="auto", 
+#                 interpolation='none', 
+#                 # extent=[0,1,0, 1], 
+#                 extent=[0, 2*pi, -3*sqrt(3)*t2,3*sqrt(3)*t2], 
+#                 norm = mpl.colors.Normalize(vmin=np.min(cn), vmax=np.max(cn)))
+# ax.set_title(r"Chern Number,"+"\n"+r"Extended Haldane model, "+ r"$t_1="+str(t1) + r",  t_3=0.0$")
+# # ax.set_xlabel(r"$t_2$")
+# ax.set_xlabel(r"$\varphi$")
+# # x_label_list = [r"$0$", r"$1$"]
+# # y_label_list = [r"$0$", r"$1$"]
+# x_label_list = [r"$0$", r"$\pi$", r"$2\pi$"]
+# y_label_list = [r"$-3\sqrt{3}$", r"$0$", r"$3 \sqrt{3}$"]
+# ax.set_xticks([0, pi, 2*pi])
+# ax.set_yticks([-3*sqrt(3)*t2,0,3*sqrt(3)*t2])
+# ax.set_xticklabels(x_label_list)
+# ax.set_yticklabels(y_label_list)
+# # ax.set_ylabel(r"$t_3$",  rotation=0, labelpad=0)
+# ax.set_ylabel(r"$\frac{\Delta}{ t_2}$",  rotation=0, fontsize = 16, labelpad=0)
+# fig.colorbar(img)
+# # fig.suptitle(r"$t="+str(t1) + r" M = "+str(m)+r" \lambda_R = "+str(lambdaR)+r"$", y=1.05)
+# plt.show()
+#%%
 
 cn = chernnumbers1
+extent = np.max((np.abs(np.min(cn)), np.abs(np.max(cn))))
+linthresh = 0.1
+# norm = mpl.colors.Normalize(vmin=-2.1, vmax=2.1)
+norm=mpl.colors.SymLogNorm(linthresh=linthresh, linscale=1, vmin=-extent, vmax=extent, base=2)
 fig, ax = plt.subplots()
 img = ax.imshow(np.real(np.flip(np.transpose(cn), axis=0)), cmap="RdBu", aspect="auto", 
                 interpolation='none', 
                 # extent=[0,1,0, 1], 
                 extent=[0, 2*pi, -3*sqrt(3)*t2,3*sqrt(3)*t2], 
-                norm = mpl.colors.Normalize(vmin=np.min(cn), vmax=np.max(cn)))
-ax.set_title(r"Chern Number,"+"\n"+r"Extended Haldane model, "+ r"$t_1="+str(t1) + r",  t_3=0.35, \lambda_R = $"+str(lambdaR))
+                norm = norm)
+ax.set_title(r"Chern Number,"+"\n"+r"Extended Haldane model, "+ r"$t_1="+str(t1) + r",  t_3=0.35$")
 # ax.set_xlabel(r"$t_2$")
 ax.set_xlabel(r"$\varphi$")
 # x_label_list = [r"$0$", r"$1$"]
