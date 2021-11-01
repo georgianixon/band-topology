@@ -43,6 +43,9 @@ c3 = np.array([sqrt(3), 1])
 c = np.array([c1, c2, c3])
 
 
+def RotationMatrix(theta):
+    return np.array([[cos(theta),-sin(theta)],[sin(theta),cos( theta)]])
+
 
 def HaldaneHamiltonian(k, params):
     """

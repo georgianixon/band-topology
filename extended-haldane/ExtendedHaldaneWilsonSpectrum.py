@@ -25,7 +25,7 @@ def AbelianCalcWilsonLine(evecsFinal, evecsInitial, dgbands=4):
     
     for n0 in range(dgbands):
         for n1 in range(dgbands):
-            wilsonLineAbelian[n0,n1] = np.dot(np.conj(evecsFinal[:,n1]), evecsInitial[:,n0])
+            wilsonLineAbelian[n0,n1] = np.vdot(evecsFinal[:,n1], evecsInitial[:,n0])
         
     return wilsonLineAbelian
 
