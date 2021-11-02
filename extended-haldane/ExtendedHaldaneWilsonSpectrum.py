@@ -12,7 +12,8 @@ from numpy import sqrt, pi
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/extended-haldane')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
-from ExtendedHaldaneModel import  ExtendedHaldaneHamiltonian
+from ExtendedHaldaneModel import Haldane3
+# from JansFile import Haldane3
 from hamiltonians import GetEvalsAndEvecs, getevalsandevecs
 from scipy.linalg import expm
 import matplotlib.pyplot as plt
@@ -29,11 +30,11 @@ def AbelianCalcWilsonLine(evecsFinal, evecsInitial, dgbands=4):
         
     return wilsonLineAbelian
 
-def CalculateBerryConnect(k, params, n0, n1):
+def CalculateBerryConnect(Hamiltonian, k, params, n0, n1):
     
     h = 0.0001;
     
-    H = ExtendedHaldaneHamiltonian(k, params)
+    H = Hamiltonian(k, params)
     evals, evecs = GetEvalsAndEvecs(H)
     
     #first eigenvector
@@ -41,12 +42,12 @@ def CalculateBerryConnect(k, params, n0, n1):
     u1 = evecs[:,n1]
     
     #dx direction
-    H = ExtendedHaldaneHamiltonian(k +np.array([h,0]), params)
+    H = Hamiltonian(k +np.array([h,0]), params)
     _,evecsX = GetEvalsAndEvecs(H)
     ux1 = evecsX[:,n1]
  
     #dy direction
-    H = ExtendedHaldaneHamiltonian(k + np.array([0,h]), params)
+    H = Hamiltonian(k + np.array([0,h]), params)
     _,evecsY = GetEvalsAndEvecs(H)
     uy1=evecsY[:,n1]
 
@@ -58,7 +59,7 @@ def CalculateBerryConnect(k, params, n0, n1):
     return berryConnect
 
 
-def CalculateBerryConnectMatrix(k, params, dgbands=4):
+def CalculateBerryConnectMatrix(Hamiltonian, k, params, dgbands=4):
     """
     Stolen from EulerClassWilsonLine.py
     """
@@ -66,7 +67,7 @@ def CalculateBerryConnectMatrix(k, params, dgbands=4):
     berryConnect = np.zeros((dgbands,dgbands, 2), dtype=np.complex128)
     for n0 in range(dgbands):
         for n1 in range(dgbands):
-            berryConnect[n0,n1] = CalculateBerryConnect(k, params, n0, n1)
+            berryConnect[n0,n1] = CalculateBerryConnect(Hamiltonian, k, params, n0, n1)
     return berryConnect
             
 def DifferenceLine(array2D):
@@ -77,66 +78,96 @@ def DifferenceLine(array2D):
     return xDiff
 
 
-#pauli matrics
-s1 = np.array([[0,1],[1,0]])
-s2 = np.array([[0,-1j],[1j,0]])
-s3 = np.array([[1,0],[0,-1]])
+# #pauli matrics
+# s1 = np.array([[0,1],[1,0]])
+# s2 = np.array([[0,-1j],[1j,0]])
+# s3 = np.array([[1,0],[0,-1]])
 
 
-# rotation matrices
-Q6 = np.array([[1/2, -sqrt(3)/2], [sqrt(3)/2, 1/2]])
-Q3 = np.array([[-1/2, -sqrt(3)/2], [sqrt(3)/2, -1/2]])
+# # X Y lattice
+# #nearest neighbor vecs
+# a1 = np.array([0, 1])
+# a2 = np.array([sqrt(3)/2, -1/2])
+# a3 = np.array([-sqrt(3)/2, -1/2])
+# a = np.array([a3, a1, a2])
+
+# #n2 vec
+# b1 = np.array([sqrt(3), 0])
+# b2 = np.array([sqrt(3)/2, 3/2])
+# b3 = np.array([-sqrt(3)/2, 3/2])
+# b4 = -b1
+# b5 = -b2
+# b6 = -b3
+# b = np.array([b1, b2, b3, b4, b5, b6])
+
+# #n3 vecs
+# c1 = np.array([-sqrt(3), 1])
+# c2 = np.array([sqrt(3), 1])
+# c3 = np.array([0, -2])
+# c = np.array([c1, c3, c2])
 
 
-# X Y lattice
-#nearest neighbor vecs
-a1 = np.array([0, 1])
-a2 = np.array([sqrt(3)/2, -1/2])
-a3 = np.array([-sqrt(3)/2, -1/2])
-a = np.array([a3, a1, a2])
-
-#n2 vec
-b1 = np.array([sqrt(3), 0])
-b2 = np.array([sqrt(3)/2, 3/2])
-b3 = np.array([-sqrt(3)/2, 3/2])
-b4 = -b1
-b5 = -b2
-b6 = -b3
-b = np.array([b1, b2, b3, b4, b5, b6])
-
-#n3 vecs
-c1 = np.array([-sqrt(3), 1])
-c2 = np.array([sqrt(3), 1])
-c3 = np.array([0, -2])
-c = np.array([c1, c3, c2])
+# #reciprocal lattice
+# #nearest neighbour vecs
+# d1 = (4*pi/3/sqrt(3))*np.array([1,0])
+# d2 = (4*pi/3/sqrt(3))*np.array([1/2,sqrt(3)/2])
+# d3 = (4*pi/3/sqrt(3))*np.array([-1/2,sqrt(3)/2])
 
 
-#reciprocal lattice
-#nearest neighbour vecs
-d1 = (4*pi/3/sqrt(3))*np.array([1,0])
-d2 = (4*pi/3/sqrt(3))*np.array([1/2,sqrt(3)/2])
-d3 = (4*pi/3/sqrt(3))*np.array([-1/2,sqrt(3)/2])
+G =    np.array([0,0])                          #Gamma
 
+K_1 =  np.array([ 2*pi/(3*sqrt(3)), 2*pi/3])       # Right upper K
+K_p1 = np.array([4*pi/(3*sqrt(3)),  0])            # Rightmost K'
+K_2 =  np.array([2*pi/(3*sqrt(3)),  -2*pi/3])      # Right lower K
+K_p2 = np.array([-2*pi/(3*sqrt(3)), -2*pi/3])      # Left lower K'
+K_3 =  np.array([-4*pi/(3*sqrt(3)),  0])           # Leftmost K
+K_p3 = np.array([-2*pi/(3*sqrt(3)),  2*pi/3])      # Left upper K'
 
+M_1 =  np.array([0,      2*pi/3])             # Uppermost M
+M_2 =  np.array([pi/sqrt(3),  pi/3])               # Right upper M
+M_3 =  np.array([pi/sqrt(3),  -pi/3])              # Right lower M
+M_4 =  np.array([0,      -2*pi/3])            # Lowest M
+M_5 =  np.array([-pi/sqrt(3), -pi/3])              # Left lower M
+M_6 =  np.array([-pi/sqrt(3), pi/3])               # Left upper M
 
+def KPath(point_list, loop=True, N=200):
+    '''
+    This function produces the path connecting the set of points given in the point_list input.
+    The path will be closed if loop is True and will be open if False.
+    N is the number of points between subsequent points in point_list in the path.
+    One can check the stability of the result by increasing N further.
+    '''
+    k_trajectory = np.empty([0,2])
+    k_trajectory = np.append(k_trajectory,np.linspace(point_list[0],point_list[0],1),axis=0)
+    for i in range(len(point_list)-1):
+        segment = np.linspace(point_list[i], point_list[i+1], N)[1:] #note: requires numpy version > 1.15
+        k_trajectory = np.append(k_trajectory, segment, axis=0)
+    if loop==True:
+        segment = np.linspace(point_list[-1], point_list[0], N)[1:]
+        k_trajectory = np.append(k_trajectory, segment, axis=0)
+    return k_trajectory
 
+width = 0.7
+pointlist = [G, width*K_p1, width*K_1, width*K_p3]
+k_path = KPath(pointlist, loop=True, N=200)
 
-kline = np.concatenate([np.linspace(np.array([0,0]), 0.5*d1, 100, endpoint=False),
-          np.linspace(0.5*d1, 0.5*d1 + 0.5*d2, 100, endpoint=False),
-          np.linspace(0.5*d1+0.5*d2,  0.5*d2, 100, endpoint=False),
-          np.linspace(0.5*d2,  np.array([0,0]), 101, endpoint=True)], axis=0)
+# kline = np.concatenate([np.linspace(np.array([0,0]), 0.5*d1, 100, endpoint=False),
+#           np.linspace(0.5*d1, 0.5*d1 + 0.5*d2, 100, endpoint=False),
+#           np.linspace(0.5*d1+0.5*d2,  0.5*d2, 100, endpoint=False),
+#           np.linspace(0.5*d2,  np.array([0,0]), 101, endpoint=True)], axis=0)
 
-dqs = DifferenceLine(kline)
+dqs = DifferenceLine(k_path)
 
 
 
 #params - Extended Haldane
+phi = pi/2
 M = 0.1
 lambdaR = 0.3 
 t1 = 1
 t2 = 0.6
 t3 = 0.6
-params = [M, lambdaR, t1, t2, t3]
+params = [phi, M, t1, t2, t3, lambdaR]
     
 
 #%%
@@ -145,17 +176,17 @@ params = [M, lambdaR, t1, t2, t3]
 Calculate Wilson Line - Abelian
 '''
 
-k0 = kline[0]
-totalPoints = len(kline)
-H = ExtendedHaldaneHamiltonian(k0, params)
+k0 = k_path[0]
+totalPoints = len(k_path)
+H = Haldane3(k0, params)
 _, evecsInitial = GetEvalsAndEvecs(H)
 
 wilsonLineAbelian = np.zeros([totalPoints, 4,4], dtype=np.complex128)
 # go through possible end points for k
-for i, kpoint in enumerate(kline):
+for i, kpoint in enumerate(k_path):
     #Find evec at k point, calculate Wilson Line abelian method
-    H = ExtendedHaldaneHamiltonian(kpoint, params)
-    _, evecsFinal = getevalsandevecs(H)
+    H = Haldane3(kpoint, params)
+    _, evecsFinal = GetEvalsAndEvecs(H)
     wilsonLineAbelian[i] = AbelianCalcWilsonLine(evecsFinal, evecsInitial)
 
     
@@ -169,8 +200,8 @@ wilsonLineNonAbelian = np.zeros([totalPoints, 4, 4], dtype=np.complex128)
 currentArgument = np.zeros([4,4], dtype=np.complex128)
 
 
-for i, kpoint in enumerate(kline):
-    berryConnect = CalculateBerryConnectMatrix(kpoint, params)
+for i, kpoint in enumerate(k_path):
+    berryConnect = CalculateBerryConnectMatrix(Haldane3, kpoint, params)
     dq = dqs[i]
     berryConnectAlongKLine =  1j*np.dot(berryConnect, dq)
     currentArgument = currentArgument + berryConnectAlongKLine
@@ -188,7 +219,7 @@ m2 = 1
 multiplier = np.linspace(0,4,totalPoints, endpoint=True)
 fig, ax = plt.subplots(figsize=(12,9))
 
-ax.plot(multiplier, np.square(np.abs(wilsonLineNonAbelian[:,m1,m2])), label="Non Abelian")
+# ax.plot(multiplier, np.square(np.abs(wilsonLineNonAbelian[:,m1,m2])), label="Non Abelian")
 ax.plot(multiplier, np.square(np.abs(wilsonLineAbelian[:,m1,m2])), label="Abelian")
 
 ax.set_ylabel(r"$|W["+str(m1) +","+str(m2)+"]|^2 = |<\Phi_{q_f}^"+str(m1)+" | \Phi_{q_i}^"+str(m2)+">|^2$")
@@ -220,7 +251,7 @@ for i in range(totalPoints):
 
 #%%
 fig, ax = plt.subplots(figsize=(12,9))
-ax.plot(multiplier, np.real(evalsNonAbelian[:,0]), label="Non Abelian, first eigenvalue")
+# ax.plot(multiplier, np.real(evalsNonAbelian[:,0]), label="Non Abelian, first eigenvalue")
 ax.plot(multiplier, np.real(evalsAbelian[:,0]), label="Abelian, first eigenvalue")
 plt.legend()
 plt.show()

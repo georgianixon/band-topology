@@ -5,7 +5,7 @@ Created on Mon Aug 16 13:14:05 2021
 @author: Georgia Nixon
 """
 
-place = "Georgia"
+place = "Georgia Nixon"
 import numpy as np
 from numpy import sqrt, sin, cos, exp, pi
 
@@ -159,6 +159,72 @@ def ExtendedHaldaneHamiltonianRashbaCoupling(k, params):
     H[3,2] = H[3,2] + np.conj(HR[1,1])
     
     return H
+
+
+def Haldane3(kvec, var_vec):
+    """
+    Straight from Jans
+    This is a version of the Haldane Chern insulator, with a TRS copy.
+    I have now also added a third-nearest neighbour hopping (t3)! (https://arxiv.org/pdf/1605.04768.pdf)
+    The real-space unit cell used here is C3 symmetric, unlike in the arXiv above.
+    Note that I've set the primary hopping parameter t1 == 1, for simplicity.
+    I've also fixed phi to be pi/2.
+    Basic model explanation can be found at URL: https://topocondmat.org/w4_haldane/haldane_model.html
+    """ 
+    if var_vec == []:
+        phi, m, t1, t2, t3, l_R = [pi/2, 0.1, 1, 0.1, 0, 0]
+    else: 
+        phi, m, t1, t2, t3, l_R = var_vec
+    
+    
+    "Lattice vectors"
+    a1 = np.array([0  , 1])
+    a2 = np.array([np.sqrt(3)/2 , -1/2])
+    a3 = -a1-a2
+    b1= a2-a1
+    b2 = a3-a2
+    b3 = a1-a3
+    c1 = a1+a2-a3
+    c2 = -a1+a2+a3
+    c3 = a1-a2+a3
+    
+    "Products of kvec with lattice vectors"
+    ka1 = np.dot(kvec,a1)
+    ka2 = np.dot(kvec,a2)
+    ka3 = np.dot(kvec,a3)
+    kb1 = np.dot(kvec,b1)
+    kb2 = np.dot(kvec,b2)
+    kb3 = np.dot(kvec,b3)
+    kc1 = np.dot(kvec,c1)
+    kc2 = np.dot(kvec,c2)
+    kc3 = np.dot(kvec,c3)
+    
+    f0001 = np.array([[0,0,0,1],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
+    f0010 = np.array([[0,0,0,0],[0,0,1,0],[0,0,0,0],[0,0,0,0]])
+    f0100 = np.array([[0,0,0,0],[0,0,0,0],[0,1,0,0],[0,0,0,0]])
+    f1000 = np.array([[0,0,0,0],[0,0,0,0],[0,0,0,0],[1,0,0,0]])
+    
+    d1 = t1*(np.cos(ka1) + np.cos(ka2) + np.cos(ka3)) + t3*(np.cos(kc1) + np.cos(kc2) + np.cos(kc3))
+    d2 = t1*(- np.sin(ka1) - np.sin(ka2) - np.sin(ka3)) + t3*(-np.sin(kc1) - np.sin(kc2) - np.sin(kc3)) 
+    d3 = m + 2*t2*(np.sin(kb1) + np.sin(kb2) + np.sin(kb3))
+    d3_ = m - 2*t2*(np.sin(kb1) + np.sin(kb2) + np.sin(kb3)) #time-reversed copy
+    
+    H  = d1*s1 + d2*s2 + d3*s3
+    H2 = d1*s1 + d2*s2 + d3_*s3 
+    
+    Hupleft = np.kron(0.5*(s0+s3), H)
+    Hlowright = np.kron(0.5*(s0-s3),H2)
+    
+    "Spin-orbit coupling that preserves TRS & C3 symmetry" 
+    "Third-nn Rashba SOC:"
+    ras1 = (-1j+np.sqrt(3))*np.exp(1j*kc1) + 2*1j*np.exp(1j*kc2) + (-1j - np.sqrt(3))*np.exp(1j*kc3)
+    ras2 = (-1j-np.sqrt(3))*np.exp(1j*kc1) + 2*1j*np.exp(1j*kc2) + (-1j + np.sqrt(3))*np.exp(1j*kc3)
+    #f0001 and others defined at beginning of this module!
+    H_R3 = l_R*(ras1*f0001 + np.conj(ras2)*f0010 + ras2*f0100 + np.conj(ras1)*f1000) #3rd nn Rashba SOC
+    
+    return H_R3 + Hupleft + Hlowright 
+
+
 
 def ExtendedHaldaneHamiltonian2(k, params):
     
