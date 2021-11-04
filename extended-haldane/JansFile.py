@@ -244,174 +244,43 @@ from Funcs import BerryCurvature
 from hamiltonians import GetEvalsAndEvecs
 
 
-#%%
+def WilsonLoop(k_path, Hamil, var_vec, ns):
+    '''
+    ns is the index of bands. It must be given in pairs, e.g. ns=[0,1]  or [0,1, 2,3, 4,5].
+    Namely, if we have ns = [0,1], the computation will be done over 1st and 2nd band corresponding to first Kramer pair.
 
-phi = pi/2
-t1 = 1
-t2 = 0.5
-t3 = 0.5
-m = 0.1
-l_R = 0.3
-params = [phi, m, t1, t2, t3, l_R]
-kvec = [0.6, 0.6]
-
-Ham1 = Haldane3(kvec, params)
-
-
-"""Find the gaps"""
-
-Nt = 50
-Nk = 300
-gaps = np.empty((Nt,Nt))
-for i, t2 in enumerate(np.linspace(0,1,Nt)):
-    for j, t3 in enumerate(np.linspace(0,1,Nt)):
-        
-        params = [phi, m, t1, t2, t3, l_R]
-        gap = Gap(Haldane3, params, Nk)
-        gaps[i,j] = gap
-        
-
-gaps = np.real(np.flip(np.transpose(gaps), axis=0))
-
-
-
-# norm = mpl.colors.Normalize(vmin=np.min(gaps), vmax=np.max(gaps))
-norm =mpl.colors.LogNorm(vmin=0.1, vmax=1.0)
-sz = 10
-fig, ax = plt.subplots(figsize=(sz,sz))
-pcm = ax.matshow(gaps, interpolation='none', cmap='PuOr', norm=norm)
-ax.tick_params(axis="x", bottom=True, top=False, labelbottom=True, 
-  labeltop=False)  
-ax.set_xlabel(r'$t_2$')
-ax.set_ylabel(r'$t_3$', rotation=0, labelpad=10)
-# cax = plt.axes([1.03, 0.1, 0.03, 0.8])
-fig.colorbar(pcm)
-plt.show()
-
-#%%
-
-""" Bandstructure"""
-
-phi = pi/2
-t1 = 1
-t2 = 0
-t3 = 0.6
-m = 0.1
-l_R = 0.3
-params = [phi, m, t1, t2, t3, l_R]
-
-#reciprocal lattice vectors
-r1 = (2*pi/(3))*np.array([1, sqrt(3)])
-r2 = (2*pi/(3))*np.array([1, -sqrt(3)])
-
-dlt = 0.005
-u10 = np.linspace(0, 1, int(1/dlt + 1), endpoint=True)
-u20=u10
-qpoints = len(u10)
-u1, u2 = np.meshgrid(u10, u20)
-kx = u1*r1[0] + u2*r2[0]
-ky = u1*r1[1] + u2*r2[1]
-
-jacobian = dlt**2*(4*pi/3)**2*sin(pi/3)
-
-berrycurve = np.empty([qpoints, qpoints], dtype=np.complex128)
-lowerband = np.empty([qpoints, qpoints], dtype=np.complex128)
-upperband = np.empty([qpoints, qpoints], dtype=np.complex128)
-
-for xcnt in range(len(u10)):
-    for ycnt in range(len(u10)):
-        
-        #pick momentum point in meshgrid
-        k = np.array([kx[xcnt, ycnt], ky[xcnt,ycnt]])
-        
-        bC, lB, uB = BerryCurvature(Haldane3, k, params)
-        berrycurve[xcnt, ycnt] = bC
-        lowerband[xcnt, ycnt] = lB
-        upperband[xcnt, ycnt] = uB
-
-sumchern = (1/2/pi)*np.sum(berrycurve[:-1,:-1])*jacobian
-
-cmapstring = 'twilight'
-cmap = mpl.cm.get_cmap(cmapstring)
-
-"""plot berry curve"""
-fig = plt.figure(figsize=(8,6))
-ax = plt.axes(projection='3d')
-ax.view_init(35, -140)
-ax.plot_surface(kx/pi, ky/pi, np.real(berrycurve), cmap=cmap)
-#ax.set_xticks([ -1,0, 1])
-#ax.set_xticklabels([ -1,0, r"$1$"])
-#ax.set_yticks([-1, 0, 1])
-#ax.set_yticklabels([-1, 0, r"$1$"])
-ax.set_zlim([-5, 15])
-ax.set_title(r"$\Omega_{-}$" + " where total chern number="+str(np.round(np.real(sumchern), 6)))
-ax.set_xlabel(r'$k_x/\pi$', labelpad=5)
-ax.set_ylabel(r'$k_y/\pi$', labelpad=5)
-# fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(np.round(M,2)) + r" \quad t_2 = "
-#              +str(t2)+r" \quad \phi = 0"+
-#              r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))+r"$", 
-#              y=1.05)
-# plt.savefig(sh + ".pdf", format="pdf")
-plt.show()       
+    The output of this function is a Wilson loop matrix - its eigenvalues are the Z2 invariant.
+    '''
+    for i,k_vec in enumerate(k_path):
+        H = Hamil(k_vec, var_vec)
+        W = np.zeros((len(ns),len(ns)), dtype=complex)
+        if i == 0:                                       #first k-point in k_path
+            evals, ekets = la.eigh(H)
+            if len(ns) == 2:
+                result = np.eye(2, dtype=np.complex128)
+            elif len(ns) == 4:
+                result=np.eye(4, dtype=np.complex128)
+            evs = ekets
+        else:
+            evals, ekets = la.eigh(H) #uniTrans(old, H)
+            
+            #set right gauge
+            
+            
+            for u in ns:
+                for v in ns:
+                    W[u%(len(ns))][v%(len(ns))] = np.vdot(old[:,u], ekets[:,v])
+            result = np.dot(result, W) # matrix multiplication of wilson lines
+        old=ekets
+    
+    "IMPORTANT: With some k-paths don't start from j=0, or you'll get an error from this function!"
+    for u in ns:
+        for v in ns:
+            W[u%(len(ns))][v%(len(ns))] = np.vdot(old[:,u], evs[:,v])
+    result = np.dot(result, W)  
 
 
 
-"""plot berry curve"""
-# normaliser = mpl.colors.Normalize(vmin=-110, vmax=110)
-fig, ax = plt.subplots()
-img = ax.imshow(np.real(np.flip(np.transpose(berrycurve), axis=0)), 
-                cmap="RdBu", aspect="auto", #norm=normaliser,
-                interpolation='none', extent=[-pi,pi,-pi,pi])
-ax.set_title(r"$\Omega_{-}$")
-ax.set_xlabel(r"$k_x$")
-label_list = [r'$-\pi$', r"$0$", r"$\pi$"]
-ax.set_xticks([-pi,0,pi])
-ax.set_yticks([-pi,0,pi])
-ax.set_xticklabels(label_list)
-ax.set_yticklabels(label_list)
-ax.set_ylabel(r"$k_y$", rotation=0)
-fig.colorbar(img)
-#fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(delta) + r" \quad t_2 = "
-#             +str(t2)+r" \quad \phi = "+phistring(phi)+r"\quad \Delta / t_2 = "+str(np.round(delta/t2, 2))+r"$", y=0.99)
-plt.show()
-
-
-"""lower band"""
-fig = plt.figure(figsize=(8,6))
-ax = plt.axes(projection='3d')
-ax.view_init(35, -140)
-ax.plot_surface(kx/pi, ky/pi, np.real(lowerband), cmap=cmap)#, norm=normaliser)
-#ax.set_xticks([-1, 0, 1])
-#ax.set_xticklabels([1, 0, r"$1$"])
-#ax.set_yticks([-1, 0, 1])
-#ax.set_yticklabels([-1, 0, r"$1$"])
-ax.set_title('lowerband')
-ax.set_xlabel(r'$k_x/\pi$')
-ax.set_ylabel(r'$k_y/\pi$')
-# fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(np.round(M,2)) + r" \quad t_2 = "
-#               +str(t2)+r" \quad \phi = 0"+
-#               r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))+r"$", y=0.99)
-# plt.savefig(sh + "BerryCurvature3-lowerband.pdf", format="pdf")
-plt.show()  
-
-
-"""upperband"""
-fig = plt.figure(figsize=(8,6))
-ax = plt.axes(projection='3d')
-ax.view_init(35, -140)
-ax.plot_surface(kx/pi, ky/pi, np.real(upperband), cmap=cmap)#, norm=normaliser)
-#ax.set_xticks([-1, 0, 1])
-#ax.set_xticklabels([1, 0, r"$1$"])
-#ax.set_yticks([-1, 0, 1])
-#ax.set_yticklabels([-1, 0, r"$1$"])
-ax.set_title('upperband')
-ax.set_xlabel(r'$k_x/\pi$')
-ax.set_ylabel(r'$k_y/\pi$')
-# fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(np.round(M,2)) + r" \quad t_2 = "
-#               +str(t2)+r" \quad \phi = 0"+
-#               r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))+r"$", y=0.99)
-# plt.savefig(sh + "BerryCurvature3-lowerband.pdf", format="pdf")
-plt.show()  
 
 #%%
 
@@ -427,12 +296,12 @@ params = [phi, m, t1, t2, t3, l_R]
 ns = [0,1, 2,3]
 
 Nw = 11
-spectras = np.empty((Nw, len(ns)))
-Z2s = np.empty((Nw, len(ns)))
-i=0
-for width in np.linspace(0,1,Nw):
+# spectras = np.empty((Nw, len(ns)))
+# Z2s = np.empty((Nw, len(ns)))
+# i=0
+for i, width in enumerate(np.linspace(0,1,Nw)):
     pointlist = [G, width*K_p1, width*K_1, width*K_p3]
-    # pointlist = [width*K_p1, width*K_1, width*K_p3, width*K_3, width*K_p2, width*K_2]
+
     k_path = KPath(pointlist, loop=True, N=200)
     
     WL = WilsonLoop(k_path, Haldane3, params, ns)
@@ -514,75 +383,6 @@ fig, ax = plt.subplots(figsize=(12,9))
 ax.plot(multiplier, np.real(evalsAbelian[:,0]), label="Abelian, first eigenvalue")
 plt.legend()
 plt.show()
-
-
-
-#%%
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.collections import LineCollection
-from matplotlib.colors import ListedColormap, BoundaryNorm
-
-def make_segments(x, y):
-    '''
-    Create list of line segments from x and y coordinates, in the correct format for LineCollection:
-    an array of the form   numlines x (points per line) x 2 (x and y) array
-    '''
-    points = np.array([x, y]).T.reshape(-1, 1, 2)
-    segments = np.concatenate([points[:-1], points[1:]], axis=1)
-    
-    return segments
-
-
-# Interface to LineCollection:
-
-def colorline(x, y, z=None, cmap=plt.get_cmap('copper'), norm=plt.Normalize(0.0, 1.0), linewidth=3, alpha=1.0):
-    '''
-    Plot a colored line with coordinates x and y
-    Optionally specify colors in the array z
-    Optionally specify a colormap, a norm function and a line width
-    '''
-    
-    # Default colors equally spaced on [0,1]:
-    if z is None:
-        z = np.linspace(0.0, 1.0, len(x))
-           
-    # Special case if a single number:
-    if not hasattr(z, "__iter__"):  # to check for numerical input -- this is a hack
-        z = np.array([z])
-        
-    z = np.asarray(z)
-    
-    segments = make_segments(x, y)
-    lc = LineCollection(segments, array=z, cmap=cmap, norm=norm, linewidth=linewidth, alpha=alpha)
-    
-    ax = plt.gca()
-    ax.add_collection(lc)
-    
-    return lc
-
-pointlist = [G, width*K_p1, width*K_1, width*K_p3]
-# pointlist = [width*K_p1, width*K_1, width*K_p3, width*K_3, width*K_p2, width*K_2]
-k_path = KPath(pointlist, loop=True, N=200)
-boundary = KPath([K_p1, K_1, K_p3, K_3, K_p2, K_2], loop=True, N=200)
-    
-x = k_path[:,0]
-y = k_path[:,1]
-    
-# Sine wave colored by time
-
-fig, axes = plt.subplots()
-
-colorline(x, y)
-plt.xlim(-4*pi/(3*s3)  , 4*pi/(3*s3) )
-plt.ylim(-2*pi/3,2*pi/3)
-plt.plot(boundary[:,0], boundary[:,1], 'r', label='BZ edge')
-plt.xlabel("kx")
-plt.ylabel("ky", rotation=0)
-plt.legend()
-plt.show()
-
-boundarypoints = [K_p1, K_1, K_p3, K_3, K_p2, K_2]
 
 
 

@@ -5,12 +5,14 @@ Created on Tue Jun 15 09:03:44 2021
 @author: Georgia Nixon
 """
 
-place = "Georgia"
+place = "Georgia Nixon"
 import numpy as np
 from numpy import cos, sin, exp, pi, tan
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
-from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecs
+sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
+from EulerClassHamiltonian import  EulerHamiltonian
+from hamiltonians import GetEvalsAndEvecs
 import matplotlib.pyplot as plt
 from numpy.linalg import eig
 from numpy.linalg import norm
@@ -74,7 +76,7 @@ def AlignGaugeBetweenVecs(vec1, vec2):
     Return phase shifted vec2
     """
     #overlap between vec1 and vec2
-    c = np.dot(np.conj(vec1), vec2)
+    c = np.vdot(vec1, vec2)
     #find conj phase of overlap
     conjPhase = np.conj(c)/np.abs(c)
     #remove phase, so overlap is real and positive
@@ -88,7 +90,7 @@ def AlignGaugeBetweenVecs(vec1, vec2):
         conjPhase = np.conj(c)/np.abs(c)
         vec2 = conjPhase*vec2
         c = np.dot(np.conj(vec1), vec2)
-        assert(round(np.imag(c), 28)==0)
+        assert(round(np.imag(c), 26)==0)
     
     return vec2
 
@@ -222,7 +224,7 @@ n1 = 2
 qpoints=51
 
 # arbitrary point I guess, but not a diract point
-gammaPoint = np.array([0.01,0])
+gammaPoint = np.array([0,-0.5])
 
 #get evecs at gamma point
 H = EulerHamiltonian(gammaPoint[0],gammaPoint[1])
@@ -231,7 +233,7 @@ u0 = evecs[:,0]
 u1 = evecs[:,1]
 u2 = evecs[:,2]
 #check it is not a dirac point
-assert(np.linalg.norm(u2)==1)
+assert(np.round(np.linalg.norm(u2),10)==1)
 
 #Go through all other points in BZ;
 kmin = -1
@@ -254,10 +256,10 @@ for xi, qx in enumerate(K1):
     
         # get params
         argument = np.dot(np.conj(u2), uFinal)
-        assert(round(np.imag(argument), 27)==0)
+        assert(round(np.imag(argument), 26)==0)
         argument = np.real(argument)
         theta = 2*np.arcsin(argument)
-        assert(round(np.imag(theta), 27)==0)
+        assert(round(np.imag(theta), 26)==0)
         theta = np.real(theta)
         
         thetas[xi,yi] = theta
@@ -278,7 +280,7 @@ thetas =  np.flip(thetas.T, axis=0)
 
 # plot 
 sz = 15
-fig, ax = plt.subplots(figsize=(sz,sz/2))
+fig, ax = plt.subplots(figsize=(sz/2,sz/2))
 pos = plt.imshow(thetas, cmap='plasma')
 ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
 ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
@@ -287,5 +289,5 @@ ax.set_yticklabels([kmax, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), roun
 ax.set_xlabel(r"$k_x$")
 ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 fig.colorbar(pos)
-plt.savefig(sh+"ThetaOverBZSecondBand,Gamma=(0p01,0).pdf", format="pdf")
+plt.savefig(sh+"ThetaOverBZSecondBand,Gamma=(0,-0p5).pdf", format="pdf")
 plt.show()

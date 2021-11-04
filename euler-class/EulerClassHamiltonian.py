@@ -114,35 +114,4 @@ def EulerHamiltonian(kx,ky):
     HFn = np.array([hjk[i]*gellManns[i] for i in range(len(hjk))])
     return np.sum(HFn, axis=0)
 
-#%%
-
-def GetEvalsAndEvecs(HF):
-    """
-    Get e-vals and e-vecs of Hamiltonian HF.
-    Order Evals and correspoinding evecs by smallest eval first.
-    Set the gauge for each evec; choosing the first non-zero element to be real and positive.
-    Note that the gauge may be changed later by multiplying any vec arbitrarily by a phase. 
-    """
-    #order by evals, also order corresponding evecs
-    evals, evecs = eig(HF)
-    idx = np.real(evals).argsort()
-    evals = evals[idx]
-    evecs = evecs[:,idx]
-    
-    #make first element of evecs real and positive
-    for vec in range(np.size(HF[0])):
-        
-        # Find first element of the first eigenvector that is not zero
-        firstNonZero = (evecs[:,vec]!=0).argmax()
-        #find the conjugate phase of this element
-        conjugatePhase = np.conj(evecs[firstNonZero,vec])/np.abs(evecs[firstNonZero,vec])
-        #multiply all elements by the conjugate phase
-        evecs[:,vec] = conjugatePhase*evecs[:,vec]
-
-    # check that the evals are real
-    if np.all((np.round(np.imag(evals),7) == 0)) == True:
-        return np.real(evals), evecs
-    else:
-        print('evals are imaginary!')
-        return evals, evecs
 

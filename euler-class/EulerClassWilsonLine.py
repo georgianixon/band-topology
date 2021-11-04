@@ -11,13 +11,15 @@ place = "Georgia Nixon"
 import numpy as np
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
-from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecs
+sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
+from EulerClassHamiltonian import  EulerHamiltonian
+from hamiltonians import GetEvalsAndEvecs
 import matplotlib.pyplot as plt
 from numpy.linalg import norm
 from numpy import pi, cos, sin
 import matplotlib as mpl
 from scipy.linalg import expm
-
+import numpy.linalg as la
 
 size=25
 params = {
@@ -188,6 +190,75 @@ for i, kpoint in enumerate(kline):
     wilsonLineNonAbelian[i] = expm(currentArgument)
     
     
+    #%%
+"""
+Calculate Wilson Line - new way
+"""
+
+
+
+
+def CalcOverlapEvecs(evecsFinal, evecsInitial, dgbands=3):
+    
+    M = np.zeros([dgbands, dgbands], dtype=np.complex128)
+    for n0 in range(dgbands):
+        for n1 in range(dgbands):
+            M[n0,n1] = np.vdot(evecsFinal[:,n1], evecsInitial[:,n0])
+    return M
+
+
+#num of points to calculate the wilson Line of
+qpoints = 1000
+Nw = 50
+centre = [0,0]
+
+wilsonLineEvalsByPathWidth = np.empty((Nw, 3), dtype=np.complex128)
+
+for i, radius in enumerate(np.linspace(0,2,Nw)):
+
+
+
+    # create circle line
+    kline = CreateCircleLine(radius, qpoints, centre = centre)
+    dqs = CircleDiff(qpoints, radius)
+    totalPoints = len(kline)
+
+    
+    WilsonLine = np.zeros((3,3), dtype=np.complex128)
+    
+    
+    #find starting vecs
+    
+    k_vec = kline[0]
+    H = EulerHamiltonian(k_vec[0], k_vec[1])
+    _, ekets0 = la.eigh(H)
+    eketsOld = ekets0
+    
+    # go through and align vecs until the end
+    for k_vec in kline[1:]:
+        H = EulerHamiltonian(k_vec[0], k_vec[1])
+        _, ekets = la.eigh(H)
+        M = CalcOverlapEvecs(ekets, eketsOld, dgbands = 3)
+        v, s, wh = la.svd(M)
+        Mrotate = np.matmul(np.transpose(np.conj(wh)),np.transpose(np.conj(v)))
+        eketsNewGauge = np.dot(Mrotate, ekets)
+        eketsOld = eketsNewGauge
+    
+    #calculate overlap
+    WilsonLine = CalcOverlapEvecs(eketsOld, ekets0)
+    WLevals, _ = GetEvalsAndEvecs(WilsonLine)
+    
+    wilsonLineEvalsByPathWidth[i]=WLevals
+
+wilsonevals0 = np.angle(wilsonLineEvalsByPathWidth[:,0])
+
+wilsonevals0newphase = np.where(wilsonevals0<0 , np.abs(wilsonevals0), wilsonevals0)
+
+
+plt.plot(np.linspace(0,1,Nw), wilsonevals0)
+plt.show()
+
+
 
 #%%
 '''

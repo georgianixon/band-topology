@@ -9,19 +9,25 @@ import numpy as np
 from numpy import sqrt, exp, pi, cos, sin
 import matplotlib.pyplot as plt 
 import matplotlib as mpl
-from numpy.linalg import eig
 from mpl_toolkits import mplot3d
+import numpy.linalg as la
 
-place = "Georgia"
+place = "Georgia Nixon"
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
-from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecs
+sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
+from EulerClassHamiltonian import  EulerHamiltonian
+from hamiltonians import GetEvalsAndEvecs
+sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
+
 
 def CreateCircleLineIntVals(r, points, centre=[0,0]):
     CircleLine =  [(int(np.round(cos(2*pi/points*x)*r+centre[0])),int(np.round(sin(2*pi/points*x)*r+centre[1]))) for x in range(0,int(np.ceil(points+1)))]
     #get rid of duplicates
-    CircleLine = list(dict.fromkeys(CircleLine) )
+    CircleLine = list(dict.fromkeys(CircleLine))
     return CircleLine
+
+
 
 def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
@@ -29,6 +35,44 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     kline = kline.astype(int)
     # kline = list(dict.fromkeys(kline) )
     return kline
+
+
+def BerryCurvatureEuler(k):
+    
+    h = 0.0001
+    
+    H = EulerHamiltonian(k[0], k[1])
+    
+    d0,v0 = la.eigh(H)
+                
+    #first eigenvector
+    u0=v0[:,2]
+    
+    #eigenvalues
+    band1 = d0[0]
+    band2 = d0[1] 
+    band3 = d0[2]
+    
+    #dx direction
+    kxx = k + np.array([h,0])
+    H = EulerHamiltonian(kxx[0], kxx[1])
+    dx,vx = la.eigh(H)
+    ux = vx[:,2] # first eigenvector
+    
+    #dy direction
+    kyy = k+np.array([0,h])
+    H = EulerHamiltonian(kyy[0], kyy[1])
+    dy,vy = la.eigh(H)
+    uy=vy[:,2] # first eigenvector
+
+    xder = (ux-u0)/h
+    yder = (uy-u0)/h
+    
+    berrycurve = 2*np.imag(np.dot(np.conj(xder), yder))
+    
+    return berrycurve, band1, band2, band3
+
+
 
 # def CreateCircleLineIntVals(r, points, centre=[0,0]):
 #     CircleLine =  [(int(np.round(cos(2*pi/points*x)*r+centre[0])),int(np.round(sin(2*pi/points*x)*r+centre[1]))) for x in range(0,int(np.ceil(points+1)))]
@@ -61,6 +105,8 @@ mpl.rcParams.update(params)
 
 
 
+
+
 #%%
 """
 Calculate Bandstructure
@@ -71,20 +117,77 @@ start = time.time()
 
 kmin = -1
 kmax = 1
-qpoints = 1001 # easier for meshgrid when this is odd
+qpoints = 101 # easier for meshgrid when this is odd
 K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
+
+berrycurve = np.empty([qpoints, qpoints], dtype=np.complex128)
+# band1 = np.empty([qpoints, qpoints], dtype=np.complex128)
+# band2 = np.empty([qpoints, qpoints], dtype=np.complex128)
+# band3 = np.empty([qpoints, qpoints], dtype=np.complex128)
+
+
 
 eiglist = np.zeros((qpoints,qpoints,3)) # for three bands
 
 for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
-        eigs, evecs = GetEvalsAndEvecs(EulerHamiltonian(qx,qy))
+        eigs, evecs = la.eigh(EulerHamiltonian(qx,qy))
         eiglist[xi,yi] = eigs
+        bC, b1, b2, b3 = BerryCurvatureEuler([qx, qy])
+        berrycurve[xi, yi] = bC
+        # band1[xi, yi] = b1
+        # band2[xi, yi] = b2
+        # band3[xi, yi] = b3
+
         
  
 end = time.time()
 print("Time consumed in working: ",end - start)       
+
+
+cmapstring = 'twilight'
+cmap = mpl.cm.get_cmap(cmapstring)
+
+
+u1, u2 = np.meshgrid(K1, K2)
+
+
+"""plot berry curve"""
+fig = plt.figure(figsize=(8,6))
+ax = plt.axes(projection='3d')
+ax.view_init(35, -140)
+surf = ax.plot_surface(u1, u2, np.real(berrycurve), cmap="RdBu")
+
+# ax.set_zlim([-5, 15])
+ax.set_title(r"$\Omega $ (gapped band)" )
+ax.set_xlabel(r'$k_x$', labelpad=5)
+ax.set_ylabel(r'$k_y$', labelpad=5)
+fig.colorbar(surf)
+plt.savefig(sh+"BerryCurvEulerBand2.pdf", format="pdf")
+plt.show()       
+
+
+
+"""plot berry curve"""
+fig, ax = plt.subplots()
+img = ax.imshow(np.real(np.flip(np.transpose(berrycurve), axis=0)), 
+                cmap="RdBu", aspect="auto",
+                interpolation='none', extent=[-1,1,-1,1])
+ax.set_title(r"$\Omega_{-}$")
+ax.set_xlabel(r"$k_x$")
+label_list = [r'$-\pi$', r"$0$", r"$\pi$"]
+ax.set_xticks([-pi,0,pi])
+ax.set_yticks([-pi,0,pi])
+ax.set_xticklabels(label_list)
+ax.set_yticklabels(label_list)
+ax.set_ylabel(r"$k_y$", rotation=0)
+fig.colorbar(img)
+plt.show()
+
+
+
+
 
 #%%
 
@@ -121,7 +224,7 @@ ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
 # cax = divider.append_axes("right", size="5%", pad=0.05)
 
 plt.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser), fraction=0.026, pad=0.04)
-plt.savefig(sh + "EulerBS.pdf", format="pdf")
+# plt.savefig(sh + "EulerBS.pdf", format="pdf")
 plt.show()
 
 #%%
@@ -203,3 +306,35 @@ plt.show()
 
 theta = np.linspace(0, 2*pi, 100)
 plt.plot(theta, np.tan(theta/2))
+
+
+
+#%%
+
+
+
+for xi, qx in enumerate(K1):
+    for yi, qy in enumerate(K2):
+        
+
+        
+        bC, b1, b2, b3, b4 = BerryCurvatureEuler([qx, qy])
+        berrycurve[xcnt, ycnt] = bC
+        band1[xcnt, ycnt] = b1
+        band2[xcnt, ycnt] = b2
+        band3[xcnt, ycnt] = b3
+        band4[xcnt, ycnt] = b4
+
+chernnumber = (1/2/pi)*np.sum(berrycurve[:-1,:-1])*jacobian
+
+
+
+
+
+
+
+
+
+
+
+
