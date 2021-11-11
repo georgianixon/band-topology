@@ -12,7 +12,7 @@ import matplotlib as mpl
 from mpl_toolkits import mplot3d
 import numpy.linalg as la
 
-place = "Georgia Nixon"
+place = "Georgia"
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
@@ -35,6 +35,7 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     kline = kline.astype(int)
     # kline = list(dict.fromkeys(kline) )
     return kline
+
 
 
 def BerryCurvatureEuler(k, n0, n1):
@@ -204,6 +205,33 @@ plt.show()
 
 
 
+#%%
+
+
+
+from mpl_toolkits import mplot3d
+import numpy as np
+import matplotlib.pyplot as plt    
+
+
+# % matplotlib notebook  
+# % matplotlib inline 
+
+fig = plt.figure(figsize=(12,12))
+ax = plt.axes(projection='3d')
+ax.view_init(6, 225)
+ax.plot_surface(u1, u2, np.real(band1), color='r')
+ax.plot_surface(u1, u2, np.real(band2), color='g')
+ax.plot_surface(u1, u2, np.real(band3), color='b')
+
+ax.set_xlabel(r'$k_x$', labelpad = 20)
+ax.set_ylabel(r'$k_y$', labelpad=20)
+ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
+plt.savefig(sh + "EulerBS.pdf", format="pdf")
+plt.show() 
+
+
+
 
 
 #%%
@@ -212,6 +240,8 @@ plt.show()
 Plot Bandstructure
 """
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+
 normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
 cmapstring = 'twilight'
 cmap = mpl.cm.get_cmap(cmapstring)
@@ -222,9 +252,9 @@ sz = 15
 fig, ax = plt.subplots(figsize=(10,10))
 ax = plt.axes(projection='3d')
 ax.view_init(0, 225)
-groundband = ax.contour3D(X, Y, np.real(eiglist[:,:,0]), 50,cmap=cmap, norm=normaliser)
-firstband = ax.contour3D(X, Y, np.real(eiglist[:,:,1]), 50,cmap=cmap, norm=normaliser)
-secondband = ax.contour3D(X, Y, np.real(eiglist[:,:,2]), 50,cmap=cmap, norm=normaliser)
+groundband = ax.contour3D(X, Y, np.real(band1), 50,cmap=cmap, norm=normaliser)
+firstband = ax.contour3D(X, Y, np.real(band2), 50,cmap=cmap, norm=normaliser)
+secondband = ax.contour3D(X, Y, np.real(band3), 50,cmap=cmap, norm=normaliser)
 # fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
 ax.set_xticks([-1, 0, 1])
 ax.set_yticks([-1, 0, 1])
@@ -248,7 +278,7 @@ plt.show()
 """
 Find dirac points
 """
-eigdiff = eiglist[:,:,1] - eiglist[:,:,0]
+eigdiff = band2 - band1
 eigdiff = np.abs(eigdiff)
 #align eigdiff with a usual plot, x along bottom, y along LHS.
 # =============================================================================

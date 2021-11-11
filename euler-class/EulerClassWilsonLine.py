@@ -6,7 +6,7 @@ Created on Thu Jul 15 16:55:37 2021
 """
 
 
-place = "Georgia Nixon"
+place = "Georgia"
 
 import numpy as np
 import sys
@@ -387,6 +387,7 @@ plt.show()
 Eigenvalue flow
 """ 
 
+multiplier = np.linspace(0,2*pi,totalPoints, endpoint=True)
     
 # calc evals for Wilson Line
 evalsAbelian = np.empty([totalPoints, 3], dtype=np.complex128)
@@ -404,7 +405,7 @@ mpl.rcParams.update({
           })
     
 apply = [lambda x: np.real, np.imag, np.angle]
-labels = [ r'$\mathrm{Re}( e )$', r'$\mathrm{Imag} (e) $', r'$\mathrm{Phase}( e)$', ]
+labels = [ r'$\mathrm{Real}( e )$', r'$\mathrm{Imag} (e) $', r'$\mathrm{Phase}( e)$', ]
 
 
 cmapcol = 'PuOr' #PiYG_r
@@ -414,9 +415,13 @@ sz = 6
 fig, ax = plt.subplots(nrows=1, ncols=3, sharey=True, constrained_layout=True, 
                         figsize=(sz*len(apply)*1.3,sz))
 
-ax[0].plot(multiplier, np.real(evalstoPlot), label='first eigenvalue')
-ax[1].plot(multiplier, np.imag(evalstoPlot), label='first eigenvalue')
-ax[2].plot(multiplier, np.angle(evalstoPlot), label='first eigenvalue')
+funcs = [np.real, np.imag, np.angle]
+for i , f in enumerate(funcs):
+    ax[i].plot(multiplier, f(evalsAbelian[:,0]), '.', label=r'$1^{st}$ eigenvalue')
+    ax[i].plot(multiplier, f(evalsAbelian[:,1]), '.', label=r'$2^{nd}$ eigenvalue')
+    ax[i].plot(multiplier, f(evalsAbelian[:,2]), '.', label=r'$3^{rd}$ eigenvalue')
+    # ax[i].plot(multiplier, np.imag(evalsAbelian[:,0]), label='first eigenvalue')
+    # ax[i].plot(multiplier, np.angle(evalsAbelian[:,0]), 'x', label='first eigenvalue')
  
 for i, f in enumerate(apply):
     # ax[i].plot(multiplier, f(evalstoPlot), label='first eigenvalue')
