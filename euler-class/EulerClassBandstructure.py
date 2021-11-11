@@ -12,7 +12,7 @@ import matplotlib as mpl
 from mpl_toolkits import mplot3d
 import numpy.linalg as la
 
-place = "Georgia"
+place = "Georgia Nixon"
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
@@ -128,10 +128,12 @@ import time
 start = time.time()
 
 kmin = -1
-kmax = 1
-qpoints = 101 # easier for meshgrid when this is odd
+kmax = 3
+qpoints = 201 # easier for meshgrid when this is odd
 K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
+
+u1, u2 = np.meshgrid(K1, K2)
 
 berrycurve = np.empty([qpoints, qpoints], dtype=np.complex128)
 
@@ -146,9 +148,7 @@ band3 = np.empty([qpoints, qpoints], dtype=np.complex128)
 for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
         k = np.array([qx,qy])
-        # H = EulerHamiltonian(k)
-        # eigs, _ = GetEvalsAndEvecsEuler(H)
-        # eiglist[xi,yi] = eigs
+
         bC, b1, b2, b3 = BerryCurvatureEuler(k,2,2)
         
         berrycurve[xi, yi] = bC
@@ -166,9 +166,6 @@ print("Time consumed in working: ",end - start)
 
 cmapstring = 'twilight'
 cmap = mpl.cm.get_cmap(cmapstring)
-
-
-u1, u2 = np.meshgrid(K1, K2)
 
 
 """plot berry curve"""
@@ -217,17 +214,18 @@ import matplotlib.pyplot as plt
 # % matplotlib notebook  
 # % matplotlib inline 
 
-fig = plt.figure(figsize=(12,12))
+fig = plt.figure(figsize=(14,9), constrained_layout=True)
 ax = plt.axes(projection='3d')
-ax.view_init(6, 225)
+ax.view_init(0, 225)
 ax.plot_surface(u1, u2, np.real(band1), color='r')
 ax.plot_surface(u1, u2, np.real(band2), color='g')
 ax.plot_surface(u1, u2, np.real(band3), color='b')
 
 ax.set_xlabel(r'$k_x$', labelpad = 20)
 ax.set_ylabel(r'$k_y$', labelpad=20)
-ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
-plt.savefig(sh + "EulerBS.pdf", format="pdf")
+# ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
+plt.margins(0,0,0)
+plt.savefig(sh + "EulerBS1.pdf", format="pdf", bbox_inches = 'tight', pad_inches = -0.1)
 plt.show() 
 
 
@@ -302,16 +300,26 @@ verticalEl_upToDown, horizontalEl_leftToRight = np.unravel_index(idx, np.shape(e
 verticalEl_downToUp = len(eigdiff[:,0])-1-verticalEl_upToDown
 diracPoints = list(zip(horizontalEl_leftToRight, verticalEl_upToDown))
 
-norm = mpl.colors.Normalize(vmin=eigdiff.min(), vmax=eigdiff.max())
-# norm=mpl.colors.LogNorm(vmin=eigdiff.min(), vmax=eigdiff.max())
+# norm = mpl.colors.Normalize(vmin=eigdiff.min(), vmax=eigdiff.max())
+norm=mpl.colors.LogNorm(vmin=eigdiff.min(), vmax=eigdiff.max())
 
-sz = 15
-fig, ax = plt.subplots(figsize=(sz,sz/2))
+sz = 9
+fig, ax = plt.subplots(figsize=(sz,sz))
 pos = plt.imshow(eigdiff, cmap='viridis', norm=norm)
+
+#for range k = ([-1,3])
 ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
 ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
 ax.set_xticklabels([kmin, int(round((kmin+kmax)/4)), int((kmin+kmax)/2), int(round(3*(kmin+kmax)/4)), kmax])
 ax.set_yticklabels([kmax, int(round(3*(kmin+kmax)/4)), int((kmin+kmax)/2), int(round((kmin+kmax)/4)), kmin])
+
+# for range k = ([-1,1])
+# ax.set_xticks([0, (qpoints-1)/2,   qpoints-1])
+# ax.set_yticks([0,  (qpoints-1)/2,  qpoints-1])
+# ax.set_xticklabels([kmin,  int((kmin+kmax)/2),  kmax])
+# ax.set_yticklabels([kmax,  int((kmin+kmax)/2),  kmin])
+
+
 ax.set_xlabel(r"$k_x$")
 ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 
@@ -340,7 +348,7 @@ ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 #     ax.add_patch(circ)
 
 fig.colorbar(pos)
-plt.savefig(sh + "EigDif-1,1.pdf", format="pdf")
+plt.savefig(sh + "EigDif-1,3Log.pdf", format="pdf")
 plt.show()
 
 

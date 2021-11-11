@@ -6,7 +6,7 @@ Created on Thu Jul 15 16:55:37 2021
 """
 
 
-place = "Georgia"
+place = "Georgia Nixon"
 
 import numpy as np
 import sys
@@ -23,11 +23,11 @@ import numpy.linalg as la
 
 size=25
 params = {
-        'legend.fontsize': size*0.75,
+        'legend.fontsize': size*0.8,
           'axes.labelsize': size,
           'axes.titlesize': size,
-          'xtick.labelsize': size*0.75,
-          'ytick.labelsize': size*0.75,
+          'xtick.labelsize': size*0.8,
+          'ytick.labelsize': size*0.8,
           'font.size': size,
           'font.family': 'STIXGeneral',
           'mathtext.fontset': 'stix',
@@ -44,6 +44,7 @@ params = {
           "axes.facecolor":"0.9",
           "grid.color":"1"
           }
+
 
 mpl.rcParams.update(params)
 
@@ -197,7 +198,7 @@ Define Wilson Line path (kline)
 #num of points to calculate the wilson Line of
 qpoints = 1000
 radius=0.5
-centre = [1,1]
+centre = [0,0]
 
 # create rectangle line
 # kline0 = CreateLinearLine(0.5, 0, 0.5, 2,  qpoints)
@@ -318,123 +319,144 @@ Calculate Wilson Line -
 """
 
 
-
-#num of points to calculate the wilson Line of
-qpoints = 1000
-Nw = 50
-centre = [0,0]
-radius = 0.5
-kline = CreateCircleLine(radius, qpoints, centre = centre)
-dqs = CircleDiff(qpoints, radius)
-totalPoints = len(kline)
+def NumToString(num):
+    string = str(num)
+    string= string.replace(".", "p")
+    return string
 
 
-# initial conditions
-k0 = kline[0]
-H = EulerHamiltonian(k0)
-_, evecs0 = GetEvalsAndEvecsEuler(H)
-evecsOld = evecs0
-
-
-wilsonLineAbelian = np.empty([totalPoints, 3, 3], dtype=np.complex128)
-# go through possible end points for k
-
-for i, kpoint in enumerate(kline[1:]):
-    #Find evec at k point, calculate Wilson Line abelian method
-    H = EulerHamiltonian(kpoint)
-    _, evecsP = GetEvalsAndEvecsEuler(H)
+for radius in np.linspace(0.1, 3, 30):
+    #num of points to calculate the wilson Line of
+    qpoints = 1000
+    Nw = 50
+    centre = [1,1]
+    # radius = 1.1
+    kline = CreateCircleLine(radius, qpoints, centre = centre)
+    dqs = CircleDiff(qpoints, radius)
+    totalPoints = len(kline)
     
-    #rotate evecs to be in aligning gauge with evecs before
-    # evecsP = SetGaugeSVG(evecsP, evecsOld)
-    evecsP = SetGaugeByBand(evecsP, evecsOld)
     
-    #find abelian Wilson Line crossover
+    # initial conditions
+    k0 = kline[0]
+    H = EulerHamiltonian(k0)
+    _, evecs0 = GetEvalsAndEvecsEuler(H)
+    evecsOld = evecs0
     
-    wilsonLineAbelian[i] = AbelianCalcWilsonLine(evecsP, evecs0)
     
-    evecsOld = evecsP
-
-
-
-#%%
-'''
-Plot [2,2] Matrix element
-'''
-
-m1 = 2
-m2 = 2
-multiplier = np.linspace(0,2*pi,totalPoints, endpoint=True)
-fig, ax = plt.subplots(figsize=(12,9))
-
-# ax.plot(multiplier, np.square(np.abs(wilsonLineNonAbelian[:,m1,m2])), label="Non Abelian")
-ax.plot(multiplier, np.real(wilsonLineAbelian[:,m1,m2]))
-
-ax.set_ylabel(r"$|W["+str(m1) +","+str(m2)+"]|^2 = |<\Phi_{q_f}^"+str(m1)+" | \Phi_{q_i}^"+str(m2)+">|^2$")
-ax.set_xticks([0, pi, 2*pi])
-ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
-
-
-# ax.set_ylim([0,1.01])
-ax.set_xlabel(r"Final quasimomentum point, going around circle with centre (0,0)")
-# plt.legend(loc="upper right")
-# plt.savefig(sh+ "WilsonLineEulerRectangle00.pdf", format="pdf")
-plt.savefig(sh+ "WilsonLineEulerCircleMatrixEl,"+str(m1)+str(m2)+".pdf", format="pdf")
-plt.show()   
-
-
-#%%
-"""
-Eigenvalue flow
-""" 
-
-multiplier = np.linspace(0,2*pi,totalPoints, endpoint=True)
+    wilsonLineAbelian = np.empty([totalPoints, 3, 3], dtype=np.complex128)
+    # go through possible end points for k
     
-# calc evals for Wilson Line
-evalsAbelian = np.empty([totalPoints, 3], dtype=np.complex128)
-for i in range(totalPoints):
-    wL = wilsonLineAbelian[i]
-    wLEvals, _ = GetEvalsAndEvecsGen(wL)
-    evalsAbelian[i,:] = wLEvals
+    for i, kpoint in enumerate(kline[1:]):
+        #Find evec at k point, calculate Wilson Line abelian method
+        H = EulerHamiltonian(kpoint)
+        _, evecsP = GetEvalsAndEvecsEuler(H)
+        
+        #rotate evecs to be in aligning gauge with evecs before
+        # evecsP = SetGaugeSVG(evecsP, evecsOld)
+        evecsP = SetGaugeByBand(evecsP, evecsOld)
+        
+        #find abelian Wilson Line crossover
+        
+        wilsonLineAbelian[i] = AbelianCalcWilsonLine(evecsP, evecs0)
+        
+        evecsOld = evecsP
     
-
-
-evalstoPlot = evalsAbelian[:,0]
-
-mpl.rcParams.update({
-          'mathtext.fontset':'stix'
-          })
     
-apply = [lambda x: np.real, np.imag, np.angle]
-labels = [ r'$\mathrm{Real}( e )$', r'$\mathrm{Imag} (e) $', r'$\mathrm{Phase}( e)$', ]
+    
+    # #%%
+    # '''
+    # Plot [2,2] Matrix element
+    # '''
+    
+    # m1 = 2
+    # m2 = 2
+    # multiplier = np.linspace(0,2*pi,totalPoints, endpoint=True)
+    # fig, ax = plt.subplots(figsize=(12,9))
+    
+    # # ax.plot(multiplier, np.square(np.abs(wilsonLineNonAbelian[:,m1,m2])), label="Non Abelian")
+    # ax.plot(multiplier, np.real(wilsonLineAbelian[:,m1,m2]))
+    
+    # ax.set_ylabel(r"$|W["+str(m1) +","+str(m2)+"]|^2 = |<\Phi_{q_f}^"+str(m1)+" | \Phi_{q_i}^"+str(m2)+">|^2$")
+    # ax.set_xticks([0, pi, 2*pi])
+    # ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
+    
+    
+    # # ax.set_ylim([0,1.01])
+    # ax.set_xlabel(r"Final quasimomentum point, going around circle with centre (0,0)")
+    # # plt.legend(loc="upper right")
+    # # plt.savefig(sh+ "WilsonLineEulerRectangle00.pdf", format="pdf")
+    # plt.savefig(sh+ "WilsonLineEulerCircleMatrixEl,"+str(m1)+str(m2)+".pdf", format="pdf")
+    # plt.show()   
+    
+    
+    """
+    Eigenvalue flow
+    """ 
+    
+    multiplier = np.linspace(0,2*pi,totalPoints, endpoint=True)
+        
+    # calc evals for Wilson Line
+    evalsAbelian = np.empty([totalPoints, 3], dtype=np.complex128)
+    for i in range(totalPoints):
+        wL = wilsonLineAbelian[i]
+        wLEvals, _ = GetEvalsAndEvecsGen(wL)
+        evalsAbelian[i,:] = wLEvals
+        
+        
+    #get rid of last value which can be funny..
+    evalsAbelian = evalsAbelian[:-1]
+    multiplier = multiplier[:-1]
+    
+    
+    
+    sz = 8
+    fig, ax = plt.subplots(figsize=(sz*1.3,sz))
+    
+    ax.plot(multiplier, np.angle(evalsAbelian[:,0]), '.', label=r'$1^{\mathrm{st}}$ eigenvalue')
+    ax.plot(multiplier, np.angle(evalsAbelian[:,1]), '.', label=r'$2^{\mathrm{nd}}$ eigenvalue')
+    ax.plot(multiplier, np.angle(evalsAbelian[:,2]), '.', label=r'$3^{\mathrm{rd}}$ eigenvalue')
+    ax.set_xticks((0, pi/2,  pi, 3*pi/2,  2*pi))
+    ax.set_xticklabels((r'$0$', r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3\pi}{2}$", r"$2\pi$" ))
+    ax.set_title( r'$\mathrm{Im} ( \mathrm{log}(e))$') 
+    plt.legend()
+    ax.set_yticks((-pi, -1,  0, 1,  pi))
+    ax.set_yticklabels((r'$-\pi$', "-1", r"$0$", "$1$", r"$\pi$" ))
+    fig.text(0.5, 0.03, 'final q-momentum', ha='center')
+    plt.savefig(sh+ "WilsonLineEulerCircleEvals,r="+NumToString(radius)+",c=(1,1).pdf", format="pdf")
+    plt.show()
 
 
-cmapcol = 'PuOr' #PiYG_r
-cmap= mpl.cm.get_cmap(cmapcol)
 
-sz = 6
-fig, ax = plt.subplots(nrows=1, ncols=3, sharey=True, constrained_layout=True, 
-                        figsize=(sz*len(apply)*1.3,sz))
 
-funcs = [np.real, np.imag, np.angle]
-for i , f in enumerate(funcs):
-    ax[i].plot(multiplier, f(evalsAbelian[:,0]), '.', label=r'$1^{st}$ eigenvalue')
-    ax[i].plot(multiplier, f(evalsAbelian[:,1]), '.', label=r'$2^{nd}$ eigenvalue')
-    ax[i].plot(multiplier, f(evalsAbelian[:,2]), '.', label=r'$3^{rd}$ eigenvalue')
-    # ax[i].plot(multiplier, np.imag(evalsAbelian[:,0]), label='first eigenvalue')
-    # ax[i].plot(multiplier, np.angle(evalsAbelian[:,0]), 'x', label='first eigenvalue')
+# sz = 5
+# fig, ax = plt.subplots(nrows=1, ncols=3, sharey=True, constrained_layout=True, 
+#                         figsize=(sz*len(apply)*1.3,sz))
+
+# funcs = [np.real, np.imag, np.angle]
+# for i , f in enumerate(funcs):
+#     ax[i].plot(multiplier, f(evalsAbelian[:,0]), '.', label=r'$1^{\mathrm{st}}$ eigenvalue')
+#     ax[i].plot(multiplier, f(evalsAbelian[:,1]), '.', label=r'$2^{\mathrm{nd}}$ eigenvalue')
+#     ax[i].plot(multiplier, f(evalsAbelian[:,2]), '.', label=r'$3^{\mathrm{rd}}$ eigenvalue')
+#     # ax[i].plot(multiplier, np.imag(evalsAbelian[:,0]), label='first eigenvalue')
+#     # ax[i].plot(multiplier, np.angle(evalsAbelian[:,0]), 'x', label='first eigenvalue')
+#     ax[i].set_xticks((0, pi/2,  pi, 3*pi/2,  2*pi))
+#     ax[i].set_xticklabels((r'$0$', r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3\pi}{2}$", r"$2\pi$" ))
  
-for i, f in enumerate(apply):
-    # ax[i].plot(multiplier, f(evalstoPlot), label='first eigenvalue')
-    ax[i].set_title(labels[i],  fontfamily='STIXGeneral') 
-plt.legend()
-# plt.savefig(sh+ "WilsonLineEulerCircleEvals,"+str(m1)+str(m2)+".pdf", format="pdf")
-plt.show()
-
-# fig, ax = plt.subplots(figsize=(12,9))
-# # ax.plot(multiplier, np.real(evalsNonAbelian[:,0]), label="Non Abelian, first eigenvalue")
-# ax.plot(multiplier, np.angle(evalsAbelian[:,0]), label="first eigenvalue")
+# for i, f in enumerate(apply):
+#     # ax[i].plot(multiplier, f(evalstoPlot), label='first eigenvalue')
+#     ax[i].set_title(labels[i],  fontfamily='STIXGeneral') 
 # plt.legend()
+# ax[0].set_yticks((-pi, -1,  0, 1,  pi))
+# ax[0].set_yticklabels((r'$-\pi$', "-1", r"$0$", "$1$", r"$\pi$" ))
+# fig.text(0.5, -0.08, 'position along circle path (parameterised by angle relative to horizontal)', ha='center')
+# plt.savefig(sh+ "WilsonLineEulerCircleEvals,r=2,c=(0,0).pdf", format="pdf")
 # plt.show()
+
+# # fig, ax = plt.subplots(figsize=(12,9))
+# # # ax.plot(multiplier, np.real(evalsNonAbelian[:,0]), label="Non Abelian, first eigenvalue")
+# # ax.plot(multiplier, np.angle(evalsAbelian[:,0]), label="first eigenvalue")
+# # plt.legend()
+# # plt.show()
 
 
 
