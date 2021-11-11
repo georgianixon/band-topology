@@ -16,8 +16,8 @@ place = "Georgia Nixon"
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
-from EulerClassHamiltonian import  EulerHamiltonian
-from hamiltonians import GetEvalsAndEvecs
+from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
+from hamiltonians import GetEvalsAndEvecsGen
 sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
 
 
@@ -37,16 +37,21 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     return kline
 
 
-def BerryCurvatureEuler(k):
+def BerryCurvatureEuler(k, n0, n1):
+    """
+    Usually for Euler set n0 = n1 = 2 to look at Berry curvature in the gappend, excited band
+    """
+    
     
     h = 0.0001
     
-    H = EulerHamiltonian(k[0], k[1])
+    H = EulerHamiltonian(k)
     
-    d0,v0 = la.eigh(H)
+    d0,v0 = GetEvalsAndEvecsEuler(H)
                 
-    #first eigenvector
-    u0=v0[:,2]
+    # excited (gapped) eigenvector
+    u0bx=v0[:,n0]
+    u0by=v0[:,n1]
     
     #eigenvalues
     band1 = d0[0]
@@ -55,20 +60,26 @@ def BerryCurvatureEuler(k):
     
     #dx direction
     kxx = k + np.array([h,0])
-    H = EulerHamiltonian(kxx[0], kxx[1])
-    dx,vx = la.eigh(H)
-    ux = vx[:,2] # first eigenvector
+    H = EulerHamiltonian(kxx)
+    dx,vx = GetEvalsAndEvecsEuler(H)
+    ux = vx[:,n0] # first eigenvector
+    
+    #chose neighbouring gauge
+    ux = AlignGaugeBetweenVecs(u0bx, ux)
     
     #dy direction
     kyy = k+np.array([0,h])
-    H = EulerHamiltonian(kyy[0], kyy[1])
-    dy,vy = la.eigh(H)
-    uy=vy[:,2] # first eigenvector
-
-    xder = (ux-u0)/h
-    yder = (uy-u0)/h
+    H = EulerHamiltonian(kyy)
+    dy,vy = GetEvalsAndEvecsEuler(H)
+    uy=vy[:,n1] # first eigenvector
     
-    berrycurve = 2*np.imag(np.dot(np.conj(xder), yder))
+    #choose neighbouring gauge
+    uy = AlignGaugeBetweenVecs(u0by, uy)
+
+    xder = (ux-u0bx)/h
+    yder = (uy-u0by)/h
+    
+    berrycurve = 2*np.imag(np.vdot(xder, yder))
     
     return berrycurve, band1, band2, band3
 
@@ -109,7 +120,7 @@ mpl.rcParams.update(params)
 
 #%%
 """
-Calculate Bandstructure
+Calculate Bandstructure / Berry Curve
 """
 
 import time
@@ -122,29 +133,35 @@ K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 
 berrycurve = np.empty([qpoints, qpoints], dtype=np.complex128)
-# band1 = np.empty([qpoints, qpoints], dtype=np.complex128)
-# band2 = np.empty([qpoints, qpoints], dtype=np.complex128)
-# band3 = np.empty([qpoints, qpoints], dtype=np.complex128)
 
 
+band1 = np.empty([qpoints, qpoints], dtype=np.complex128)
+band2 = np.empty([qpoints, qpoints], dtype=np.complex128)
+band3 = np.empty([qpoints, qpoints], dtype=np.complex128)
 
-eiglist = np.zeros((qpoints,qpoints,3)) # for three bands
+
+# eiglist = np.zeros((qpoints,qpoints,3)) # for three bands
 
 for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
-        eigs, evecs = la.eigh(EulerHamiltonian(qx,qy))
-        eiglist[xi,yi] = eigs
-        bC, b1, b2, b3 = BerryCurvatureEuler([qx, qy])
+        k = np.array([qx,qy])
+        # H = EulerHamiltonian(k)
+        # eigs, _ = GetEvalsAndEvecsEuler(H)
+        # eiglist[xi,yi] = eigs
+        bC, b1, b2, b3 = BerryCurvatureEuler(k,2,2)
+        
         berrycurve[xi, yi] = bC
-        # band1[xi, yi] = b1
-        # band2[xi, yi] = b2
-        # band3[xi, yi] = b3
+
+        band1[xi, yi] = b1
+        band2[xi, yi] = b2
+        band3[xi, yi] = b3
 
         
  
 end = time.time()
 print("Time consumed in working: ",end - start)       
 
+#%%
 
 cmapstring = 'twilight'
 cmap = mpl.cm.get_cmap(cmapstring)
@@ -164,7 +181,7 @@ ax.set_title(r"$\Omega $ (gapped band)" )
 ax.set_xlabel(r'$k_x$', labelpad=5)
 ax.set_ylabel(r'$k_y$', labelpad=5)
 fig.colorbar(surf)
-plt.savefig(sh+"BerryCurvEulerBand2.pdf", format="pdf")
+# plt.savefig(sh+"BerryCurvEulerBand2.pdf", format="pdf")
 plt.show()       
 
 
@@ -176,7 +193,7 @@ img = ax.imshow(np.real(np.flip(np.transpose(berrycurve), axis=0)),
                 interpolation='none', extent=[-1,1,-1,1])
 ax.set_title(r"$\Omega_{-}$")
 ax.set_xlabel(r"$k_x$")
-label_list = [r'$-\pi$', r"$0$", r"$\pi$"]
+label_list = [r'$-1$', r"$0$", r"$1$"]
 ax.set_xticks([-pi,0,pi])
 ax.set_yticks([-pi,0,pi])
 ax.set_xticklabels(label_list)

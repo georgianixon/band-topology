@@ -11,8 +11,9 @@ from numpy import cos, sin, exp, pi, tan
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
-from EulerClassHamiltonian import  EulerHamiltonian
-from hamiltonians import GetEvalsAndEvecs
+from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
+
+# from hamiltonians import GetEvalsAndEvecs
 import matplotlib.pyplot as plt
 from numpy.linalg import eig
 from numpy.linalg import norm
@@ -70,29 +71,7 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     return kline
 
 
-def AlignGaugeBetweenVecs(vec1, vec2):
-    """
-    Make <vec1|vec2> real and positive by shifting overall phase of vec2
-    Return phase shifted vec2
-    """
-    #overlap between vec1 and vec2
-    c = np.vdot(vec1, vec2)
-    #find conj phase of overlap
-    conjPhase = np.conj(c)/np.abs(c)
-    #remove phase, so overlap is real and positive
-    vec2 = conjPhase*vec2
-    
-    # make sure vec1 is in the right gauge, to 20dp
-    c = np.dot(np.conj(vec1), vec2)
-    
-    #try again if still not within..
-    if round(np.imag(c), 30)!=0:
-        conjPhase = np.conj(c)/np.abs(c)
-        vec2 = conjPhase*vec2
-        c = np.dot(np.conj(vec1), vec2)
-        assert(round(np.imag(c), 26)==0)
-    
-    return vec2
+
 
 #%%
 #band that we looking at eigenstate trajectory
@@ -115,8 +94,8 @@ totalPoints = len(kline)
 #step for abelian version
 #find u at first k
 k0 = kline[0]
-H = EulerHamiltonian(k0[0],k0[1])
-_, evecs = GetEvalsAndEvecs(H)
+H = EulerHamiltonian(k0)
+_, evecs = GetEvalsAndEvecsEuler(H)
 u0 = evecs[:,0]
 u1 = evecs[:,1]
 u2 = evecs[:,2]
@@ -130,8 +109,8 @@ phisLine = np.zeros(totalPoints, dtype=np.complex128)
 for i, kpoint in enumerate(kline):
     #do abeliean version,
     #find evecs at other k down the line
-    H = EulerHamiltonian(kpoint[0], kpoint[1])
-    _, evecs = GetEvalsAndEvecs(H)
+    H = EulerHamiltonian(kpoint)
+    _, evecs = GetEvalsAndEvecsEuler(H)
     uFinal = evecs[:,n1]
     
     #get correct overall phase for uFinal
@@ -177,7 +156,7 @@ ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
 ax.set_yticks([0, pi/2, pi])
 ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
 ax.set_ylabel(r"$\theta$", rotation=0, labelpad=15)
-plt.savefig(sh+ "thetasCircle2Trajectory.pdf", format="pdf")
+# plt.savefig(sh+ "thetasCircle2Trajectory.pdf", format="pdf")
 plt.show()    
 
 # fig, ax = plt.subplots(figsize=fs)
@@ -198,7 +177,7 @@ ax.set_xlabel(r"final quasimomentum, going around circle with centre (1,1), $2^{
 ax.set_xticks([0, pi, 2*pi])
 ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
 ax.set_ylabel(r"$\phi$")
-plt.savefig(sh+ "phisCircle2Trajectory.pdf", format="pdf")
+# plt.savefig(sh+ "phisCircle2Trajectory.pdf", format="pdf")
 plt.show()    
 
 
@@ -224,11 +203,11 @@ n1 = 2
 qpoints=51
 
 # arbitrary point I guess, but not a diract point
-gammaPoint = np.array([0,-0.5])
+gammaPoint = np.array([0.5,-0.5])
 
 #get evecs at gamma point
-H = EulerHamiltonian(gammaPoint[0],gammaPoint[1])
-_, evecs = GetEvalsAndEvecs(H)
+H = EulerHamiltonian(gammaPoint)
+_, evecs = GetEvalsAndEvecsEuler(H)
 u0 = evecs[:,0]
 u1 = evecs[:,1]
 u2 = evecs[:,2]
@@ -247,7 +226,9 @@ eiglist = np.empty((qpoints,qpoints,3)) # for three bands
 
 for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
-        eigs, evecs = GetEvalsAndEvecs(EulerHamiltonian(qx,qy))
+        k = np.array([qx,qy])
+        H = EulerHamiltonian(k)
+        eigs, evecs = GetEvalsAndEvecsEuler(H)
         
         uFinal = evecs[:,n1]
     
@@ -289,5 +270,5 @@ ax.set_yticklabels([kmax, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), roun
 ax.set_xlabel(r"$k_x$")
 ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 fig.colorbar(pos)
-plt.savefig(sh+"ThetaOverBZSecondBand,Gamma=(0,-0p5).pdf", format="pdf")
+# plt.savefig(sh+"ThetaOverBZSecondBand,Gamma=(0,-0p5).pdf", format="pdf")
 plt.show()
