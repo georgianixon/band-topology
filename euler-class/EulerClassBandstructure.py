@@ -12,11 +12,12 @@ import matplotlib as mpl
 from mpl_toolkits import mplot3d
 import numpy.linalg as la
 
-place = "Georgia Nixon"
+place = "Georgia"
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
-from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
+from EulerClass2Hamiltonian import  Euler2Hamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
+from EulerClass4Hamiltonian import  Euler4Hamiltonian
 from hamiltonians import GetEvalsAndEvecsGen
 sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
 
@@ -38,7 +39,7 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
 
 
 
-def BerryCurvatureEuler(k, n0, n1):
+def BerryCurvatureEuler(k, n0, n1, EulerHamiltonian):
     """
     Usually for Euler set n0 = n1 = 2 to look at Berry curvature in the gappend, excited band
     """
@@ -149,7 +150,7 @@ for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
         k = np.array([qx,qy])
 
-        bC, b1, b2, b3 = BerryCurvatureEuler(k,2,2)
+        bC, b1, b2, b3 = BerryCurvatureEuler(k,0,0, Euler4Hamiltonian)
         
         berrycurve[xi, yi] = bC
 
@@ -172,7 +173,7 @@ cmap = mpl.cm.get_cmap(cmapstring)
 fig = plt.figure(figsize=(8,6))
 ax = plt.axes(projection='3d')
 ax.view_init(35, -140)
-surf = ax.plot_surface(u1, u2, np.real(berrycurve), cmap="RdBu")
+surf = ax.plot_surface(u1[:50,:50], u2[:50,:50], np.real(berrycurve)[:50,:50], cmap="RdBu")
 
 # ax.set_zlim([-5, 15])
 ax.set_title(r"$\Omega $ (gapped band)" )
@@ -210,22 +211,30 @@ from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt    
 
+pp = 101
+u1p = u1[:pp, :pp]
+u2p = u2[:pp, :pp]
+band1p = band1[:pp, :pp]
+band2p = band2[:pp, :pp]
+band3p = band3[:pp, :pp]
+
+
 
 # % matplotlib notebook  
 # % matplotlib inline 
 
 fig = plt.figure(figsize=(14,9), constrained_layout=True)
 ax = plt.axes(projection='3d')
-ax.view_init(0, 225)
-ax.plot_surface(u1, u2, np.real(band1), color='r')
-ax.plot_surface(u1, u2, np.real(band2), color='g')
-ax.plot_surface(u1, u2, np.real(band3), color='b')
+ax.view_init(10, 225)
+ax.plot_surface(u1p, u2p, np.real(band1p), color='r')
+ax.plot_surface(u1p, u2p, np.real(band2p), color='g')
+ax.plot_surface(u1p, u2p, np.real(band3p), color='b')
 
 ax.set_xlabel(r'$k_x$', labelpad = 20)
 ax.set_ylabel(r'$k_y$', labelpad=20)
 # ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
 plt.margins(0,0,0)
-plt.savefig(sh + "EulerBS1.pdf", format="pdf", bbox_inches = 'tight', pad_inches = -0.1)
+# plt.savefig(sh + "Euler4BS(10,225).pdf", format="pdf", bbox_inches = 'tight', pad_inches = -0.1)
 plt.show() 
 
 
@@ -234,49 +243,49 @@ plt.show()
 
 #%%
 
-"""
-Plot Bandstructure
-"""
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+# """
+# Plot Bandstructure
+# """
+# from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
-normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
-cmapstring = 'twilight'
-cmap = mpl.cm.get_cmap(cmapstring)
+# normaliser = mpl.colors.Normalize(vmin=-3, vmax=3)
+# cmapstring = 'twilight'
+# cmap = mpl.cm.get_cmap(cmapstring)
 
-X, Y = np.meshgrid(K1, K2)
+# X, Y = np.meshgrid(K1, K2)
 
-sz = 15
-fig, ax = plt.subplots(figsize=(10,10))
-ax = plt.axes(projection='3d')
-ax.view_init(0, 225)
-groundband = ax.contour3D(X, Y, np.real(band1), 50,cmap=cmap, norm=normaliser)
-firstband = ax.contour3D(X, Y, np.real(band2), 50,cmap=cmap, norm=normaliser)
-secondband = ax.contour3D(X, Y, np.real(band3), 50,cmap=cmap, norm=normaliser)
-# fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
-ax.set_xticks([-1, 0, 1])
-ax.set_yticks([-1, 0, 1])
-ax.set_zlabel("E")
-ax.set_zlabel("E")
-ax.set_xlabel(r"$k_x$", labelpad=25)
-ax.set_ylabel(r"$k_y$", labelpad=25)
-ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
+# sz = 15
+# fig, ax = plt.subplots(figsize=(10,10))
+# ax = plt.axes(projection='3d')
+# ax.view_init(0, 225)
+# groundband = ax.contour3D(X, Y, np.real(band1), 50,cmap=cmap, norm=normaliser)
+# firstband = ax.contour3D(X, Y, np.real(band2), 50,cmap=cmap, norm=normaliser)
+# secondband = ax.contour3D(X, Y, np.real(band3), 50,cmap=cmap, norm=normaliser)
+# # fig.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser))
+# ax.set_xticks([-1, 0, 1])
+# ax.set_yticks([-1, 0, 1])
+# ax.set_zlabel("E")
+# ax.set_zlabel("E")
+# ax.set_xlabel(r"$k_x$", labelpad=25)
+# ax.set_ylabel(r"$k_y$", labelpad=25)
+# ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
 
 
-# create an axes on the right side of ax. The width of cax will be 5%
-# of ax and the padding between cax and ax will be fixed at 0.05 inch.
-# divider = make_axes_locatable(ax)
-# cax = divider.append_axes("right", size="5%", pad=0.05)
+# # create an axes on the right side of ax. The width of cax will be 5%
+# # of ax and the padding between cax and ax will be fixed at 0.05 inch.
+# # divider = make_axes_locatable(ax)
+# # cax = divider.append_axes("right", size="5%", pad=0.05)
 
-plt.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser), fraction=0.026, pad=0.04)
-# plt.savefig(sh + "EulerBS.pdf", format="pdf")
-plt.show()
+# plt.colorbar(plt.cm.ScalarMappable(cmap=cmapstring, norm=normaliser), fraction=0.026, pad=0.04)
+# # plt.savefig(sh + "EulerBS.pdf", format="pdf")
+# plt.show()
 
 #%%
 """
 Find dirac points
 """
-eigdiff = band2 - band1
+eigdiff = band3 - band2
 eigdiff = np.abs(eigdiff)
 #align eigdiff with a usual plot, x along bottom, y along LHS.
 # =============================================================================
@@ -290,7 +299,7 @@ eigdiff = np.abs(eigdiff)
 #             {kx=min, ky=min},... , {kx=max, ky=min}]]
 # =============================================================================
 eigdiff =  np.flip(eigdiff.T, axis=0)
-
+# eigdiff = eigdiff[:101,:101]
 
 # find min values (dirac points)?
 idx = np.argsort(eigdiff, axis=None)
@@ -328,6 +337,8 @@ ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 #     circ = mpl.patches.Circle((xd, yd), 2, fill=0, edgecolor="1")
 #     ax.add_patch(circ)
 
+
+
 # add path part
 # npoints = 100
 # kline0 = CreateLinearLine(3*qpoints/8, qpoints/4, 3*qpoints/8, 3*qpoints/4,  npoints)
@@ -335,10 +346,7 @@ ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 # kline2 = CreateLinearLine(5*qpoints/8, 3*qpoints/4, 5*qpoints/8, qpoints/4, npoints)
 # kline3 = CreateLinearLine(5*qpoints/8, qpoints/4, 3*qpoints/8, qpoints/4, npoints)
 # kline =np.vstack((kline0,kline1,kline2, kline3))
-
-
 # # klineCircle = CreateCircleLineIntVals(qpoints/8, 2*pi*qpoints/8, centre = [qpoints/4, qpoints/4])
-
 # for i, (xd, yd) in enumerate(kline):
 #     if i == 0 or i == len(kline):
 #         ec = '0'
@@ -347,8 +355,17 @@ ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
 #     circ = mpl.patches.Circle((xd, -yd+qpoints), 2, fill=0, edgecolor=ec)
 #     ax.add_patch(circ)
 
-fig.colorbar(pos)
-plt.savefig(sh + "EigDif-1,3Log.pdf", format="pdf")
+
+cax = plt.axes([0.93, 0.129, 0.04, 0.75])
+cbar = fig.colorbar(pos, cax=cax, extend="min")
+
+# cbar.ax.get_yaxis().set_ticks([])
+# for j, lab in zip([round(np.min(eigdiff), 2), 2, 3,], [str(round(np.min(eigdiff), 2)),'$2$','$3$']):
+#     cbar.ax.text(7, j, lab, ha='center', va='center')
+# cbar.ax.set_ylabel(r'$|\psi(t)|^2$', rotation=270, labelpad=0)
+# 
+
+plt.savefig(sh + "EigDif-Euler2-1,3Log.pdf", format="pdf", bbox_inches="tight")
 plt.show()
 
 
