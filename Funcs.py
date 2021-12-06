@@ -9,8 +9,7 @@ place = "Georgia Nixon"
 import numpy as np
 import sys
 sys.path.append("/Users/"+place+"/Code/MBQD/floquet-simulations/src")
-from hamiltonians import GetEvalsAndEvecs, PhiString, getevalsandevecs
-
+from hamiltonians import GetEvalsAndEvecsGen, PhiString, getevalsandevecs
 
 
 def BerryCurvature(Hamiltonian, k, params):
@@ -19,7 +18,7 @@ def BerryCurvature(Hamiltonian, k, params):
     
     H = Hamiltonian(k,params)
     
-    d0,v0 = GetEvalsAndEvecs(H)
+    d0,v0 = GetEvalsAndEvecsGen(H)
                 
     #first eigenvector
     u0=v0[:,0]
@@ -31,13 +30,13 @@ def BerryCurvature(Hamiltonian, k, params):
     #dx direction
     kxx = k + np.array([h,0])
     H = Hamiltonian(kxx, params)
-    dx,vx = GetEvalsAndEvecs(H)
+    dx,vx = GetEvalsAndEvecsGen(H)
     ux = vx[:,0] # first eigenvector
     
     #dy direction
     kyy = k+np.array([0,h])
     H = Hamiltonian(kyy, params)
-    dy,vy = GetEvalsAndEvecs(H)
+    dy,vy = GetEvalsAndEvecsGen(H)
     uy=vy[:,0] # first eigenvector
 
     xder = (ux-u0)/h
