@@ -12,7 +12,7 @@ import numpy as np
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
-from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
+from EulerClass2Hamiltonian import  Euler2Hamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
 from hamiltonians import GetEvalsAndEvecsGen
 import matplotlib.pyplot as plt
 from numpy.linalg import norm
@@ -165,7 +165,7 @@ def SetGaugeSVG(evecsFinal, evecsInitial):
     evecsFinalNewGauge = np.dot(Mrotate, evecsFinal)
     return evecsFinalNewGauge
 
-def SetGaugeByBand(evecsFinal, evecsInitial):
+def SetGaugeByBand( evecsInitial, evecsFinal):
     """overlap band gauges independently"""
     
     evec0I = evecsInitial[:,0]
@@ -267,7 +267,6 @@ wilsonLineEvalsByPathWidth = np.empty((Nw, 3), dtype=np.complex128)
 
 for i, radius in enumerate(np.linspace(0,2,Nw)):
 
-
     # create circle line
     kline = CreateCircleLine(radius, qpoints, centre = centre)
     dqs = CircleDiff(qpoints, radius)
@@ -290,7 +289,7 @@ for i, radius in enumerate(np.linspace(0,2,Nw)):
         _, evecs = GetEvalsAndEvecsEuler(H)
         
         evecs = SetGaugeSVG(evecs, evecsOld)
-        # evecs = SetGaugeByBand(evecs, evecsOld)
+        # evecs = SetGaugeByBand( evecsOld, evecs)
 
         evecsOld = evecs
     
@@ -353,7 +352,7 @@ for radius in np.linspace(0.1, 3, 30):
         
         #rotate evecs to be in aligning gauge with evecs before
         # evecsP = SetGaugeSVG(evecsP, evecsOld)
-        evecsP = SetGaugeByBand(evecsP, evecsOld)
+        evecsP = SetGaugeByBand( evecsOld, evecsP)
         
         #find abelian Wilson Line crossover
         
