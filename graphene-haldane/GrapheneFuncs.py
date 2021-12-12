@@ -10,7 +10,7 @@ import numpy as np
 from numpy import sqrt, sin, cos
 import sys
 sys.path.append("/Users/"+place+"/Code/MBQD/floquet-simulations/src")
-from hamiltonians import GetEvalsAndEvecs, PhiString, getevalsandevecs
+from hamiltonians import GetEvalsAndEvecsGen, PhiString, getevalsandevecs
 
 
 def HaldaneHamiltonianNur(k, params):
@@ -140,7 +140,7 @@ def CalculateBerryConnectGraphene(k, params, n0, n1):
 
     H = HaldaneHamiltonianPaulis(k, params)
     
-    d0,v0 = GetEvalsAndEvecs(H)
+    d0,v0 = GetEvalsAndEvecsGen(H)
     
     #first eigenvector
     u0=v0[:,n0]
@@ -149,13 +149,13 @@ def CalculateBerryConnectGraphene(k, params, n0, n1):
     #dx direction
     kxx = k + np.array([h,0])
     H = HaldaneHamiltonianPaulis(kxx, params)
-    dx,vx = GetEvalsAndEvecs(H)
+    dx,vx = GetEvalsAndEvecsGen(H)
     ux1 = vx[:,n1]
     
     #dy direction
     kyy = k+np.array([0,h])
     H = HaldaneHamiltonianPaulis(kyy, params)
-    dy,vy = GetEvalsAndEvecs(H)
+    dy,vy = GetEvalsAndEvecsGen(H)
     uy1=vy[:,n1]
 
     xder = (ux1-u1)/h
