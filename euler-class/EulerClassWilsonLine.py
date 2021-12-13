@@ -166,7 +166,7 @@ def SetGaugeSVG(evecsFinal, evecsInitial):
     evecsFinalNewGauge = np.dot(Mrotate, evecsFinal)
     return evecsFinalNewGauge
 
-def SetGaugeByBand(evecsFinal, evecsInitial):
+def SetGaugeByBand( evecsInitial, evecsFinal):
     """overlap band gauges independently"""
     
     evec0I = evecsInitial[:,0]
@@ -269,7 +269,6 @@ wilsonLineEvalsByPathWidth = np.empty((Nw, 3), dtype=np.complex128)
 
 for i, radius in enumerate(np.linspace(0,2,Nw)):
 
-
     # create circle line
     kline = CreateCircleLine(radius, qpoints, centre = centre)
     dqs = CircleDiff(qpoints, radius)
@@ -282,17 +281,17 @@ for i, radius in enumerate(np.linspace(0,2,Nw)):
     #find starting vecs
     
     k_vec = kline[0]
-    H = EulerHamiltonian(k_vec)
+    H = Euler2Hamiltonian(k_vec)
     _, evecs0 = GetEvalsAndEvecsEuler(H)
     evecsOld = evecs0
     
     # go through and align vecs until the end
     for k_vec in kline[1:]:
-        H = EulerHamiltonian(k_vec)
+        H = Euler2Hamiltonian(k_vec)
         _, evecs = GetEvalsAndEvecsEuler(H)
         
         evecs = SetGaugeSVG(evecs, evecsOld)
-        # evecs = SetGaugeByBand(evecs, evecsOld)
+        # evecs = SetGaugeByBand( evecsOld, evecs)
 
         evecsOld = evecs
     
@@ -340,7 +339,7 @@ for radius in np.linspace(0.1, 3, 30):
     
     # initial conditions
     k0 = kline[0]
-    H = EulerHamiltonian(k0)
+    H = Euler2Hamiltonian(k0)
     _, evecs0 = GetEvalsAndEvecsEuler(H)
     evecsOld = evecs0
     
@@ -350,12 +349,12 @@ for radius in np.linspace(0.1, 3, 30):
     
     for i, kpoint in enumerate(kline[1:]):
         #Find evec at k point, calculate Wilson Line abelian method
-        H = EulerHamiltonian(kpoint)
+        H = Euler2Hamiltonian(kpoint)
         _, evecsP = GetEvalsAndEvecsEuler(H)
         
         #rotate evecs to be in aligning gauge with evecs before
         # evecsP = SetGaugeSVG(evecsP, evecsOld)
-        evecsP = SetGaugeByBand(evecsP, evecsOld)
+        evecsP = SetGaugeByBand( evecsOld, evecsP)
         
         #find abelian Wilson Line crossover
         
