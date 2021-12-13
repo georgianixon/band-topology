@@ -11,7 +11,8 @@ from numpy import cos, sin, exp, pi, tan
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
-from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
+from EulerClass2Hamiltonian import  Euler2Hamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
+from EulerClass4Hamiltonian import Euler4Hamiltonian
 
 # from hamiltonians import GetEvalsAndEvecs
 import matplotlib.pyplot as plt
@@ -19,7 +20,7 @@ from numpy.linalg import eig
 from numpy.linalg import norm
 import matplotlib as mpl
 
-sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
+sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/Euler Class/"
 
 
 size=25
@@ -69,6 +70,147 @@ def CircleDiff(points, radius):
 def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
     return kline
+
+
+
+
+
+#%% 
+"""
+Theta over the BZ
+"""
+#band that we looking to describe
+n1 = 0
+
+#points in the line
+qpoints=51
+
+# arbitrary point I guess, but not a dirac point
+gammaPoint = np.array([-0.501,-0.5])
+
+#get evecs at gamma point
+H = Euler4Hamiltonian(gammaPoint)
+_, evecs = GetEvalsAndEvecsEuler(H)
+u0 = evecs[:,0]
+u1 = evecs[:,1]
+u2 = evecs[:,2]
+#check it is not a dirac point
+
+assert(np.round(np.linalg.norm(evecs[:,n1]),10)==1)
+
+#Go through all other points in BZ;
+kmin = -1
+kmax = 1
+qpoints = 201 # easier for meshgrid when this is odd
+K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
+K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
+
+thetas0 = np.zeros((qpoints,qpoints))
+alphas0 = np.zeros((qpoints, qpoints))
+
+# thetas1 = np.zeros((qpoints,qpoints))
+# alphas1 = np.zeros((qpoints, qpoints))
+
+eiglist = np.empty((qpoints,qpoints,3)) # for three bands
+
+for xi, qx in enumerate(K1):
+    for yi, qy in enumerate(K2):
+        k = np.array([qx,qy])
+        H = Euler4Hamiltonian(k)
+        eigs, evecs = GetEvalsAndEvecsEuler(H)
+        
+        uFinal = evecs[:,n1]
+    
+        #get correct overall phase for uFinal
+        uFinal0 = AlignGaugeBetweenVecs(u0, uFinal)
+        # uFinal1 = AlignGaugeBetweenVecs(u1, uFinal)
+        
+        # get params
+        argument = np.dot(np.conj(u0), uFinal0)
+        assert(round(np.imag(argument), 26)==0)
+        argument = np.real(argument)
+        theta0 = 2*np.arcsin(argument)
+        thetas0[xi,yi] = theta0
+        
+        alphaarg = np.vdot(u1, uFinal0)/cos(theta0/2)
+        assert(round(np.imag(alphaarg), 26)==0)
+        alphaarg = np.real(alphaarg)
+        alpha = 2*np.arcsin(alphaarg)
+        alphas0[xi,yi] = alpha
+        
+        # get params
+        # argument = np.dot(np.conj(u0), uFinal1)
+        # assert(round(np.imag(argument), 26)==0)
+        # argument = np.real(argument)
+        # theta1 = 2*np.arcsin(argument)
+        # thetas1[xi,yi] = theta1
+        
+        # alphaarg = np.vdot(u1, uFinal1)/cos(theta1/2)
+        # assert(round(np.imag(alphaarg), 26)==0)
+        # alphaarg = np.real(alphaarg)
+        # alpha = 2*np.arcsin(alphaarg)
+        # alphas1[xi,yi] = alpha
+        
+#%%
+"""
+Plot theta over BZ
+"""
+
+params = {
+          'axes.grid':False,
+          }
+
+mpl.rcParams.update(params)
+
+# turn x -> along bottom, y |^ along LHS
+thetas0Plot =  np.flip(thetas0.T, axis=0)
+alphas0Plot =  np.flip(alphas0.T, axis=0)
+# thetas1Plot =  np.flip(thetas1.T, axis=0)
+# alphas1Plot =  np.flip(alphas1.T, axis=0)
+
+xx = "-0p501"
+yy = "-0p5"
+plotnames = ["ThetaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+             "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+             # "ThetaOverBZ-Euler2-,Gamma=(0p01,0),FixGaugeTo-u1.pdf",
+             # "AlphaOverBZ-Euler2-,Gamma=(0p01,0),FixGaugeTo-u1.pdf"
+             ]
+
+plotvars = [thetas0Plot, alphas0Plot, 
+            # thetas1Plot, alphas1Plot
+            ]
+for plotvar, savename in zip(plotvars, plotnames):
+    # plot 
+    sz = 15
+    fig, ax = plt.subplots(figsize=(sz/2,sz/2))
+    pos = plt.imshow(plotvar, cmap='plasma')
+    ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
+    ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
+    ax.set_xticklabels([kmin, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmax])
+    ax.set_yticklabels([kmax, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmin])
+    ax.set_xlabel(r"$k_x$")
+    ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
+    fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
+    plt.savefig(sh+savename, format="pdf", bbox_inches="tight")
+    plt.show()
+
+
+# # turn x -> along bottom, y |^ along LHS
+# alphasPlot =  np.flip(alphas.T, axis=0)
+
+# # plot 
+# sz = 15
+# fig, ax = plt.subplots(figsize=(sz/2,sz/2))
+# pos = plt.imshow(alphasPlot, cmap='plasma')
+# ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
+# ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
+# ax.set_xticklabels([kmin, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmax])
+# ax.set_yticklabels([kmax, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmin])
+# ax.set_xlabel(r"$k_x$")
+# ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
+# fig.colorbar(pos)
+# # plt.savefig(sh+"ThetaOverBZ-Euler4-,Gamma=(0p5,0).pdf", format="pdf", bbox_inches="tight")
+# plt.show()
 
 
 
@@ -190,85 +332,3 @@ plt.show()
 # ax.set_ylabel(r"$\psi$")
 # # plt.savefig(sh+ "psisSquareTrajectory2ndExcitedBand.pdf", format="pdf")
 # plt.show()    
-
-
-#%% 
-"""
-Theta over the BZ
-"""
-#band that we looking to describe
-n1 = 2
-
-#points in the line
-qpoints=51
-
-# arbitrary point I guess, but not a diract point
-gammaPoint = np.array([0.5,-0.5])
-
-#get evecs at gamma point
-H = EulerHamiltonian(gammaPoint)
-_, evecs = GetEvalsAndEvecsEuler(H)
-u0 = evecs[:,0]
-u1 = evecs[:,1]
-u2 = evecs[:,2]
-#check it is not a dirac point
-assert(np.round(np.linalg.norm(u2),10)==1)
-
-#Go through all other points in BZ;
-kmin = -1
-kmax = 1
-qpoints = 201 # easier for meshgrid when this is odd
-K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
-K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
-thetas = np.zeros((qpoints,qpoints))
-
-eiglist = np.empty((qpoints,qpoints,3)) # for three bands
-
-for xi, qx in enumerate(K1):
-    for yi, qy in enumerate(K2):
-        k = np.array([qx,qy])
-        H = EulerHamiltonian(k)
-        eigs, evecs = GetEvalsAndEvecsEuler(H)
-        
-        uFinal = evecs[:,n1]
-    
-        #get correct overall phase for uFinal
-        uFinal = AlignGaugeBetweenVecs(u2, uFinal)
-    
-        # get params
-        argument = np.dot(np.conj(u2), uFinal)
-        assert(round(np.imag(argument), 26)==0)
-        argument = np.real(argument)
-        theta = 2*np.arcsin(argument)
-        assert(round(np.imag(theta), 26)==0)
-        theta = np.real(theta)
-        
-        thetas[xi,yi] = theta
-        
-#%%
-"""
-Plot theta over BZ
-"""
-
-params = {
-          'axes.grid':False,
-          }
-
-mpl.rcParams.update(params)
-
-# turn x -> along bottom, y |^ along LHS
-thetas =  np.flip(thetas.T, axis=0)
-
-# plot 
-sz = 15
-fig, ax = plt.subplots(figsize=(sz/2,sz/2))
-pos = plt.imshow(thetas, cmap='plasma')
-ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
-ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
-ax.set_xticklabels([kmin, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmax])
-ax.set_yticklabels([kmax, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmin])
-ax.set_xlabel(r"$k_x$")
-ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
-fig.colorbar(pos)
-# plt.savefig(sh+"ThetaOverBZSecondBand,Gamma=(0,-0p5).pdf", format="pdf")
-plt.show()

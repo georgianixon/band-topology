@@ -119,7 +119,7 @@ def GetEvalsAndEvecsEuler(HF):
     
     #need to pick gauge such that first entry is positive
     # This will also guarantee every evec is fully
-    evecs = np.round(evecs, 12)
+    # evecs = np.round(evecs, 12)
 
     for vec in range(3):
     
@@ -134,7 +134,7 @@ def GetEvalsAndEvecsEuler(HF):
     if np.all(np.imag(np.round(evecs,9))!=0):
         for vec in range(3):
             if np.all(np.imag(np.round(evecs[:,vec],9))!=0):
-                print(evecs[:,vec])
+                print("   evec ",vec, " is imag!: ", evecs[:,vec])
     evecs = np.real(evecs)
     
     return evals, evecs
@@ -159,6 +159,6 @@ def AlignGaugeBetweenVecs(vec1, vec2):
         conjPhase = np.conj(c)/np.abs(c)
         vec2 = conjPhase*vec2
         c = np.dot(np.conj(vec1), vec2)
-        assert(round(np.imag(c), 26)==0)
+        assert(round(np.imag(c), 12)==0)
     
     return vec2

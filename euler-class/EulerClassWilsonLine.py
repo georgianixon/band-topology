@@ -12,7 +12,8 @@ import numpy as np
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
-from EulerClassHamiltonian import  EulerHamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
+from EulerClass2Hamiltonian import  Euler2Hamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
+from Kagome3Hamiltonian import Kagome3, GetEvalsAndEvecsKagome
 from hamiltonians import GetEvalsAndEvecsGen
 import matplotlib.pyplot as plt
 from numpy.linalg import norm
@@ -98,7 +99,7 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints, endpoint=False)
     return kline
 
-def CalculateBerryConnect(k, n0, n1):
+def CalculateBerryConnect(k, n0, n1, EulerHamiltonian):
     
     h = 0.00001;
     
@@ -141,7 +142,7 @@ def AbelianCalcWilsonLine(evecsFinal, evecsInitial, dgbands=3):
     
     for n0 in range(dgbands):
         for n1 in range(dgbands):
-            wilsonLineAbelian[n0,n1] = np.dot(np.conj(evecsFinal[:,n1]), evecsInitial[:,n0])
+            wilsonLineAbelian[n0,n1] = np.vdot(evecsFinal[:,n1], evecsInitial[:,n0])
         
     return wilsonLineAbelian
 
@@ -201,15 +202,16 @@ radius=0.5
 centre = [0,0]
 
 # create rectangle line
-# kline0 = CreateLinearLine(0.5, 0, 0.5, 2,  qpoints)
+kline = CreateLinearLine(0, 0, 2*pi, 0,  qpoints)
+dqs = np.full((qpoints,2), [2*pi/qpoints,0])
 # kline1 = CreateLinearLine(0.5, 2, 1.5, 2, qpoints)
 # kline2 = CreateLinearLine(1.5, 2, 1.5, 0, qpoints)
 # kline3 = CreateLinearLine(1.5, 0, 0.5, 0, qpoints)
 # kline =np.vstack((kline0,kline1,kline2, kline3))
 
 # create circle line
-kline = CreateCircleLine(radius, qpoints, centre = centre)
-dqs = CircleDiff(qpoints, radius)
+# kline = CreateCircleLine(radius, qpoints, centre = centre)
+# dqs = CircleDiff(qpoints, radius)
 totalPoints = len(kline)
 
 
@@ -422,7 +424,7 @@ for radius in np.linspace(0.1, 3, 30):
     ax.set_yticks((-pi, -1,  0, 1,  pi))
     ax.set_yticklabels((r'$-\pi$', "-1", r"$0$", "$1$", r"$\pi$" ))
     fig.text(0.5, 0.03, 'final q-momentum', ha='center')
-    plt.savefig(sh+ "WilsonLineEulerCircleEvals,r="+NumToString(radius)+",c=(1,1).pdf", format="pdf")
+    # plt.savefig(sh+ "WilsonLineEulerCircleEvals,r="+NumToString(radius)+",c=(1,1).pdf", format="pdf")
     plt.show()
 
 
@@ -457,6 +459,88 @@ for radius in np.linspace(0.1, 3, 30):
 # # ax.plot(multiplier, np.angle(evalsAbelian[:,0]), label="first eigenvalue")
 # # plt.legend()
 # # plt.show()
+
+#%%
+
+""" for Kagome"""
+
+
+"""
+Calculate Wilson Line - 
+    Calculate half baked wilson lines around a circle
+    Plot first wilson line eval vs. loop parameter
+"""
+
+
+
+#num of points to calculate the wilson Line of
+qpoints = 1000
+# create rectangle line
+kline = CreateLinearLine(0, 0, 2*pi, 2*pi,  qpoints)
+
+totalPoints = len(kline)
+
+# initial conditions
+k0 = kline[0]
+H = Kagome3(k0)
+_, evecs0 = GetEvalsAndEvecsKagome(H)
+evecsOld = evecs0
+
+
+wilsonLineAbelian = np.empty([totalPoints, 3, 3], dtype=np.complex128)
+# go through possible end points for k
+
+for i, kpoint in enumerate(kline[1:]):
+    #Find evec at k point, calculate Wilson Line abelian method
+    H = Kagome3(kpoint)
+    _, evecsP = GetEvalsAndEvecsKagome(H)
+    
+    #rotate evecs to be in aligning gauge with evecs before
+    # evecsP = SetGaugeSVG(evecsP, evecsOld)
+    evecsP = SetGaugeByBand(evecsP, evecsOld)
+    
+    #find abelian Wilson Line crossover
+    wilsonLineAbelian[i] = AbelianCalcWilsonLine(evecsP, evecs0)
+    
+    evecsOld = evecsP
+    
+    
+    
+"""
+Eigenvalue flow
+""" 
+
+multiplier = np.linspace(0,2*pi,totalPoints, endpoint=True)
+    
+# calc evals for Wilson Line
+evalsAbelian = np.empty([totalPoints, 3], dtype=np.complex128)
+for i in range(totalPoints):
+    wL = wilsonLineAbelian[i]
+    wLEvals, _ = GetEvalsAndEvecsGen(wL)
+    evalsAbelian[i,:] = wLEvals
+    
+    
+#get rid of last value which can be funny..
+evalsAbelian = evalsAbelian[:-1]
+multiplier = multiplier[:-1]
+
+
+sz = 8
+fig, ax = plt.subplots(figsize=(sz*1.3,sz))
+
+ax.plot(multiplier, np.angle(evalsAbelian[:,0]), '.', label=r'$1^{\mathrm{st}}$ eigenvalue')
+ax.plot(multiplier, np.angle(evalsAbelian[:,1]), '.', label=r'$2^{\mathrm{nd}}$ eigenvalue')
+ax.plot(multiplier, np.angle(evalsAbelian[:,2]), '.', label=r'$3^{\mathrm{rd}}$ eigenvalue')
+ax.set_xticks((0, pi/2,  pi, 3*pi/2,  2*pi))
+ax.set_xticklabels((r'$0$', r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3\pi}{2}$", r"$2\pi$" ))
+ax.set_title( r'$\mathrm{Im} ( \mathrm{log}(e))$') 
+plt.legend()
+ax.set_yticks((-pi, -1,  0, 1,  pi))
+ax.set_yticklabels((r'$-\pi$', "-1", r"$0$", "$1$", r"$\pi$" ))
+fig.text(0.5, 0.03, 'final q-momentum', ha='center')
+plt.show()
+
+
 
 
 
