@@ -89,7 +89,7 @@ qpoints=51
 gammaPoint = np.array([-0.501,-0.5])
 
 #get evecs at gamma point
-H = Euler4Hamiltonian(gammaPoint)
+H = Euler2Hamiltonian(gammaPoint)
 _, evecs = GetEvalsAndEvecsEuler(H)
 u0 = evecs[:,0]
 u1 = evecs[:,1]
@@ -113,30 +113,40 @@ alphas0 = np.zeros((qpoints, qpoints))
 
 eiglist = np.empty((qpoints,qpoints,3)) # for three bands
 
+lambda3 = np.diag([1,-1,0])
+nurThings = np.zeros((qpoints, qpoints))
 for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
         k = np.array([qx,qy])
-        H = Euler4Hamiltonian(k)
+        H = Euler2Hamiltonian(k)
         eigs, evecs = GetEvalsAndEvecsEuler(H)
         
         uFinal = evecs[:,n1]
     
         #get correct overall phase for uFinal
-        uFinal0 = AlignGaugeBetweenVecs(u0, uFinal)
+        uFinal = AlignGaugeBetweenVecs(u0, uFinal)
         # uFinal1 = AlignGaugeBetweenVecs(u1, uFinal)
         
         # get params
-        argument = np.dot(np.conj(u0), uFinal0)
+        argument = np.dot(np.conj(u0), uFinal)
         assert(round(np.imag(argument), 26)==0)
         argument = np.real(argument)
         theta0 = 2*np.arcsin(argument)
         thetas0[xi,yi] = theta0
         
-        alphaarg = np.vdot(u1, uFinal0)/cos(theta0/2)
+        alphaarg = np.vdot(u1, uFinal)/cos(theta0/2)
         assert(round(np.imag(alphaarg), 26)==0)
         alphaarg = np.real(alphaarg)
         alpha = 2*np.arcsin(alphaarg)
         alphas0[xi,yi] = alpha
+        
+        """random lambda 3 thing Nur asked for"""
+        u0overlap = np.vdot(u0, uFinal)
+        u1overlap = np.vdot(u1, uFinal)
+        u2overlap = np.vdot(u2, uFinal)
+        kvec_u_basis = np.array([u0overlap, u1overlap, u2overlap])
+        nurThing = np.vdot(kvec_u_basis, np.dot(lambda3, kvec_u_basis))
+        nurThings[xi,yi] = nurThing
         
         # get params
         # argument = np.dot(np.conj(u0), uFinal1)
@@ -165,19 +175,24 @@ mpl.rcParams.update(params)
 # turn x -> along bottom, y |^ along LHS
 thetas0Plot =  np.flip(thetas0.T, axis=0)
 alphas0Plot =  np.flip(alphas0.T, axis=0)
+nurThings = np.flip(nurThings.T, axis=0)
 # thetas1Plot =  np.flip(thetas1.T, axis=0)
 # alphas1Plot =  np.flip(alphas1.T, axis=0)
 
 xx = "-0p501"
 yy = "-0p5"
-plotnames = ["ThetaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-             "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+plotnames = [
+            # "ThetaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+             # "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
              # "ThetaOverBZ-Euler2-,Gamma=(0p01,0),FixGaugeTo-u1.pdf",
-             # "AlphaOverBZ-Euler2-,Gamma=(0p01,0),FixGaugeTo-u1.pdf"
+             # "AlphaOverBZ-Euler2-,Gamma=(0p01,0),FixGaugeTo-u1.pdf",
+             "nurThings.pdf"
              ]
 
-plotvars = [thetas0Plot, alphas0Plot, 
+plotvars = [
+            # thetas0Plot, alphas0Plot, 
             # thetas1Plot, alphas1Plot
+            nurThings
             ]
 for plotvar, savename in zip(plotvars, plotnames):
     # plot 
@@ -191,7 +206,7 @@ for plotvar, savename in zip(plotvars, plotnames):
     ax.set_xlabel(r"$k_x$")
     ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
     fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
-    plt.savefig(sh+savename, format="pdf", bbox_inches="tight")
+    # plt.savefig(sh+savename, format="pdf", bbox_inches="tight")
     plt.show()
 
 
