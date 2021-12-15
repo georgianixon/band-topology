@@ -5,7 +5,7 @@ Created on Tue Jun 15 09:03:44 2021
 @author: Georgia Nixon
 """
 
-place = "Georgia Nixon"
+place = "Georgia"
 import numpy as np
 from numpy import cos, sin, exp, pi, tan
 import sys
@@ -86,7 +86,7 @@ n1 = 0
 qpoints=51
 
 # arbitrary point I guess, but not a dirac point
-gammaPoint = np.array([-0.501,-0.5])
+gammaPoint = np.array([0.5,0])
 
 #get evecs at gamma point
 H = Euler2Hamiltonian(gammaPoint)
@@ -175,7 +175,7 @@ mpl.rcParams.update(params)
 # turn x -> along bottom, y |^ along LHS
 thetas0Plot =  np.flip(thetas0.T, axis=0)
 alphas0Plot =  np.flip(alphas0.T, axis=0)
-nurThings = np.flip(nurThings.T, axis=0)
+nurThings0Plot = np.flip(nurThings.T, axis=0)
 # thetas1Plot =  np.flip(thetas1.T, axis=0)
 # alphas1Plot =  np.flip(alphas1.T, axis=0)
 
@@ -186,13 +186,13 @@ plotnames = [
              # "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
              # "ThetaOverBZ-Euler2-,Gamma=(0p01,0),FixGaugeTo-u1.pdf",
              # "AlphaOverBZ-Euler2-,Gamma=(0p01,0),FixGaugeTo-u1.pdf",
-             "nurThings.pdf"
+             "S3-Refk=(0p5,0).pdf"
              ]
 
 plotvars = [
             # thetas0Plot, alphas0Plot, 
             # thetas1Plot, alphas1Plot
-            nurThings
+            nurThings0Plot
             ]
 for plotvar, savename in zip(plotvars, plotnames):
     # plot 
@@ -206,7 +206,7 @@ for plotvar, savename in zip(plotvars, plotnames):
     ax.set_xlabel(r"$k_x$")
     ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
     fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
-    # plt.savefig(sh+savename, format="pdf", bbox_inches="tight")
+    plt.savefig(sh+savename, format="pdf", bbox_inches="tight")
     plt.show()
 
 
