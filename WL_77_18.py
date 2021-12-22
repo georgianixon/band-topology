@@ -5,8 +5,9 @@ from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 plt.rcParams["text.usetex"] = True
 from scipy.linalg import orth
 import sys
-
-
+place = "Georgia Nixon"
+sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
+from EulerClass2Hamiltonian import AlignGaugeBetweenVecs
 ####Model parameters for MSG77.18
 
 t1 = 1.0
@@ -185,9 +186,14 @@ def make_Wilson_loop(H_func,open_path, integration_path, bands,nk,orb_pos = [[0.
         P_tot =  np.copy(U_0)
         int_k_passed = 0
         
+        """ New bit from G"""
+        U_prev = np.copy(U_0)
+        """ end"""
+        
         #go through integration path, each k represented by current_k
         for current_k in int_k:
-            if int_k_passed != 0 and int_k_passed != nk-1: # if we not at the end or the beginning?
+            if int_k_passed != 0 and int_k_passed != nk-1: # if we not at the end or the beginning? <-- this on in Gunnars 
+            # if int_k_passed != 0: # if we not at the end or the beginning? <--- this one testing for me
                 U_current = np.zeros((num_states, num_bands),dtype=np.complex128)
             
                 #diagonalise Hamiltonian at this point
@@ -198,12 +204,21 @@ def make_Wilson_loop(H_func,open_path, integration_path, bands,nk,orb_pos = [[0.
 				#vecs = vecs[:,idx_sorted]
 				#vals = vals[idx_sorted]
 				#print(vals)
+                """New bit from G - gauge fix"""
+                for i in range(num_bands):
+                    v = vecs[:,i]
+                    v_prev = U_prev[:,i]
+                    v = AlignGaugeBetweenVecs(v_prev, v)
+                    vecs[:,i] = v
+                """ end"""
     				
                 #store evecs
                 for band in range(num_bands):
                     U_current[:,band] = vecs[:,bands[band]]
                     
-                    
+                
+                
+                
                 if debug:
                     if np.sum(np.abs(np.matmul(np.conjugate(U_current).T, U_current))-np.eye(num_bands, num_bands))>1e-10:
                         print("ERROR: Eigenvectors are not orthogonal!")
@@ -212,6 +227,11 @@ def make_Wilson_loop(H_func,open_path, integration_path, bands,nk,orb_pos = [[0.
 				# P_tot =  U * U^dagger * P_tot
                 # Think this is making the Wilson Line Matrix
                 P_tot = np.matmul(np.matmul(U_current, np.conjugate(U_current).T), P_tot)
+                
+                """ New bit from G"""
+                # U_prev = np.copy(U_current)
+                """ end"""
+                
             int_k_passed += 1
         
         #reciprocal lattice vec 

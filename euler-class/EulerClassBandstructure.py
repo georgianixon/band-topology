@@ -12,7 +12,7 @@ import matplotlib as mpl
 from mpl_toolkits import mplot3d
 import numpy.linalg as la
 
-place = "Georgia"
+place = "Georgia Nixon"
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
@@ -150,7 +150,7 @@ for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
         k = np.array([qx,qy])
 
-        bC, b1, b2, b3 = BerryCurvatureEuler(k,0,0, Euler4Hamiltonian)
+        bC, b1, b2, b3 = BerryCurvatureEuler(k,0,0, Euler2Hamiltonian)
         
         berrycurve[xi, yi] = bC
 
@@ -211,7 +211,7 @@ from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt    
 
-pp = 101
+pp = 101 # to make sure -1 < kx||ky < 1
 u1p = u1[:pp, :pp]
 u2p = u2[:pp, :pp]
 band1p = band1[:pp, :pp]

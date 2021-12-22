@@ -5,7 +5,7 @@ Created on Tue Jun 15 09:03:44 2021
 @author: Georgia Nixon
 """
 
-place = "Georgia"
+place = "Georgia Nixon"
 import numpy as np
 from numpy import cos, sin, exp, pi, tan
 import sys
@@ -77,8 +77,9 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
 
 #%% 
 """
-Theta over the BZ
+Theta/alpha/inner manifold over the BZ
 """
+
 #band that we looking to describe
 n1 = 0
 
@@ -86,11 +87,11 @@ n1 = 0
 qpoints=51
 
 # arbitrary point I guess, but not a dirac point
-gammaPoint = np.array([0.5,0])
+gammaPoint = np.array([-0.5,-0.5])
 
 #get evecs at gamma point
 H = Euler2Hamiltonian(gammaPoint)
-_, evecs = GetEvalsAndEvecsEuler(H)
+_, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix = 1) # may as well gauge fix here
 u0 = evecs[:,0]
 u1 = evecs[:,1]
 u2 = evecs[:,2]
@@ -107,20 +108,24 @@ K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 
 thetas0 = np.zeros((qpoints,qpoints))
 alphas0 = np.zeros((qpoints, qpoints))
+S3 = np.zeros((qpoints, qpoints))
+S8 = np.zeros((qpoints, qpoints))
+
+#calculate internal manifold
+lambda3 = np.diag([0,-1,1])
+lambda8 = (1/np.sqrt(3))*np.diag([-2,1,1])
 
 # thetas1 = np.zeros((qpoints,qpoints))
 # alphas1 = np.zeros((qpoints, qpoints))
 
 eiglist = np.empty((qpoints,qpoints,3)) # for three bands
 
-lambda3 = np.diag([1,-1,0])
-nurThings = np.zeros((qpoints, qpoints))
 for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
         k = np.array([qx,qy])
         H = Euler2Hamiltonian(k)
-        eigs, evecs = GetEvalsAndEvecsEuler(H)
-        
+        eigs, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix=0) # will gauge fix later
+
         uFinal = evecs[:,n1]
     
         #get correct overall phase for uFinal
@@ -128,25 +133,27 @@ for xi, qx in enumerate(K1):
         # uFinal1 = AlignGaugeBetweenVecs(u1, uFinal)
         
         # get params
-        argument = np.dot(np.conj(u0), uFinal)
-        assert(round(np.imag(argument), 26)==0)
-        argument = np.real(argument)
-        theta0 = 2*np.arcsin(argument)
-        thetas0[xi,yi] = theta0
+        # argument = np.dot(np.conj(u0), uFinal)
+        # assert(round(np.imag(argument), 26)==0)
+        # argument = np.real(argument)
+        # theta0 = 2*np.arcsin(argument)
+        # thetas0[xi,yi] = theta0
         
-        alphaarg = np.vdot(u1, uFinal)/cos(theta0/2)
-        assert(round(np.imag(alphaarg), 26)==0)
-        alphaarg = np.real(alphaarg)
-        alpha = 2*np.arcsin(alphaarg)
-        alphas0[xi,yi] = alpha
+        # alphaarg = np.vdot(u1, uFinal)/cos(theta0/2)
+        # assert(round(np.imag(alphaarg), 26)==0)
+        # alphaarg = np.real(alphaarg)
+        # alpha = 2*np.arcsin(alphaarg)
+        # alphas0[xi,yi] = alpha
         
-        """random lambda 3 thing Nur asked for"""
+        # calculate interior sphere only
         u0overlap = np.vdot(u0, uFinal)
         u1overlap = np.vdot(u1, uFinal)
         u2overlap = np.vdot(u2, uFinal)
         kvec_u_basis = np.array([u0overlap, u1overlap, u2overlap])
-        nurThing = np.vdot(kvec_u_basis, np.dot(lambda3, kvec_u_basis))
-        nurThings[xi,yi] = nurThing
+        internalSphere = np.vdot(kvec_u_basis, np.dot(lambda3, kvec_u_basis))
+        externalSphere = np.vdot(kvec_u_basis, np.dot(lambda8, kvec_u_basis))
+        S3[xi,yi] = internalSphere
+        S8[xi,yi] = externalSphere
         
         # get params
         # argument = np.dot(np.conj(u0), uFinal1)
@@ -171,11 +178,13 @@ params = {
           }
 
 mpl.rcParams.update(params)
+cmap = "RdYlGn"#"plasma"
 
 # turn x -> along bottom, y |^ along LHS
 thetas0Plot =  np.flip(thetas0.T, axis=0)
 alphas0Plot =  np.flip(alphas0.T, axis=0)
-nurThings0Plot = np.flip(nurThings.T, axis=0)
+S30Plot = np.flip(S3.T, axis=0)
+S80Plot = np.flip(S8.T, axis=0)
 # thetas1Plot =  np.flip(thetas1.T, axis=0)
 # alphas1Plot =  np.flip(alphas1.T, axis=0)
 
@@ -186,23 +195,30 @@ plotnames = [
              # "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
              # "ThetaOverBZ-Euler2-,Gamma=(0p01,0),FixGaugeTo-u1.pdf",
              # "AlphaOverBZ-Euler2-,Gamma=(0p01,0),FixGaugeTo-u1.pdf",
-             "S3-Refk=(0p5,0).pdf"
+             "S8-Refk=(-0p5,-0p5).pdf"
              ]
 
 plotvars = [
             # thetas0Plot, alphas0Plot, 
             # thetas1Plot, alphas1Plot
-            nurThings0Plot
+            # S30Plot,
+            S80Plot
             ]
 for plotvar, savename in zip(plotvars, plotnames):
+    # to ensure zero is in the middle, optional
+    pmin = np.min(plotvar)
+    pmax = np.max(plotvar)
+    bignum = np.max([np.abs(pmin), np.abs(pmax)])
+    normaliser = mpl.colors.Normalize(vmin=-bignum, vmax=bignum)
+    
     # plot 
     sz = 15
     fig, ax = plt.subplots(figsize=(sz/2,sz/2))
-    pos = plt.imshow(plotvar, cmap='plasma')
+    pos = plt.imshow(plotvar, cmap=cmap, norm=normaliser)
     ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
     ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
     ax.set_xticklabels([kmin, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmax])
-    ax.set_yticklabels([kmax, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmin])
+    ax.set_yticklabels([kmax, round(kmin+3*(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+(kmax-kmin)/4, 2), kmin])
     ax.set_xlabel(r"$k_x$")
     ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
     fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
