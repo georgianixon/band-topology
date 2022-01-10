@@ -4,7 +4,7 @@ Created on Thu Dec 16 11:03:26 2021
 
 @author: Georgia Nixon
 """
-place = "Georgia"
+place = "Georgia Nixon"
 import numpy as np
 from numpy import cos, sin, exp, pi, tan
 import sys

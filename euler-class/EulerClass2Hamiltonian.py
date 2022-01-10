@@ -110,32 +110,35 @@ def Euler2Hamiltonian(k):
     HFn = np.array([hjk[i]*gellManns[i] for i in range(len(hjk))])
     return np.sum(HFn, axis=0)
 
-def GetEvalsAndEvecsEuler(HF):
+def GetEvalsAndEvecsEuler(HF, gaugeFix=1, debug = 1):
 
         
     #assert hermitian, to 14 dp (Euler Hamiltonian should definitely be Hermitian)
     assert(np.all(np.round(np.conj(HF.T), 14)==np.round(HF, 14)))
     evals, evecs = eigh(HF) # evals are automatically real from eigh function
+        
     
-    #need to pick gauge such that first entry is positive
-    # This will also guarantee every evec is fully
-    # evecs = np.round(evecs, 12)
-
-    for vec in range(3):
-    
-        # Find first element of the first eigenvector that is not zero
-        firstNonZero = (evecs[:,vec]!=0).argmax()
-        #find the conjugate phase of this element
-        conjugatePhase = np.conj(evecs[firstNonZero,vec])/np.abs(evecs[firstNonZero,vec])
-        #multiply all elements by the conjugate phase
-        evecs[:,vec] = conjugatePhase*evecs[:,vec]
-    
-    #check evecs is imaginary to 9dp
-    if np.all(np.imag(np.round(evecs,9))!=0):
+    if gaugeFix:
+        # Gauge fix s.t. first non-zero element of each eigenvector is real and positive
         for vec in range(3):
-            if np.all(np.imag(np.round(evecs[:,vec],9))!=0):
-                print("   evec ",vec, " is imag!: ", evecs[:,vec])
-    evecs = np.real(evecs)
+            # Find first element of the first eigenvector that is not zero
+            firstNonZero = (evecs[:,vec]!=0).argmax()
+            #find the conjugate phase of this element
+            conjugatePhase = np.conj(evecs[firstNonZero,vec])/np.abs(evecs[firstNonZero,vec])
+            #multiply all elements by the conjugate phase
+            evecs[:,vec] = conjugatePhase*evecs[:,vec]
+        
+    # Euler should have all evecs real
+    if debug:
+        #check evecs is not imaginary to 9dp
+        if np.all(np.imag(np.round(evecs,9))!=0):
+            # one evec has some imaginary part..
+            for vec in range(3):
+                if np.all(np.imag(np.round(evecs[:,vec],9))!=0):
+                    print("   evec ",vec, " is imag!: ", evecs[:,vec])
+                raise(ValueError)
+        else:           
+            evecs = np.real(evecs)
     
     return evals, evecs
 
@@ -159,6 +162,6 @@ def AlignGaugeBetweenVecs(vec1, vec2):
         conjPhase = np.conj(c)/np.abs(c)
         vec2 = conjPhase*vec2
         c = np.dot(np.conj(vec1), vec2)
-        assert(round(np.imag(c), 12)==0)
+        assert(round(np.imag(c), 9)==0)
     
     return vec2
