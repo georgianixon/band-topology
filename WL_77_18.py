@@ -225,7 +225,7 @@ def make_Wilson_loop(H_func,open_path, integration_path, bands,nk,orb_pos = [[0.
         P_tot = np.matmul(np.conjugate(U_0.T),P_tot)
 
         # get evals and evecs of P_tot, this must be Wilson Line matrix
-        vals,vecs = np.linalg.eig(P_tot)
+        vals,_ = np.linalg.eig(P_tot)
         #store the phase of the eigs for this particular k start point
         eigs[num_k_passed,:] = np.sort(np.imag(np.log(vals)))
         
