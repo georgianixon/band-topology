@@ -5,7 +5,7 @@ Created on Tue Jun 15 09:03:44 2021
 @author: Georgia Nixon
 """
 
-place = "Georgia Nixon"
+place = "Georgia"
 import numpy as np
 from numpy import cos, sin, exp, pi, tan
 import sys
@@ -87,7 +87,7 @@ n1 = 0
 qpoints=51
 
 # arbitrary point I guess, but not a dirac point
-gammaPoint = np.array([-0.5,-0.5])
+gammaPoint = np.array([0.5,-0.5])
 
 #get evecs at gamma point
 H = Euler2Hamiltonian(gammaPoint)
@@ -133,17 +133,17 @@ for xi, qx in enumerate(K1):
         # uFinal1 = AlignGaugeBetweenVecs(u1, uFinal)
         
         # get params
-        # argument = np.dot(np.conj(u0), uFinal)
-        # assert(round(np.imag(argument), 26)==0)
-        # argument = np.real(argument)
-        # theta0 = 2*np.arcsin(argument)
-        # thetas0[xi,yi] = theta0
+        argument = np.vdot(u0, uFinal)
+        assert(round(np.imag(argument), 26)==0)
+        argument = np.real(argument)
+        theta0 = np.arcsin(argument)
+        thetas0[xi,yi] = theta0
         
-        # alphaarg = np.vdot(u1, uFinal)/cos(theta0/2)
-        # assert(round(np.imag(alphaarg), 26)==0)
-        # alphaarg = np.real(alphaarg)
-        # alpha = 2*np.arcsin(alphaarg)
-        # alphas0[xi,yi] = alpha
+        alphaarg = np.vdot(u1, uFinal)/cos(theta0)
+        assert(round(np.imag(alphaarg), 26)==0)
+        alphaarg = np.real(alphaarg)
+        alpha = np.arcsin(alphaarg)
+        alphas0[xi,yi] = alpha
         
         # calculate interior sphere only
         u0overlap = np.vdot(u0, uFinal)
@@ -178,7 +178,7 @@ params = {
           }
 
 mpl.rcParams.update(params)
-cmap = "RdYlGn"#"plasma"
+cmap = "RdYlGn"#"plasma"#"RdYlGn"#"plasma"
 
 # turn x -> along bottom, y |^ along LHS
 thetas0Plot =  np.flip(thetas0.T, axis=0)
@@ -188,27 +188,29 @@ S80Plot = np.flip(S8.T, axis=0)
 # thetas1Plot =  np.flip(thetas1.T, axis=0)
 # alphas1Plot =  np.flip(alphas1.T, axis=0)
 
-xx = "-0p501"
+xx = "0p5"
 yy = "-0p5"
 plotnames = [
             # "ThetaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
              # "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-             # "ThetaOverBZ-Euler2-,Gamma=(0p01,0),FixGaugeTo-u1.pdf",
-             # "AlphaOverBZ-Euler2-,Gamma=(0p01,0),FixGaugeTo-u1.pdf",
-             "S8-Refk=(-0p5,-0p5).pdf"
+              "HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+              "HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+             # "S8-Refk=(-0p5,-0p5).pdf"
              ]
 
 plotvars = [
-            # thetas0Plot, alphas0Plot, 
+            thetas0Plot, alphas0Plot, 
             # thetas1Plot, alphas1Plot
             # S30Plot,
-            S80Plot
+            # S80Plot
             ]
 for plotvar, savename in zip(plotvars, plotnames):
     # to ensure zero is in the middle, optional
-    pmin = np.min(plotvar)
-    pmax = np.max(plotvar)
+    pmin = np.nanmin(plotvar)
+    pmax = np.nanmax(plotvar)
     bignum = np.max([np.abs(pmin), np.abs(pmax)])
+    if bignum < pi/2:
+        bignum = pi/2
     normaliser = mpl.colors.Normalize(vmin=-bignum, vmax=bignum)
     
     # plot 
@@ -243,123 +245,145 @@ for plotvar, savename in zip(plotvars, plotnames):
 # # plt.savefig(sh+"ThetaOverBZ-Euler4-,Gamma=(0p5,0).pdf", format="pdf", bbox_inches="tight")
 # plt.show()
 
-
-
-
-#%%
-#band that we looking at eigenstate trajectory
-n1 = 2
-
+#%% 
 """
-Define path (kline)
+Theta over a line
 """
 
-#num of points to calculate the wilson Line of
-qpoints = 1000
-radius=0.5
-centre = [1,1]
+#band that we looking to describe
+n1 = 0
+
+#points in the line
+qpoints=51
+
+
+#define path
+#num of points
+qpoints = 10000
+radius=0.4
+centre = [0,0]
 
 # create circle line
 kline = CreateCircleLine(radius, qpoints, centre = centre)
 dqs = CircleDiff(qpoints, radius)
 totalPoints = len(kline)
 
-#step for abelian version
-#find u at first k
-k0 = kline[0]
-H = EulerHamiltonian(k0)
-_, evecs = GetEvalsAndEvecsEuler(H)
+
+
+# arbitrary point I guess, but not a dirac point
+gammaPoint = kline[0]
+
+#get evecs at gamma point
+H = Euler2Hamiltonian(gammaPoint)
+_, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix = 1) # may as well gauge fix here
 u0 = evecs[:,0]
 u1 = evecs[:,1]
 u2 = evecs[:,2]
+#check it is not a dirac point
+assert(np.round(np.linalg.norm(evecs[:,n1]),10)==1)
+
 
 thetasLine = np.zeros(totalPoints, dtype=np.complex128)
 alphasLine = np.zeros(totalPoints, dtype=np.complex128)
-psisLine = np.zeros(totalPoints, dtype=np.complex128)
-phisLine = np.zeros(totalPoints, dtype=np.complex128)
 
 # go through possible end points for k, get andlges
 for i, kpoint in enumerate(kline):
     #do abeliean version,
     #find evecs at other k down the line
-    H = EulerHamiltonian(kpoint)
-    _, evecs = GetEvalsAndEvecsEuler(H)
+    H = Euler2Hamiltonian(kpoint)
+    _, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix=0)
     uFinal = evecs[:,n1]
     
     #get correct overall phase for uFinal
-    uFinal = AlignGaugeBetweenVecs(u2, uFinal)
+    uFinal = AlignGaugeBetweenVecs(u0, uFinal)
 
     # get params
-    theta = 2*np.arcsin(np.dot(np.conj(u2), uFinal))
-    #sometimes you will get nans for these, if theta = pi
-    alpha = 2*np.arcsin(np.linalg.norm(np.dot(np.conj(u1), uFinal)/(cos(theta/2))))
-    expIPsi = np.dot(np.conj(u1), uFinal)/(np.dot(np.conj(u0), uFinal)*tan(alpha/2))
-    psi = np.angle(expIPsi)
-    expIPhi = np.dot(np.conj(u0), uFinal)*exp(1j*psi/2)/(cos(theta/2)*cos(alpha/2))
-    phi = np.angle(expIPhi)
+    
+    # get params
+    argument = np.vdot(u0, uFinal)
+    assert(round(np.imag(argument), 26)==0)
+    argument = np.real(argument)
+    theta0 = np.arcsin(argument)
+    
+    alphaarg = np.vdot(u1, uFinal)/cos(theta0)
+    assert(round(np.imag(alphaarg), 26)==0)
+    alphaarg = np.real(alphaarg)
+    alpha = np.arcsin(alphaarg)
 
     
-    thetasLine[i] = theta
+    thetasLine[i] = theta0
     alphasLine[i] = alpha
-    psisLine[i] = psi
-    phisLine[i] = phi
-    
+
 
 
 #%%
 # #plot kline
+
+
+CB91_Blue = 'darkblue'#'#2CBDFE'
+oxfordblue = "#061A40"
+CB91_Green = '#47DBCD'
+CB91_Pink = '#F3A0F2'
+CB91_Purple = '#9D2EC5'
+CB91_Violet = '#661D98'
+CB91_Amber = '#F5B14C'
+red = "#FC4445"
+newred = "#E4265C"
+flame = "#DD6031"
+
+color_list = [CB91_Blue, flame, CB91_Pink, CB91_Green, CB91_Amber,
+                CB91_Purple,
+                # CB91_Violet,
+                'dodgerblue',
+                'slategrey', newred]
+plt.rcParams['axes.prop_cycle'] = plt.cycler(color=color_list)
+saveLine = "OverCircle,GroundState,GaugeFixToGamma=(0p4,0),CircleTraj,Centre=0,R=0p4.pdf"
+saveTheta = "Theta"+saveLine
+saveAlpha = "Alpha"+saveLine
+
+
+
 multiplier = np.linspace(0, 2*pi, totalPoints)
 fs = (12,9)
-# x,y = zip(*kline)
-# fig, ax = plt.subplots(figsize=fs)
-# ax.plot(x, y, label=r"k line")
-# ax.set_xlabel(r"$q_x$")
-# ax.set_ylabel(r"$q_y$", rotation=0, labelpad=15)
-# ax.set_facecolor('1')
-# ax.grid(b=1, color='0.6')
-# # plt.savefig(sh+ "CircleTrajectory.pdf", format="pdf")
-# plt.show()
+x,y = zip(*kline)
+fig, ax = plt.subplots(figsize=fs)
+ax.plot(x, y, label=r"k line")
+ax.plot(kline[0][0], kline[0][1], 'x', markersize=20, label=r"$\Gamma$")
+ax.set_xlabel(r"$q_x$")
+ax.set_ylabel(r"$q_y$", rotation=0, labelpad=15)
+ax.set_facecolor('1')
+ax.grid(b=1, color='0.6')
+ax.legend()
+plt.savefig(sh+saveLine, format="pdf", bbox_inches="tight")
+plt.show()
 
 
 fig, ax = plt.subplots(figsize=fs)
-ax.plot(multiplier, np.real(thetasLine), label=r"$\theta$")
-ax.set_xlabel(r"final quasimomentum, going around circle with centre (1,1), $2^{\mathrm{nd}}$ excited band")
+ax.plot(multiplier, np.real(thetasLine), '.', markersize=3, label=r"$\theta$")
+# ax.set_xlabel(r"$\theta$ over circle trajectory, centre=(0,0), radius=0.6, gauge fix to $\Theta=(0.6,0)$, ground band")
 ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
 ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
 ax.set_yticks([0, pi/2, pi])
 ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
 ax.set_ylabel(r"$\theta$", rotation=0, labelpad=15)
-# plt.savefig(sh+ "thetasCircle2Trajectory.pdf", format="pdf")
+plt.savefig(sh+saveTheta, format="pdf", bbox_inches="tight")
 plt.show()    
-
-# fig, ax = plt.subplots(figsize=fs)
-# ax.plot(multiplier, np.real(alphasLine), label=r"$\alpha$")
-# ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), 2^{\mathrm{nd}}$ excited band")
-# ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
-# ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
-# ax.set_yticks([0, pi/2, pi])
-# ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
-# ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
-# plt.savefig(sh+ "alphasCircle1Trajectory.pdf", format="pdf")
-# plt.show()    
 
 fig, ax = plt.subplots(figsize=fs)
-ax.plot(multiplier, np.real(phisLine), label=r"$\phi$")
-ax.set_xlabel(r"final quasimomentum, going around circle with centre (1,1), $2^{\mathrm{nd}}$ excited band")
-# plt.legend()
-ax.set_xticks([0, pi, 2*pi])
-ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
-ax.set_ylabel(r"$\phi$")
-# plt.savefig(sh+ "phisCircle2Trajectory.pdf", format="pdf")
+ax.plot(multiplier, np.real(alphasLine), '.', markersize=3, label=r"$\alpha$")
+# ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), ground band")
+ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
+ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
+ax.set_yticks([0, pi/2, pi])
+ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
+ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
+plt.savefig(sh+saveAlpha, format="pdf", bbox_inches="tight")
 plt.show()    
 
 
-# fig, ax = plt.subplots(figsize=fs)
-# ax.plot(multiplier, np.real(psisLine), label=r"$\psi$")
-# ax.set_xlabel(r"Final quasimomentum, square trajectory, $2^{\mathrm{nd}}$ excited band")
-# # plt.legend()
-# # ax.set_xticks([0, pi, 2*pi])
-# # ax.set_xticklabels(['0',r"$\pi$", r"$2\pi$"])
-# ax.set_ylabel(r"$\psi$")
-# # plt.savefig(sh+ "psisSquareTrajectory2ndExcitedBand.pdf", format="pdf")
-# plt.show()    
+    
+
+
+
+    
+
