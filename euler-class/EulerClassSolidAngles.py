@@ -5,7 +5,7 @@ Created on Tue Jun 15 09:03:44 2021
 @author: Georgia Nixon
 """
 
-place = "Georgia"
+place = "Georgia Nixon"
 import numpy as np
 from numpy import cos, sin, exp, pi, tan
 import sys
@@ -87,7 +87,7 @@ n1 = 0
 qpoints=51
 
 # arbitrary point I guess, but not a dirac point
-gammaPoint = np.array([0.5,-0.5])
+gammaPoint = np.array([0.5,0])
 
 #get evecs at gamma point
 H = Euler2Hamiltonian(gammaPoint)
@@ -115,8 +115,11 @@ S8 = np.zeros((qpoints, qpoints))
 lambda3 = np.diag([0,-1,1])
 lambda8 = (1/np.sqrt(3))*np.diag([-2,1,1])
 
-# thetas1 = np.zeros((qpoints,qpoints))
-# alphas1 = np.zeros((qpoints, qpoints))
+thetas1 = np.zeros((qpoints,qpoints))
+alphas1 = np.zeros((qpoints, qpoints))
+
+thetas2 = np.zeros((qpoints,qpoints))
+alphas2 = np.zeros((qpoints, qpoints))
 
 eiglist = np.empty((qpoints,qpoints,3)) # for three bands
 
@@ -129,21 +132,22 @@ for xi, qx in enumerate(K1):
         uFinal = evecs[:,n1]
     
         #get correct overall phase for uFinal
-        uFinal = AlignGaugeBetweenVecs(u0, uFinal)
-        # uFinal1 = AlignGaugeBetweenVecs(u1, uFinal)
+        uFinal0 = AlignGaugeBetweenVecs(u0, uFinal)
+        uFinal1 = AlignGaugeBetweenVecs(u1, uFinal)
+        uFinal2 = AlignGaugeBetweenVecs(u2, uFinal)
         
         # get params
-        argument = np.vdot(u0, uFinal)
+        argument = np.vdot(u0, uFinal0)
         assert(round(np.imag(argument), 26)==0)
         argument = np.real(argument)
         theta0 = np.arcsin(argument)
         thetas0[xi,yi] = theta0
         
-        alphaarg = np.vdot(u1, uFinal)/cos(theta0)
+        alphaarg = np.vdot(u1, uFinal0)/cos(theta0)
         assert(round(np.imag(alphaarg), 26)==0)
         alphaarg = np.real(alphaarg)
-        alpha = np.arcsin(alphaarg)
-        alphas0[xi,yi] = alpha
+        alpha0 = np.arcsin(alphaarg)
+        alphas0[xi,yi] = alpha0
         
         # calculate interior sphere only
         u0overlap = np.vdot(u0, uFinal)
@@ -156,17 +160,30 @@ for xi, qx in enumerate(K1):
         S8[xi,yi] = externalSphere
         
         # get params
-        # argument = np.dot(np.conj(u0), uFinal1)
-        # assert(round(np.imag(argument), 26)==0)
-        # argument = np.real(argument)
-        # theta1 = 2*np.arcsin(argument)
-        # thetas1[xi,yi] = theta1
+        argument = np.dot(np.conj(u0), uFinal1)
+        assert(round(np.imag(argument), 26)==0)
+        argument = np.real(argument)
+        theta1 = np.arcsin(argument)
+        thetas1[xi,yi] = theta1
         
-        # alphaarg = np.vdot(u1, uFinal1)/cos(theta1/2)
-        # assert(round(np.imag(alphaarg), 26)==0)
-        # alphaarg = np.real(alphaarg)
-        # alpha = 2*np.arcsin(alphaarg)
-        # alphas1[xi,yi] = alpha
+        alphaarg = np.vdot(u1, uFinal1)/cos(theta1)
+        assert(round(np.imag(alphaarg), 26)==0)
+        alphaarg = np.real(alphaarg)
+        alpha1 = np.arcsin(alphaarg)
+        alphas1[xi,yi] = alpha1
+        
+        # get params
+        argument = np.dot(np.conj(u0), uFinal2)
+        assert(round(np.imag(argument), 26)==0)
+        argument = np.real(argument)
+        theta2 = np.arcsin(argument)
+        thetas2[xi,yi] = theta2
+        
+        alphaarg = np.vdot(u1, uFinal2)/cos(theta2)
+        assert(round(np.imag(alphaarg), 26)==0)
+        alphaarg = np.real(alphaarg)
+        alpha2 = np.arcsin(alphaarg)
+        alphas1[xi,yi] = alpha2
         
 #%%
 """
@@ -185,22 +202,29 @@ thetas0Plot =  np.flip(thetas0.T, axis=0)
 alphas0Plot =  np.flip(alphas0.T, axis=0)
 S30Plot = np.flip(S3.T, axis=0)
 S80Plot = np.flip(S8.T, axis=0)
-# thetas1Plot =  np.flip(thetas1.T, axis=0)
-# alphas1Plot =  np.flip(alphas1.T, axis=0)
+thetas1Plot =  np.flip(thetas1.T, axis=0)
+alphas1Plot =  np.flip(alphas1.T, axis=0)
+thetas2Plot =  np.flip(thetas2.T, axis=0)
+alphas2Plot =  np.flip(alphas2.T, axis=0)
 
 xx = "0p5"
-yy = "-0p5"
+yy = "0"
 plotnames = [
             # "ThetaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
              # "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-              "HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-              "HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+              "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+              "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+              "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
+              "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
+              "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
+              "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
              # "S8-Refk=(-0p5,-0p5).pdf"
              ]
 
 plotvars = [
             thetas0Plot, alphas0Plot, 
-            # thetas1Plot, alphas1Plot
+            thetas1Plot, alphas1Plot,
+            thetas2Plot, alphas2Plot,
             # S30Plot,
             # S80Plot
             ]
@@ -223,7 +247,8 @@ for plotvar, savename in zip(plotvars, plotnames):
     ax.set_yticklabels([kmax, round(kmin+3*(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+(kmax-kmin)/4, 2), kmin])
     ax.set_xlabel(r"$k_x$")
     ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
-    fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
+    # fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
+    fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
     plt.savefig(sh+savename, format="pdf", bbox_inches="tight")
     plt.show()
 
@@ -253,9 +278,6 @@ Theta over a line
 #band that we looking to describe
 n1 = 0
 
-#points in the line
-qpoints=51
-
 
 #define path
 #num of points
@@ -267,6 +289,7 @@ centre = [0,0]
 kline = CreateCircleLine(radius, qpoints, centre = centre)
 dqs = CircleDiff(qpoints, radius)
 totalPoints = len(kline)
+
 
 
 
@@ -316,6 +339,14 @@ for i, kpoint in enumerate(kline):
 
 
 
+#differentiate thetas
+dCircAngle = 2*pi/(qpoints-1)
+dThetadAngle = np.empty(qpoints-1)
+dAlphadAngle = np.empty(qpoints-1)
+for i in range(qpoints-1):
+    dThetadAngle[i] = (thetasLine[i+1] - thetasLine[i])/dCircAngle
+    dAlphadAngle[i] = (alphasLine[i+1] - alphasLine[i])/dCircAngle
+
 #%%
 # #plot kline
 
@@ -338,8 +369,12 @@ color_list = [CB91_Blue, flame, CB91_Pink, CB91_Green, CB91_Amber,
                 'slategrey', newred]
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=color_list)
 saveLine = "OverCircle,GroundState,GaugeFixToGamma=(0p4,0),CircleTraj,Centre=0,R=0p4.pdf"
+saveLineDifferentiate = "DifferentiatedOverCircle,GroundState,GaugeFixToGamma=(0p6,0),CircleTraj,Centre=0,R=0p6.pdf"
 saveTheta = "Theta"+saveLine
 saveAlpha = "Alpha"+saveLine
+
+saveThetaDifferentiated = "Theta"+saveLineDifferentiate
+saveAlphaDifferentiated = "Alpha"+saveLineDifferentiate
 
 
 
@@ -366,6 +401,7 @@ ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
 ax.set_yticks([0, pi/2, pi])
 ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
 ax.set_ylabel(r"$\theta$", rotation=0, labelpad=15)
+ax.set_xlabel(r"$\phi$")
 plt.savefig(sh+saveTheta, format="pdf", bbox_inches="tight")
 plt.show()    
 
@@ -377,8 +413,64 @@ ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
 ax.set_yticks([0, pi/2, pi])
 ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
 ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
+ax.set_xlabel(r"$\phi$")
 plt.savefig(sh+saveAlpha, format="pdf", bbox_inches="tight")
 plt.show()    
+
+
+
+
+fig, ax = plt.subplots(figsize=fs)
+ax.plot(multiplier[:-1], dThetadAngle, '.', markersize=3)
+# ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), ground band")
+ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
+ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
+# ax.set_yticks([0, pi/2, pi])
+# ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
+ax.set_ylabel(r"$\frac{\partial \theta}{\partial \phi}$", rotation=0, labelpad=15)
+ax.set_xlabel(r"$\phi$")
+plt.savefig(sh+saveThetaDifferentiated, format="pdf", bbox_inches="tight")
+plt.show()  
+
+
+fig, ax = plt.subplots(figsize=fs)
+ax.plot(multiplier[:-1], dAlphadAngle, '.', markersize=3)
+# ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), ground band")
+ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
+ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
+ax.set_ylim([-2.5,2.5])
+# ax.set_yticks([0, pi/2, pi])
+# ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
+ax.set_ylabel(r"$\frac{\partial \alpha}{\partial \phi}$", rotation=0, labelpad=15)
+ax.set_xlabel(r"$\phi$")
+plt.savefig(sh+saveAlphaDifferentiated, format="pdf", bbox_inches="tight")
+plt.show()    
+  
+
+
+#%%
+
+
+
+import numpy as np
+from matplotlib import pyplot as plt
+
+plt.rcParams["figure.autolayout"] = True
+fig = plt.figure(figsize=(7,3.5))
+ax = fig.add_subplot(111, projection='3d')
+m = 1
+N = 3
+data = np.empty((100,100,3))
+for i, kx in enumerate(np.linspace(-1, 1, 100)):
+    for j, ky in enumerate(np.linspace(-1,1, 100)):
+        data[i, j, 0] = m - cos(kx) - cos(ky)
+        data[i, j, 1] = sin(kx)
+        data[i, j, 2] = sin(ky)
+data = data/N
+z, x, y = data.nonzero()
+
+ax.scatter(x, y, z, c=z, alpha=1)
+plt.show()
 
 
     
