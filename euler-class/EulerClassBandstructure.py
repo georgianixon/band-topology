@@ -12,14 +12,15 @@ import matplotlib as mpl
 from mpl_toolkits import mplot3d
 import numpy.linalg as la
 
-place = "Georgia Nixon"
+place = "Georgia"
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
 from EulerClass2Hamiltonian import  Euler2Hamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
 from EulerClass4Hamiltonian import  Euler4Hamiltonian
+from EulerClass0Hamiltonian import Euler0Hamiltonian
 from hamiltonians import GetEvalsAndEvecsGen
-sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/"
+sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/Euler Class/"
 
 
 def CreateCircleLineIntVals(r, points, centre=[0,0]):
@@ -150,7 +151,7 @@ for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
         k = np.array([qx,qy])
 
-        bC, b1, b2, b3 = BerryCurvatureEuler(k,0,0, Euler2Hamiltonian)
+        bC, b1, b2, b3 = BerryCurvatureEuler(k,0,0, Euler0Hamiltonian)
         
         berrycurve[xi, yi] = bC
 
@@ -225,7 +226,8 @@ band3p = band3[:pp, :pp]
 
 fig = plt.figure(figsize=(14,9), constrained_layout=True)
 ax = plt.axes(projection='3d')
-ax.view_init(10, 225)
+# ax.view_init(10, 225)
+ax.view_init(0,225)
 ax.plot_surface(u1p, u2p, np.real(band1p), color='r')
 ax.plot_surface(u1p, u2p, np.real(band2p), color='g')
 ax.plot_surface(u1p, u2p, np.real(band3p), color='b')
@@ -234,7 +236,7 @@ ax.set_xlabel(r'$k_x$', labelpad = 20)
 ax.set_ylabel(r'$k_y$', labelpad=20)
 # ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
 plt.margins(0,0,0)
-# plt.savefig(sh + "Euler4BS(10,225).pdf", format="pdf", bbox_inches = 'tight', pad_inches = -0.1)
+plt.savefig(sh + "Euler0BS(0,225).pdf", format="pdf", bbox_inches = 'tight', pad_inches = -0.1)
 plt.show() 
 
 
@@ -285,7 +287,7 @@ plt.show()
 """
 Find dirac points
 """
-eigdiff = band3 - band2
+eigdiff = band2 - band1
 eigdiff = np.abs(eigdiff)
 #align eigdiff with a usual plot, x along bottom, y along LHS.
 # =============================================================================
@@ -365,19 +367,8 @@ cbar = fig.colorbar(pos, cax=cax, extend="min")
 # cbar.ax.set_ylabel(r'$|\psi(t)|^2$', rotation=270, labelpad=0)
 # 
 
-plt.savefig(sh + "EigDif-Euler2-1,3Log.pdf", format="pdf", bbox_inches="tight")
+plt.savefig(sh + "EigDif-Euler0-2,1Log.pdf", format="pdf", bbox_inches="tight")
 plt.show()
-
-
-#%%
-
-x = np.linspace(0, 1, num=100)
-plt.plot(x, np.arcsin(x))
-plt.xlabel(r"$\sin ( \theta / 2)$")
-plt.show()
-
-theta = np.linspace(0, 2*pi, 100)
-plt.plot(theta, np.tan(theta/2))
 
 
 
