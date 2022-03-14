@@ -107,19 +107,19 @@ K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 
 thetas0 = np.zeros((qpoints,qpoints))
-alphas0 = np.zeros((qpoints, qpoints))
-S3 = np.zeros((qpoints, qpoints))
-S8 = np.zeros((qpoints, qpoints))
+# alphas0 = np.zeros((qpoints, qpoints))
+# S3 = np.zeros((qpoints, qpoints))
+# S8 = np.zeros((qpoints, qpoints))
 
-#calculate internal manifold
-lambda3 = np.diag([0,-1,1])
-lambda8 = (1/np.sqrt(3))*np.diag([-2,1,1])
+# #calculate internal manifold
+# lambda3 = np.diag([0,-1,1])
+# lambda8 = (1/np.sqrt(3))*np.diag([-2,1,1])
 
-thetas1 = np.zeros((qpoints,qpoints))
-alphas1 = np.zeros((qpoints, qpoints))
+# thetas1 = np.zeros((qpoints,qpoints))
+# alphas1 = np.zeros((qpoints, qpoints))
 
-thetas2 = np.zeros((qpoints,qpoints))
-alphas2 = np.zeros((qpoints, qpoints))
+# thetas2 = np.zeros((qpoints,qpoints))
+# alphas2 = np.zeros((qpoints, qpoints))
 
 eiglist = np.empty((qpoints,qpoints,3)) # for three bands
 
@@ -130,11 +130,12 @@ for xi, qx in enumerate(K1):
         eigs, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix=0) # will gauge fix later
 
         uFinal = evecs[:,n1]
+        # uFinal0 = uFinal
     
         #get correct overall phase for uFinal
         uFinal0 = AlignGaugeBetweenVecs(u0, uFinal)
-        uFinal1 = AlignGaugeBetweenVecs(u1, uFinal)
-        uFinal2 = AlignGaugeBetweenVecs(u2, uFinal)
+        # uFinal1 = AlignGaugeBetweenVecs(u1, uFinal)
+        # uFinal2 = AlignGaugeBetweenVecs(u2, uFinal)
         
         # get params
         argument = np.vdot(u0, uFinal0)
@@ -143,47 +144,47 @@ for xi, qx in enumerate(K1):
         theta0 = np.arcsin(argument)
         thetas0[xi,yi] = theta0
         
-        alphaarg = np.vdot(u1, uFinal0)/cos(theta0)
-        assert(round(np.imag(alphaarg), 26)==0)
-        alphaarg = np.real(alphaarg)
-        alpha0 = np.arcsin(alphaarg)
-        alphas0[xi,yi] = alpha0
+        # alphaarg = np.vdot(u1, uFinal0)/cos(theta0)
+        # assert(round(np.imag(alphaarg), 26)==0)
+        # alphaarg = np.real(alphaarg)
+        # alpha0 = np.arcsin(alphaarg)
+        # alphas0[xi,yi] = alpha0
         
         # calculate interior sphere only
-        u0overlap = np.vdot(u0, uFinal)
-        u1overlap = np.vdot(u1, uFinal)
-        u2overlap = np.vdot(u2, uFinal)
-        kvec_u_basis = np.array([u0overlap, u1overlap, u2overlap])
-        internalSphere = np.vdot(kvec_u_basis, np.dot(lambda3, kvec_u_basis))
-        externalSphere = np.vdot(kvec_u_basis, np.dot(lambda8, kvec_u_basis))
-        S3[xi,yi] = internalSphere
-        S8[xi,yi] = externalSphere
+        # u0overlap = np.vdot(u0, uFinal)
+        # u1overlap = np.vdot(u1, uFinal)
+        # u2overlap = np.vdot(u2, uFinal)
+        # kvec_u_basis = np.array([u0overlap, u1overlap, u2overlap])
+        # internalSphere = np.vdot(kvec_u_basis, np.dot(lambda3, kvec_u_basis))
+        # externalSphere = np.vdot(kvec_u_basis, np.dot(lambda8, kvec_u_basis))
+        # S3[xi,yi] = internalSphere
+        # S8[xi,yi] = externalSphere
         
         # get params
-        argument = np.dot(np.conj(u0), uFinal1)
-        assert(round(np.imag(argument), 26)==0)
-        argument = np.real(argument)
-        theta1 = np.arcsin(argument)
-        thetas1[xi,yi] = theta1
+        # argument = np.dot(np.conj(u0), uFinal1)
+        # assert(round(np.imag(argument), 26)==0)
+        # argument = np.real(argument)
+        # theta1 = np.arcsin(argument)
+        # thetas1[xi,yi] = theta1
         
-        alphaarg = np.vdot(u1, uFinal1)/cos(theta1)
-        assert(round(np.imag(alphaarg), 26)==0)
-        alphaarg = np.real(alphaarg)
-        alpha1 = np.arcsin(alphaarg)
-        alphas1[xi,yi] = alpha1
+        # alphaarg = np.vdot(u1, uFinal1)/cos(theta1)
+        # assert(round(np.imag(alphaarg), 26)==0)
+        # alphaarg = np.real(alphaarg)
+        # alpha1 = np.arcsin(alphaarg)
+        # alphas1[xi,yi] = alpha1
         
         # get params
-        argument = np.dot(np.conj(u0), uFinal2)
-        assert(round(np.imag(argument), 26)==0)
-        argument = np.real(argument)
-        theta2 = np.arcsin(argument)
-        thetas2[xi,yi] = theta2
+        # argument = np.dot(np.conj(u0), uFinal2)
+        # assert(round(np.imag(argument), 26)==0)
+        # argument = np.real(argument)
+        # theta2 = np.arcsin(argument)
+        # thetas2[xi,yi] = theta2
         
-        alphaarg = np.vdot(u1, uFinal2)/cos(theta2)
-        assert(round(np.imag(alphaarg), 26)==0)
-        alphaarg = np.real(alphaarg)
-        alpha2 = np.arcsin(alphaarg)
-        alphas1[xi,yi] = alpha2
+        # alphaarg = np.vdot(u1, uFinal2)/cos(theta2)
+        # assert(round(np.imag(alphaarg), 26)==0)
+        # alphaarg = np.real(alphaarg)
+        # alpha2 = np.arcsin(alphaarg)
+        # alphas1[xi,yi] = alpha2
         
 #%%
 """
@@ -199,13 +200,13 @@ cmap = "RdYlGn"#"plasma"#"RdYlGn"#"plasma"
 
 # turn x -> along bottom, y |^ along LHS
 thetas0Plot =  np.flip(thetas0.T, axis=0)
-alphas0Plot =  np.flip(alphas0.T, axis=0)
-S30Plot = np.flip(S3.T, axis=0)
-S80Plot = np.flip(S8.T, axis=0)
-thetas1Plot =  np.flip(thetas1.T, axis=0)
-alphas1Plot =  np.flip(alphas1.T, axis=0)
-thetas2Plot =  np.flip(thetas2.T, axis=0)
-alphas2Plot =  np.flip(alphas2.T, axis=0)
+# alphas0Plot =  np.flip(alphas0.T, axis=0)
+# S30Plot = np.flip(S3.T, axis=0)
+# S80Plot = np.flip(S8.T, axis=0)
+# thetas1Plot =  np.flip(thetas1.T, axis=0)
+# alphas1Plot =  np.flip(alphas1.T, axis=0)
+# thetas2Plot =  np.flip(thetas2.T, axis=0)
+# alphas2Plot =  np.flip(alphas2.T, axis=0)
 
 xx = "0p5"
 yy = "0"
@@ -213,18 +214,19 @@ plotnames = [
             # "ThetaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
              # "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
               "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-              "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-              "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
-              "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
-              "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
-              "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
+              # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+              # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
+              # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
+              # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
+              # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
              # "S8-Refk=(-0p5,-0p5).pdf"
              ]
 
 plotvars = [
-            thetas0Plot, alphas0Plot, 
-            thetas1Plot, alphas1Plot,
-            thetas2Plot, alphas2Plot,
+            thetas0Plot, 
+            # alphas0Plot, 
+            # thetas1Plot, alphas1Plot,
+            # thetas2Plot, alphas2Plot,
             # S30Plot,
             # S80Plot
             ]
@@ -249,7 +251,7 @@ for plotvar, savename in zip(plotvars, plotnames):
     ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
     # fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
     fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
-    plt.savefig(sh+savename, format="pdf", bbox_inches="tight")
+    # plt.savefig(sh+savename, format="pdf", bbox_inches="tight")
     plt.show()
 
 
