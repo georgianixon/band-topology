@@ -147,20 +147,13 @@ for xi, qx in enumerate(K1):
         
         theta0 = np.arccos(argument)
         thetas0[xi,yi] = theta0
-        
-<<<<<<< HEAD
-        # alphaarg = np.vdot(u1, uFinal0)/cos(theta0)
-        # assert(round(np.imag(alphaarg), 26)==0)
-        # alphaarg = np.real(alphaarg)
-        # alpha0 = np.arcsin(alphaarg)
-        # alphas0[xi,yi] = alpha0
-=======
+
         alphaarg = np.vdot(u1, uFinal0)/sin(theta0)
         assert(round(np.imag(alphaarg), 26)==0)
         alphaarg = np.real(alphaarg)
         alpha0 = np.arcsin(alphaarg)
         alphas0[xi,yi] = alpha0
->>>>>>> 398a54ed037ca42ab42fceb8313d2d4ba068545e
+
         
         # calculate interior sphere only
         # u0overlap = np.vdot(u0, uFinal)
@@ -172,33 +165,6 @@ for xi, qx in enumerate(K1):
         # S3[xi,yi] = internalSphere
         # S8[xi,yi] = externalSphere
         
-        # get params
-<<<<<<< HEAD
-        # argument = np.dot(np.conj(u0), uFinal1)
-        # assert(round(np.imag(argument), 26)==0)
-        # argument = np.real(argument)
-        # theta1 = np.arcsin(argument)
-        # thetas1[xi,yi] = theta1
-        
-        # alphaarg = np.vdot(u1, uFinal1)/cos(theta1)
-        # assert(round(np.imag(alphaarg), 26)==0)
-        # alphaarg = np.real(alphaarg)
-        # alpha1 = np.arcsin(alphaarg)
-        # alphas1[xi,yi] = alpha1
-        
-        # get params
-        # argument = np.dot(np.conj(u0), uFinal2)
-        # assert(round(np.imag(argument), 26)==0)
-        # argument = np.real(argument)
-        # theta2 = np.arcsin(argument)
-        # thetas2[xi,yi] = theta2
-        
-        # alphaarg = np.vdot(u1, uFinal2)/cos(theta2)
-        # assert(round(np.imag(alphaarg), 26)==0)
-        # alphaarg = np.real(alphaarg)
-        # alpha2 = np.arcsin(alphaarg)
-        # alphas1[xi,yi] = alpha2
-=======
         argument = np.dot(np.conj(u0), uFinal1)
         assert(round(np.imag(argument), 26)==0)
         argument = np.real(argument)
@@ -223,8 +189,7 @@ for xi, qx in enumerate(K1):
         alphaarg = np.real(alphaarg)
         alpha2 = np.arcsin(alphaarg)
         alphas1[xi,yi] = alpha2
->>>>>>> 398a54ed037ca42ab42fceb8313d2d4ba068545e
-        
+
 #%%
 """
 Plot theta over BZ
@@ -252,14 +217,6 @@ yy = "0"
 plotnames = [
             # "ThetaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
              # "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-<<<<<<< HEAD
-              "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-              # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-              # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
-              # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
-              # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
-              # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
-=======
              "ThetaOverBZ-Euler0-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
               "AlphaOverBZ-Euler0-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
               # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
@@ -268,17 +225,12 @@ plotnames = [
                # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
                # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
                # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
->>>>>>> 398a54ed037ca42ab42fceb8313d2d4ba068545e
+
              # "S8-Refk=(-0p5,-0p5).pdf"
              ]
 
 plotvars = [
-<<<<<<< HEAD
-            thetas0Plot, 
-            # alphas0Plot, 
-=======
             thetas0Plot, alphas0Plot, 
->>>>>>> 398a54ed037ca42ab42fceb8313d2d4ba068545e
             # thetas1Plot, alphas1Plot,
             # thetas2Plot, alphas2Plot,
             # S30Plot,
@@ -303,15 +255,10 @@ for plotvar, savename in zip(plotvars, plotnames):
     ax.set_yticklabels([kmax, round(kmin+3*(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+(kmax-kmin)/4, 2), kmin])
     ax.set_xlabel(r"$k_x$")
     ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
-<<<<<<< HEAD
-    # fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
-    fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
-    # plt.savefig(sh+savename, format="pdf", bbox_inches="tight")
-=======
+
     fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
     # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
     plt.savefig(sh+savename, format="pdf", bbox_inches="tight")
->>>>>>> 398a54ed037ca42ab42fceb8313d2d4ba068545e
     plt.show()
 
 
