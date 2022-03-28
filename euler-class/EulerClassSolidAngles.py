@@ -26,11 +26,11 @@ sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bl
 
 size=25
 params = {
-        'legend.fontsize': size*0.75,
+        'legend.fontsize': size*0.9,
           'axes.labelsize': size,
           'axes.titlesize': size,
-          'xtick.labelsize': size*0.75,
-          'ytick.labelsize': size*0.75,
+          'xtick.labelsize': size*0.9,
+          'ytick.labelsize': size*0.9,
           'font.size': size,
           'font.family': 'STIXGeneral',
           'mathtext.fontset': 'stix',
@@ -74,6 +74,50 @@ def CreateLinearLine(qBegin, qEnd,  qpoints):
 
 
 
+def VecToStringSave(q0):
+    a = q0[0]
+    b = q0[1]
+    if type(a) != int and type(a) != np.int32:
+        
+        if a.is_integer():
+            a = int(a)
+    if type(b) != int and type(b) != np.int32:
+        if b.is_integer():
+            b = int(b)
+        
+    return "("+str(a).replace(".", "p")+","+str(b).replace(".", "p")+")"
+
+
+def VecToString(q0):
+    a = q0[0]
+    b = q0[1]
+    if type(a) != int and type(a) != np.int32:
+        
+        if a.is_integer():
+            a = int(a)
+        else:
+            a = round(a, 2)
+    if type(b) != int and type(b) != np.int32:
+        if b.is_integer():
+            b = int(b)
+        else:
+            b = round(b,2)
+
+    return "("+str(a)+","+str(b)+")"
+
+def SquareLine(q0, v1, v2, qpoints):
+    kline = np.linspace(q0, q0+v1, qpoints)
+    kline2 = np.linspace(q0+v1, q0+v1+v2, qpoints)[1:]
+    kline3 = np.linspace(q0+v1+v2, q0+v2, qpoints)[1:]
+    kline4 = np.linspace(q0+v2, q0, qpoints)[1:]
+    return np.vstack([kline, kline2, kline3, kline4])
+
+def FivePointLine(q0, q1, q2, q3, q4, qpoints):
+    kline = np.linspace(q0, q1, qpoints)
+    kline2 = np.linspace(q1, q2, qpoints)[1:]
+    kline3 = np.linspace(q2, q3, qpoints)[1:]
+    kline4 = np.linspace(q3, q4, qpoints)[1:]
+    return np.vstack([kline, kline2, kline3, kline4])
 
 
 #%% 
@@ -305,19 +349,10 @@ color_list = [CB91_Blue, flame, CB91_Pink, CB91_Green, CB91_Amber,
                 'dodgerblue',
                 'slategrey', newred]
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=color_list)
-def q0ToString(q0):
-    a = q0[0]
-    b = q0[1]
-    if type(a) != int and type(a) != np.int32:
-        
-        if a.is_integer():
-            a = int(a)
-    if type(b) != int and type(b) != np.int32:
-        if b.is_integer():
-            b = int(b)
-        
-    return "("+str(a).replace(".", "p")+","+str(b).replace(".", "p")+")"
 
+
+G1colour = 'darkblue'
+G2colour = "#DD6031"
 #band that we looking to describe
 n1 = 0
 
@@ -344,18 +379,27 @@ n1 = 0
 # plt.show()
 
 
-for pp in np.linspace(-1,1,21):
+
+for pp in [-1, -0.5, -0.1, 0, 0.1, 0.5, 1]:#np.linspace(-1,1,5):#[0]:#np.linspace(-1,1,21):
     pp = round(pp, 2)
     
     Ham = Euler4Hamiltonian
     
     #define path
     #num of points
-    qpoints = 10000
+    qpoints = 10001
     q0 = np.array([pp,0])
-    qf = q0+ np.array([0,4])
-    kline = np.linspace(q0, qf, qpoints)
+    v1 = np.array([0,2])
+    q1 = q0+v1
+    q2 = q0+2*v1
+    q3 = q0+3*v1
+    q4 = q0+4*v1
+    # v2 = np.array([2,0])
+    # qf = q0+ np.array([0,4])
+    # kline = np.linspace(q0, qf, qpoints)
+    # kline = SquareLine(q0, v1, v2, int((qpoints+3)/4))
     
+    kline = FivePointLine(q0, q1, q2, q3, q4, int((qpoints+3)/4))
     
     #get evecs at gamma point
     H = Ham(q0)
@@ -389,12 +433,13 @@ for pp in np.linspace(-1,1,21):
         argument = np.real(argument)
         
         theta0 = np.arccos(argument)
-        # thetaPrime = 
+        thetaOtherGauge = pi-theta0
         
         alphaarg = np.vdot(u1, uFinal)/sin(theta0)
         assert(round(np.imag(alphaarg), 26)==0)
         alphaarg = np.real(alphaarg)
         alpha = np.arcsin(alphaarg)
+        alphaOtherGauge = alpha - pi
     
         
         thetasLine[i] = theta0
@@ -414,10 +459,12 @@ for pp in np.linspace(-1,1,21):
     # #plot kline
     
     
-    print(q0ToString(q0))
+    print(VecToStringSave(q0))
     
 
-    saveLine = "LineTraj,Euler=4,GroundState,GaugeFixToGamma="+q0ToString(q0)+",VecF=(0,4).png"
+    # saveLine = "LineTraj,Euler=4,GroundState,GaugeFixToGamma="+VecToStringSave(q0)+",V1="+VecToStringSave(v1)+",V2="+VecToStringSave(v2)+".png"
+    saveLine = ("LineTraj,Euler=4,GroundState,GaugeFixToGamma="+VecToStringSave(q0)
+                +",v="+VecToStringSave(4*v1)+".png")
     # saveLineDifferentiate = "DifferentiatedOverCircle,GroundState,GaugeFixToGamma=(0p6,0),CircleTraj,Centre=0,R=0p6.pdf"
     saveTheta = "Theta"+saveLine
     saveAlpha = "Alpha"+saveLine
@@ -425,18 +472,35 @@ for pp in np.linspace(-1,1,21):
     # saveThetaDifferentiated = "Theta"+saveLineDifferentiate
     # saveAlphaDifferentiated = "Alpha"+saveLineDifferentiate
     
+    fs = (10,7.5)
     
-    
-
-    
+    ms = 0.2
+    multiplier = np.linspace(0, 4, qpoints)
     
     fig, ax = plt.subplots(figsize=fs)
-    ax.plot(multiplier, thetasLine, '.', markersize=3, label=r"$\theta$")
-    ax.set_yticks([0, pi/2, pi])
-    ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
+    ax.plot(multiplier[0], thetasLine[0], '.', color=G1colour, markersize = 3, label=r"$\theta_{G1}$")
+    ax.plot(multiplier, thetasLine, '.', color = G1colour, markersize=ms)
+    ax.plot(multiplier, -thetasLine, '.', color = G1colour, markersize=ms)
+    # ax.plot(multiplier, 2*pi-thetasLine, '.', color = G1colour, markersize=3)
+    # ax.plot(multiplier, -2*pi+thetasLine, '.', color = G1colour, markersize=3)
+    ax.plot(multiplier[0], pi - thetasLine[0], '.', color = G2colour, markersize=3, label=r"$\theta_{G2}$")
+    ax.plot(multiplier, pi - thetasLine, '.', color = G2colour, markersize=ms)
+    ax.plot(multiplier, pi + thetasLine, '.', color = G2colour, markersize=ms)
+    ax.plot(multiplier, -pi + thetasLine, '.', color = G2colour, markersize=ms)
+    ax.plot(multiplier, -pi - thetasLine, '.', color = G2colour, markersize=ms)
+    ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
+    # ax.set_yticks([0, pi/2])
+    ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
+                        '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$"])
+    # ax.set_yticklabels(['0',r"$\frac{\pi}{2}$"])
+    # ax.set_ylim(-0.1, pi/2+0.1)
     ax.set_ylabel(r"$\theta$", rotation=0, labelpad=15)
-    ax.set_xlabel(r"$q_x$")
+    # ax.set_xlabel(r"$q_x$")
+    ax.set_xticks([0,1,2,3,4])
+    ax.set_xticklabels([VecToString(q0), VecToString(q1), VecToString(q2), VecToString(q3), VecToString(q4)])
+    # ax.set_xlabel(r"square path")
     ax.grid(b=1, color='1')
+    ax.legend(loc="upper right")
     plt.savefig(sh+saveTheta, format="png", bbox_inches="tight")
     plt.show()    
     
@@ -444,13 +508,32 @@ for pp in np.linspace(-1,1,21):
     
     
     fig, ax = plt.subplots(figsize=fs)
-    ax.plot(multiplier, alphasLine, '.', markersize=3, label=r"$\alpha$")
+    ax.plot(multiplier[0], alphasLine[0], '.', color = G1colour, markersize=3, label=r"$\alpha_{G1}$")
+    ax.plot(multiplier, alphasLine, '.', color = G1colour, markersize=ms)
+    ax.plot(multiplier, pi - alphasLine, '.', color = G1colour, markersize=ms)
+    ax.plot(multiplier, -pi - alphasLine, '.', color = G1colour, markersize=ms)
+    # ax.plot(multiplier, -2*pi + alphasLine, '.', color = G1colour, markersize=3)
+    ax.plot(multiplier[0],  - alphasLine[0], '.',color = G2colour,  markersize=3, label=r"$\alpha_{G2}$")
+    ax.plot(multiplier,  - alphasLine, '.',color = G2colour,  markersize=ms)
+    ax.plot(multiplier,  - pi + alphasLine, '.',color = G2colour,  markersize=ms)
+    ax.plot(multiplier,  pi + alphasLine, '.',color = G2colour,  markersize=ms)
+    # ax.plot(multiplier,  2*pi - alphasLine, '.',color = G2colour,  markersize=3)
     # ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), ground band")
-    ax.set_yticks([-pi, -pi/2, 0, pi/2, pi])
-    ax.set_yticklabels([ r"$-\pi$", r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$", r"$\pi$"])
+    ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
+    # ax.set_yticks([-pi, -pi/2, 0, pi/2, pi])
+    # ax.set_yticks([-pi/2, 0, pi/2])
+    # ax.set_yticklabels([ r"$-\pi$", r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$", r"$\pi$"])
+    ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
+                        '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$"])
+    # ax.set_yticklabels([ r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$"])
+    # ax.set_ylim([-pi/2-0.1, pi/2+0.1])
     ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
-    ax.set_xlabel(r"$q_x$")
+    # ax.set_xlabel(r"$q_x$")
+    ax.set_xticks([0,1,2,3,4])
+    # ax.set_xticklabels([VecToString(q0), VecToString(q0+v1), VecToString(q0+v1+v2), VecToString(q0+v2), VecToString(q0)])
+    ax.set_xticklabels([VecToString(q0), VecToString(q1), VecToString(q2), VecToString(q3), VecToString(q4)])
     ax.grid(b=1, color='1')
+    ax.legend(loc="upper right")
     plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
     plt.show()    
 
@@ -492,7 +575,7 @@ n1 = 0
 
 
 
-Ham = Euler2Hamiltonian
+Ham = EulerHamiltonian
 #define path
 #num of points
 qpoints = 10000
