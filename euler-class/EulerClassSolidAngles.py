@@ -395,23 +395,23 @@ n1 = 0
 # plt.savefig(sh+"VerticalLineTrajes,Euler=2,V1=(0,8).png", format="png", bbox_inches="tight")
 # plt.show()
 
-Ham = Euler2Hamiltonian
+Ham = Euler4Hamiltonian
     
 
-for pp in [   -0.01,0.01, 0.1, 0.5, 0.99]:#np.linspace(-1,1,5):#[0]:#np.linspace(-1,1,21):
+for pp in np.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     pp = round(pp, 2)
     
 
     #define path
     #num of points
-    qpoints = 10001
+    qpoints = 1001
     q0 = np.array([pp,0])
     v1 = np.array([0,2])
     v2 = np.array([2,0])
     q1 = q0+v1
-    q2 = q0+v1+v2
-    q3 = q0+v2
-    q4 = q0
+    q2 = q0+2*v1
+    q3 = q0+3*v1
+    q4 = q0+4*v1
     
     # qf = q0+ np.array([0,4])
     # kline = np.linspace(q0, qf, qpoints)
@@ -492,7 +492,7 @@ for pp in [   -0.01,0.01, 0.1, 0.5, 0.99]:#np.linspace(-1,1,5):#[0]:#np.linspace
     
     fs = (10,7.5)
     
-    ms = 0.2
+    ms = 0.7
     multiplier = np.linspace(0, 4, qpoints)
     
     fig, ax = plt.subplots(figsize=fs)
@@ -519,41 +519,41 @@ for pp in [   -0.01,0.01, 0.1, 0.5, 0.99]:#np.linspace(-1,1,5):#[0]:#np.linspace
     # ax.set_xlabel(r"square path")
     ax.grid(b=1, color='1')
     ax.legend(loc="upper right")
-    plt.savefig(sh+saveTheta, format="png", bbox_inches="tight")
+    # plt.savefig(sh+saveTheta, format="png", bbox_inches="tight")
     plt.show()    
     
     
     
     
-    fig, ax = plt.subplots(figsize=fs)
-    ax.plot(multiplier[0], alphasLine[0], '.', color = G1colour, markersize=3, label=r"$\alpha_{G1}$")
-    ax.plot(multiplier, alphasLine, '.', color = G1colour, markersize=ms)
-    ax.plot(multiplier, pi - alphasLine, '.', color = G1colour, markersize=ms)
-    ax.plot(multiplier, -pi - alphasLine, '.', color = G1colour, markersize=ms)
-    # ax.plot(multiplier, -2*pi + alphasLine, '.', color = G1colour, markersize=3)
-    ax.plot(multiplier[0],  - alphasLine[0], '.',color = G2colour,  markersize=3, label=r"$\alpha_{G2}$")
-    ax.plot(multiplier,  - alphasLine, '.',color = G2colour,  markersize=ms)
-    ax.plot(multiplier,  - pi + alphasLine, '.',color = G2colour,  markersize=ms)
-    ax.plot(multiplier,  pi + alphasLine, '.',color = G2colour,  markersize=ms)
-    # ax.plot(multiplier,  2*pi - alphasLine, '.',color = G2colour,  markersize=3)
-    # ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), ground band")
-    ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
-    # ax.set_yticks([-pi, -pi/2, 0, pi/2, pi])
-    # ax.set_yticks([-pi/2, 0, pi/2])
-    # ax.set_yticklabels([ r"$-\pi$", r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$", r"$\pi$"])
-    ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
-                        '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$"])
-    # ax.set_yticklabels([ r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$"])
-    # ax.set_ylim([-pi/2-0.1, pi/2+0.1])
-    ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
-    # ax.set_xlabel(r"$q_x$")
-    ax.set_xticks([0,1,2,3,4])
-    # ax.set_xticklabels([VecToString(q0), VecToString(q0+v1), VecToString(q0+v1+v2), VecToString(q0+v2), VecToString(q0)])
-    ax.set_xticklabels([VecToString(q0), VecToString(q1), VecToString(q2), VecToString(q3), VecToString(q4)])
-    ax.grid(b=1, color='1')
-    ax.legend(loc="upper right")
-    plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
-    plt.show()    
+    # fig, ax = plt.subplots(figsize=fs)
+    # ax.plot(multiplier[0], alphasLine[0], '.', color = G1colour, markersize=3, label=r"$\alpha_{G1}$")
+    # ax.plot(multiplier, alphasLine, '.', color = G1colour, markersize=ms)
+    # ax.plot(multiplier, pi - alphasLine, '.', color = G1colour, markersize=ms)
+    # ax.plot(multiplier, -pi - alphasLine, '.', color = G1colour, markersize=ms)
+    # # ax.plot(multiplier, -2*pi + alphasLine, '.', color = G1colour, markersize=3)
+    # ax.plot(multiplier[0],  - alphasLine[0], '.',color = G2colour,  markersize=3, label=r"$\alpha_{G2}$")
+    # ax.plot(multiplier,  - alphasLine, '.',color = G2colour,  markersize=ms)
+    # ax.plot(multiplier,  - pi + alphasLine, '.',color = G2colour,  markersize=ms)
+    # ax.plot(multiplier,  pi + alphasLine, '.',color = G2colour,  markersize=ms)
+    # # ax.plot(multiplier,  2*pi - alphasLine, '.',color = G2colour,  markersize=3)
+    # # ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), ground band")
+    # ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
+    # # ax.set_yticks([-pi, -pi/2, 0, pi/2, pi])
+    # # ax.set_yticks([-pi/2, 0, pi/2])
+    # # ax.set_yticklabels([ r"$-\pi$", r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$", r"$\pi$"])
+    # ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
+    #                     '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$"])
+    # # ax.set_yticklabels([ r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$"])
+    # # ax.set_ylim([-pi/2-0.1, pi/2+0.1])
+    # ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
+    # # ax.set_xlabel(r"$q_x$")
+    # ax.set_xticks([0,1,2,3,4])
+    # # ax.set_xticklabels([VecToString(q0), VecToString(q0+v1), VecToString(q0+v1+v2), VecToString(q0+v2), VecToString(q0)])
+    # ax.set_xticklabels([VecToString(q0), VecToString(q1), VecToString(q2), VecToString(q3), VecToString(q4)])
+    # ax.grid(b=1, color='1')
+    # ax.legend(loc="upper right")
+    # # plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
+    # plt.show()    
 
 
 
