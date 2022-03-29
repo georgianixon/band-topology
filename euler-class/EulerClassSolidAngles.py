@@ -358,14 +358,30 @@ n1 = 0
 
 
 
-# fs = (12,9)
+# fs = (15,9)
+# fs = (12, 9)
 # fig, ax = plt.subplots(figsize=fs)
 # multiplier = np.linspace(0, 4, qpoints)
 # qpoints = 10000
-# for pp in np.linspace(-1,1,21):
+# for pp in [-0.99, -0.5, -0.1, 0, 0.1, 0.5, 0.99]:
 #     q0 = np.array([pp,0])
-#     qf = q0+ np.array([0,4])
+    
+#     # v1 = np.array([0,2])
+#     # v2 = np.array([2,0])
+#     # q1 = q0+v1
+#     # q2 = q0+v1+v2
+#     # q3 = q0+v2
+#     # q4 = q0
+    
+#     qf = q0+ np.array([0,8])
 #     kline = np.linspace(q0, qf, qpoints)
+#     # kline = SquareLine(q0, v1, v2, int((qpoints+3)/4))
+    
+#     # kline = FivePointLine(q0, q1, q2, q3, q4, int((qpoints+3)/4))
+    
+    
+#     # qf = q0+ np.array([0,8])
+#     # kline = np.linspace(q0, qf, qpoints)
 #     x,y = zip(*kline)
 #     ax.plot(x, y, color ='darkblue', label=r"k line")
 #     ax.plot(kline[0][0], kline[0][1], 'x', color = "#DD6031", markersize=20, label=r"$\Gamma=("+str(q0[0])+r","+str(q0[0])+r")$")
@@ -373,28 +389,30 @@ n1 = 0
 # ax.set_ylabel(r"$q_y$", rotation=0, labelpad=15)
 # ax.set_facecolor('1')
 # ax.grid(b=1, color='0.6')
+# # ax.set_xticks(np.linspace(-1,3,9))
 # ax.set_xticks(np.linspace(-1,1,11))
 # # ax.legend()
-# plt.savefig(sh+"LineTrajes,Euler=4,VecF=(0,4).png", format="png", bbox_inches="tight")
+# plt.savefig(sh+"VerticalLineTrajes,Euler=2,V1=(0,8).png", format="png", bbox_inches="tight")
 # plt.show()
 
+Ham = Euler2Hamiltonian
+    
 
-
-for pp in [-1, -0.5, -0.1, 0, 0.1, 0.5, 1]:#np.linspace(-1,1,5):#[0]:#np.linspace(-1,1,21):
+for pp in [   -0.01,0.01, 0.1, 0.5, 0.99]:#np.linspace(-1,1,5):#[0]:#np.linspace(-1,1,21):
     pp = round(pp, 2)
     
-    Ham = Euler4Hamiltonian
-    
+
     #define path
     #num of points
     qpoints = 10001
     q0 = np.array([pp,0])
     v1 = np.array([0,2])
+    v2 = np.array([2,0])
     q1 = q0+v1
-    q2 = q0+2*v1
-    q3 = q0+3*v1
-    q4 = q0+4*v1
-    # v2 = np.array([2,0])
+    q2 = q0+v1+v2
+    q3 = q0+v2
+    q4 = q0
+    
     # qf = q0+ np.array([0,4])
     # kline = np.linspace(q0, qf, qpoints)
     # kline = SquareLine(q0, v1, v2, int((qpoints+3)/4))
@@ -463,8 +481,8 @@ for pp in [-1, -0.5, -0.1, 0, 0.1, 0.5, 1]:#np.linspace(-1,1,5):#[0]:#np.linspac
     
 
     # saveLine = "LineTraj,Euler=4,GroundState,GaugeFixToGamma="+VecToStringSave(q0)+",V1="+VecToStringSave(v1)+",V2="+VecToStringSave(v2)+".png"
-    saveLine = ("LineTraj,Euler=4,GroundState,GaugeFixToGamma="+VecToStringSave(q0)
-                +",v="+VecToStringSave(4*v1)+".png")
+    saveLine = ("SquareLineTraj,Euler=2,GroundState,GaugeFixToGamma="+VecToStringSave(q0)
+                +",v1="+VecToStringSave(v1)+",v2="+VecToStringSave(v2)+".png")
     # saveLineDifferentiate = "DifferentiatedOverCircle,GroundState,GaugeFixToGamma=(0p6,0),CircleTraj,Centre=0,R=0p6.pdf"
     saveTheta = "Theta"+saveLine
     saveAlpha = "Alpha"+saveLine
