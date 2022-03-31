@@ -788,6 +788,20 @@ ax.scatter(x, y, z, c=z, alpha=1)
 plt.show()
 
 
+
+#%%
+
+from fractions import Fraction
+def Coeffs(phi, alpha):
+    print(Fraction(cos(phi)).limit_denominator(1000), Fraction(sin(phi)*sin(alpha)).limit_denominator(1000), Fraction(sin(phi)*cos(alpha)).limit_denominator(1000))
+    print(Fraction(cos(phi)**2).limit_denominator(100), 
+          Fraction((sin(phi)*sin(alpha)**2)).limit_denominator(100),
+          Fraction((sin(phi)*cos(alpha))**2).limit_denominator(100))
+    
+Coeffs(-pi/3, 2*pi/3)
+Coeffs(pi/3, -pi/3)
+
+
     
 
 
