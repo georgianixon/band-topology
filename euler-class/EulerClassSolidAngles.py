@@ -5,7 +5,7 @@ Created on Tue Jun 15 09:03:44 2021
 @author: Georgia Nixon
 """
 
-place = "Georgia"
+place = "Georgia Nixon"
 import numpy as np
 from numpy import cos, sin, exp, pi, tan
 import sys
@@ -26,11 +26,11 @@ sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bl
 
 size=25
 params = {
-        'legend.fontsize': size*0.75,
+        'legend.fontsize': size*0.9,
           'axes.labelsize': size,
           'axes.titlesize': size,
-          'xtick.labelsize': size*0.75,
-          'ytick.labelsize': size*0.75,
+          'xtick.labelsize': size*0.9,
+          'ytick.labelsize': size*0.9,
           'font.size': size,
           'font.family': 'STIXGeneral',
           'mathtext.fontset': 'stix',
@@ -74,6 +74,50 @@ def CreateLinearLine(qBegin, qEnd,  qpoints):
 
 
 
+def VecToStringSave(q0):
+    a = q0[0]
+    b = q0[1]
+    if type(a) != int and type(a) != np.int32:
+        
+        if a.is_integer():
+            a = int(a)
+    if type(b) != int and type(b) != np.int32:
+        if b.is_integer():
+            b = int(b)
+        
+    return "("+str(a).replace(".", "p")+","+str(b).replace(".", "p")+")"
+
+
+def VecToString(q0):
+    a = q0[0]
+    b = q0[1]
+    if type(a) != int and type(a) != np.int32:
+        
+        if a.is_integer():
+            a = int(a)
+        else:
+            a = round(a, 2)
+    if type(b) != int and type(b) != np.int32:
+        if b.is_integer():
+            b = int(b)
+        else:
+            b = round(b,2)
+
+    return "("+str(a)+","+str(b)+")"
+
+def SquareLine(q0, v1, v2, qpoints):
+    kline = np.linspace(q0, q0+v1, qpoints)
+    kline2 = np.linspace(q0+v1, q0+v1+v2, qpoints)[1:]
+    kline3 = np.linspace(q0+v1+v2, q0+v2, qpoints)[1:]
+    kline4 = np.linspace(q0+v2, q0, qpoints)[1:]
+    return np.vstack([kline, kline2, kline3, kline4])
+
+def FivePointLine(q0, q1, q2, q3, q4, qpoints):
+    kline = np.linspace(q0, q1, qpoints)
+    kline2 = np.linspace(q1, q2, qpoints)[1:]
+    kline3 = np.linspace(q2, q3, qpoints)[1:]
+    kline4 = np.linspace(q3, q4, qpoints)[1:]
+    return np.vstack([kline, kline2, kline3, kline4])
 
 
 #%% 
@@ -86,11 +130,12 @@ n1 = 0
 
 Ham = Euler2Hamiltonian
 
+
 #points in the line
 qpoints=51
 
 # arbitrary point I guess, but not a dirac point
-gammaPoint = np.array([0,0])
+gammaPoint = np.array([0,-0.5])
 
 #get evecs at gamma point
 H = Ham(gammaPoint)
@@ -98,8 +143,8 @@ _, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix = 1) # may as well gauge f
 u0 = evecs[:,0]
 u1 = evecs[:,1]
 u2 = evecs[:,2]
-#check it is not a dirac point
 
+#check it is not a dirac point
 assert(np.round(np.linalg.norm(evecs[:,n1]),10)==1)
 
 #Go through all other points in BZ;
@@ -111,18 +156,19 @@ K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 
 thetas0 = np.zeros((qpoints,qpoints))
 alphas0 = np.zeros((qpoints, qpoints))
-S3 = np.zeros((qpoints, qpoints))
-S8 = np.zeros((qpoints, qpoints))
 
-#calculate internal manifold
-lambda3 = np.diag([0,-1,1])
-lambda8 = (1/np.sqrt(3))*np.diag([-2,1,1])
+# S3 = np.zeros((qpoints, qpoints))
+# S8 = np.zeros((qpoints, qpoints))
 
-thetas1 = np.zeros((qpoints,qpoints))
-alphas1 = np.zeros((qpoints, qpoints))
+# #calculate internal manifold
+# lambda3 = np.diag([0,-1,1])
+# lambda8 = (1/np.sqrt(3))*np.diag([-2,1,1])
 
-thetas2 = np.zeros((qpoints,qpoints))
-alphas2 = np.zeros((qpoints, qpoints))
+# thetas1 = np.zeros((qpoints,qpoints))
+# alphas1 = np.zeros((qpoints, qpoints))
+
+# thetas2 = np.zeros((qpoints,qpoints))
+# alphas2 = np.zeros((qpoints, qpoints))
 
 eiglist = np.empty((qpoints,qpoints,3)) # for three bands
 
@@ -133,11 +179,12 @@ for xi, qx in enumerate(K1):
         eigs, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix=0) # will gauge fix later
 
         uFinal = evecs[:,n1]
+        # uFinal0 = uFinal
     
         #get correct overall phase for uFinal
         uFinal0 = AlignGaugeBetweenVecs(u0, uFinal)
-        uFinal1 = AlignGaugeBetweenVecs(u1, uFinal)
-        uFinal2 = AlignGaugeBetweenVecs(u2, uFinal)
+        # uFinal1 = AlignGaugeBetweenVecs(u1, uFinal)
+        # uFinal2 = AlignGaugeBetweenVecs(u2, uFinal)
         
         # get params
         argument = np.vdot(u0, uFinal0)
@@ -146,49 +193,49 @@ for xi, qx in enumerate(K1):
         
         theta0 = np.arccos(argument)
         thetas0[xi,yi] = theta0
-        
+
         alphaarg = np.vdot(u1, uFinal0)/sin(theta0)
         assert(round(np.imag(alphaarg), 26)==0)
         alphaarg = np.real(alphaarg)
         alpha0 = np.arcsin(alphaarg)
         alphas0[xi,yi] = alpha0
+
         
         # calculate interior sphere only
-        u0overlap = np.vdot(u0, uFinal)
-        u1overlap = np.vdot(u1, uFinal)
-        u2overlap = np.vdot(u2, uFinal)
-        kvec_u_basis = np.array([u0overlap, u1overlap, u2overlap])
-        internalSphere = np.vdot(kvec_u_basis, np.dot(lambda3, kvec_u_basis))
-        externalSphere = np.vdot(kvec_u_basis, np.dot(lambda8, kvec_u_basis))
-        S3[xi,yi] = internalSphere
-        S8[xi,yi] = externalSphere
+        # u0overlap = np.vdot(u0, uFinal)
+        # u1overlap = np.vdot(u1, uFinal)
+        # u2overlap = np.vdot(u2, uFinal)
+        # kvec_u_basis = np.array([u0overlap, u1overlap, u2overlap])
+        # internalSphere = np.vdot(kvec_u_basis, np.dot(lambda3, kvec_u_basis))
+        # externalSphere = np.vdot(kvec_u_basis, np.dot(lambda8, kvec_u_basis))
+        # S3[xi,yi] = internalSphere
+        # S8[xi,yi] = externalSphere
         
-        # get params
-        argument = np.dot(np.conj(u0), uFinal1)
-        assert(round(np.imag(argument), 26)==0)
-        argument = np.real(argument)
-        theta1 = np.arccos(argument)
-        thetas1[xi,yi] = theta1
+        # argument = np.dot(np.conj(u0), uFinal1)
+        # assert(round(np.imag(argument), 26)==0)
+        # argument = np.real(argument)
+        # theta1 = np.arccos(argument)
+        # thetas1[xi,yi] = theta1
         
-        alphaarg = np.vdot(u1, uFinal1)/sin(theta1)
-        assert(round(np.imag(alphaarg), 26)==0)
-        alphaarg = np.real(alphaarg)
-        alpha1 = np.arcsin(alphaarg)
-        alphas1[xi,yi] = alpha1
+        # alphaarg = np.vdot(u1, uFinal1)/sin(theta1)
+        # assert(round(np.imag(alphaarg), 26)==0)
+        # alphaarg = np.real(alphaarg)
+        # alpha1 = np.arcsin(alphaarg)
+        # alphas1[xi,yi] = alpha1
         
-        # get params
-        argument = np.dot(np.conj(u0), uFinal2)
-        assert(round(np.imag(argument), 26)==0)
-        argument = np.real(argument)
-        theta2 = np.arccos(argument)
-        thetas2[xi,yi] = theta2
+        # # get params
+        # argument = np.dot(np.conj(u0), uFinal2)
+        # assert(round(np.imag(argument), 26)==0)
+        # argument = np.real(argument)
+        # theta2 = np.arccos(argument)
+        # thetas2[xi,yi] = theta2
         
-        alphaarg = np.vdot(u1, uFinal2)/sin(theta2)
-        assert(round(np.imag(alphaarg), 26)==0)
-        alphaarg = np.real(alphaarg)
-        alpha2 = np.arcsin(alphaarg)
-        alphas1[xi,yi] = alpha2
-        
+        # alphaarg = np.vdot(u1, uFinal2)/sin(theta2)
+        # assert(round(np.imag(alphaarg), 26)==0)
+        # alphaarg = np.real(alphaarg)
+        # alpha2 = np.arcsin(alphaarg)
+        # alphas1[xi,yi] = alpha2
+
 #%%
 """
 Plot theta over BZ
@@ -204,26 +251,27 @@ cmap = "RdYlGn"#"plasma"#"RdYlGn"#"plasma"
 # turn x -> along bottom, y |^ along LHS
 thetas0Plot =  np.flip(thetas0.T, axis=0)
 alphas0Plot =  np.flip(alphas0.T, axis=0)
-S30Plot = np.flip(S3.T, axis=0)
-S80Plot = np.flip(S8.T, axis=0)
-thetas1Plot =  np.flip(thetas1.T, axis=0)
-alphas1Plot =  np.flip(alphas1.T, axis=0)
-thetas2Plot =  np.flip(thetas2.T, axis=0)
-alphas2Plot =  np.flip(alphas2.T, axis=0)
+# S30Plot = np.flip(S3.T, axis=0)
+# S80Plot = np.flip(S8.T, axis=0)
+# thetas1Plot =  np.flip(thetas1.T, axis=0)
+# alphas1Plot =  np.flip(alphas1.T, axis=0)
+# thetas2Plot =  np.flip(thetas2.T, axis=0)
+# alphas2Plot =  np.flip(alphas2.T, axis=0)
 
 xx = "0"
-yy = "0"
+yy = "-0p5"
 plotnames = [
             # "ThetaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
              # "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-             "ThetaOverBZ-Euler0-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-              "AlphaOverBZ-Euler0-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+             "ThetaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+              "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
               # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
               # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
                # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
                # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
                # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
                # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
+
              # "S8-Refk=(-0p5,-0p5).pdf"
              ]
 
@@ -253,6 +301,7 @@ for plotvar, savename in zip(plotvars, plotnames):
     ax.set_yticklabels([kmax, round(kmin+3*(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+(kmax-kmin)/4, 2), kmin])
     ax.set_xlabel(r"$k_x$")
     ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
+
     fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
     # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
     plt.savefig(sh+savename, format="pdf", bbox_inches="tight")
@@ -284,76 +333,6 @@ for plotvar, savename in zip(plotvars, plotnames):
 Theta over a line - 4 BZ
 """
 
-
-#band that we looking to describe
-n1 = 0
-
-
-Ham = Euler2Hamiltonian
-
-#define path
-#num of points
-qpoints = 10000
-q0 = np.array([0.1,0])
-qf = q0+ np.array([0,4])
-kline = np.linspace(q0, qf, qpoints)
-
-
-#get evecs at gamma point
-H = Ham(q0)
-_, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix = 1) # may as well gauge fix here
-u0 = evecs[:,0]
-u1 = evecs[:,1]
-u2 = evecs[:,2]
-#check it is not a dirac point
-assert(np.round(np.linalg.norm(evecs[:,n1]),10)==1)
-
-
-thetasLine = np.zeros(qpoints)
-alphasLine = np.zeros(qpoints)
-
-# go through possible end points for k, get andlges
-for i, kpoint in enumerate(kline):
-    #do abeliean version,
-    #find evecs at other k down the line
-    H = Ham(kpoint)
-    _, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix=0)
-    uFinal = evecs[:,n1]
-    
-    #get correct overall phase for uFinal
-    uFinal = AlignGaugeBetweenVecs(u0, uFinal)
-
-    # get params
-    
-    # get params
-    argument = np.vdot(u0, uFinal)
-    assert(round(np.imag(argument), 26)==0)
-    argument = np.real(argument)
-    theta0 = np.arccos(argument)
-    
-    alphaarg = np.vdot(u1, uFinal)/sin(theta0)
-    assert(round(np.imag(alphaarg), 26)==0)
-    alphaarg = np.real(alphaarg)
-    alpha = np.arcsin(alphaarg)
-
-    
-    thetasLine[i] = theta0
-    alphasLine[i] = alpha
-
-
-
-#differentiate thetas
-# dCircAngle = 2*pi/(qpoints-1)
-# dThetadAngle = np.empty(qpoints-1)
-# dAlphadAngle = np.empty(qpoints-1)
-# for i in range(qpoints-1):
-#     dThetadAngle[i] = (thetasLine[i+1] - thetasLine[i])/dCircAngle
-#     dAlphadAngle[i] = (alphasLine[i+1] - alphasLine[i])/dCircAngle
-
-#%%
-# #plot kline
-
-
 CB91_Blue = 'darkblue'#'#2CBDFE'
 oxfordblue = "#061A40"
 CB91_Green = '#47DBCD'
@@ -371,54 +350,211 @@ color_list = [CB91_Blue, flame, CB91_Pink, CB91_Green, CB91_Amber,
                 'dodgerblue',
                 'slategrey', newred]
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=color_list)
-saveLine = "LineTraj,Euler=2,GroundState,GaugeFixToGamma=(0p1,0),VecF=(0,4).pdf"
-# saveLineDifferentiate = "DifferentiatedOverCircle,GroundState,GaugeFixToGamma=(0p6,0),CircleTraj,Centre=0,R=0p6.pdf"
-saveTheta = "Theta"+saveLine
-saveAlpha = "Alpha"+saveLine
-
-# saveThetaDifferentiated = "Theta"+saveLineDifferentiate
-# saveAlphaDifferentiated = "Alpha"+saveLineDifferentiate
 
 
-
-multiplier = np.linspace(0, 4, qpoints)
-fs = (12,9)
-x,y = zip(*kline)
-fig, ax = plt.subplots(figsize=fs)
-ax.plot(x, y, label=r"k line")
-ax.plot(kline[0][0], kline[0][1], 'x', markersize=20, label=r"$\Gamma=(0.1,0)$")
-ax.set_xlabel(r"$q_x$")
-ax.set_ylabel(r"$q_y$", rotation=0, labelpad=15)
-ax.set_facecolor('1')
-ax.grid(b=1, color='0.6')
-ax.legend()
-plt.savefig(sh+saveLine, format="pdf", bbox_inches="tight")
-plt.show()
-
-
-fig, ax = plt.subplots(figsize=fs)
-ax.plot(multiplier, thetasLine, '.', markersize=3, label=r"$\theta$")
-ax.set_yticks([0, pi/2, pi])
-ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
-ax.set_ylabel(r"$\theta$", rotation=0, labelpad=15)
-ax.set_xlabel(r"$q_x$")
-ax.grid(b=1, color='1')
-plt.savefig(sh+saveTheta, format="pdf", bbox_inches="tight")
-plt.show()    
+G1colour = 'darkblue'
+G2colour = "#DD6031"
+#band that we looking to describe
+n1 = 0
 
 
 
+# fs = (15,9)
+# fs = (12, 9)
+# fig, ax = plt.subplots(figsize=fs)
+# multiplier = np.linspace(0, 4, qpoints)
+# qpoints = 10000
+# for pp in [-0.99, -0.5, -0.1, 0, 0.1, 0.5, 0.99]:
+#     q0 = np.array([pp,0])
+    
+#     # v1 = np.array([0,2])
+#     # v2 = np.array([2,0])
+#     # q1 = q0+v1
+#     # q2 = q0+v1+v2
+#     # q3 = q0+v2
+#     # q4 = q0
+    
+#     qf = q0+ np.array([0,8])
+#     kline = np.linspace(q0, qf, qpoints)
+#     # kline = SquareLine(q0, v1, v2, int((qpoints+3)/4))
+    
+#     # kline = FivePointLine(q0, q1, q2, q3, q4, int((qpoints+3)/4))
+    
+    
+#     # qf = q0+ np.array([0,8])
+#     # kline = np.linspace(q0, qf, qpoints)
+#     x,y = zip(*kline)
+#     ax.plot(x, y, color ='darkblue', label=r"k line")
+#     ax.plot(kline[0][0], kline[0][1], 'x', color = "#DD6031", markersize=20, label=r"$\Gamma=("+str(q0[0])+r","+str(q0[0])+r")$")
+# ax.set_xlabel(r"$q_x$")
+# ax.set_ylabel(r"$q_y$", rotation=0, labelpad=15)
+# ax.set_facecolor('1')
+# ax.grid(b=1, color='0.6')
+# # ax.set_xticks(np.linspace(-1,3,9))
+# ax.set_xticks(np.linspace(-1,1,11))
+# # ax.legend()
+# plt.savefig(sh+"VerticalLineTrajes,Euler=2,V1=(0,8).png", format="png", bbox_inches="tight")
+# plt.show()
 
-fig, ax = plt.subplots(figsize=fs)
-ax.plot(multiplier, alphasLine, '.', markersize=3, label=r"$\alpha$")
-# ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), ground band")
-ax.set_yticks([-pi, -pi/2, 0, pi/2, pi])
-ax.set_yticklabels([ r"$-\pi$", r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$", r"$\pi$"])
-ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
-ax.set_xlabel(r"$q_x$")
-ax.grid(b=1, color='1')
-plt.savefig(sh+saveAlpha, format="pdf", bbox_inches="tight")
-plt.show()    
+Ham = Euler4Hamiltonian
+    
+
+for pp in np.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
+    pp = round(pp, 2)
+    
+
+    #define path
+    #num of points
+    qpoints = 1001
+    q0 = np.array([pp,0])
+    v1 = np.array([0,2])
+    v2 = np.array([2,0])
+    q1 = q0+v1
+    q2 = q0+2*v1
+    q3 = q0+3*v1
+    q4 = q0+4*v1
+    
+    # qf = q0+ np.array([0,4])
+    # kline = np.linspace(q0, qf, qpoints)
+    # kline = SquareLine(q0, v1, v2, int((qpoints+3)/4))
+    
+    kline = FivePointLine(q0, q1, q2, q3, q4, int((qpoints+3)/4))
+    
+    #get evecs at gamma point
+    H = Ham(q0)
+    _, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix = 1) # may as well gauge fix here
+    u0 = evecs[:,0]
+    u1 = evecs[:,1]
+    u2 = evecs[:,2]
+    #check it is not a dirac point
+    assert(np.round(np.linalg.norm(evecs[:,n1]),10)==1)
+    
+    
+    thetasLine = np.zeros(qpoints)
+    alphasLine = np.zeros(qpoints)
+    
+    # go through possible end points for k, get angles
+    for i, kpoint in enumerate(kline):
+        #do abeliean version,
+        #find evecs at other k down the line
+        H = Ham(kpoint)
+        _, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix=0)
+        uFinal = evecs[:,n1]
+        
+        #get correct overall phase for uFinal
+        uFinal = AlignGaugeBetweenVecs(u0, uFinal)
+    
+        # get params
+        
+        # get params
+        argument = np.vdot(u0, uFinal)
+        assert(round(np.imag(argument), 26)==0)
+        argument = np.real(argument)
+        
+        theta0 = np.arccos(argument)
+        thetaOtherGauge = pi-theta0
+        
+        alphaarg = np.vdot(u1, uFinal)/sin(theta0)
+        assert(round(np.imag(alphaarg), 26)==0)
+        alphaarg = np.real(alphaarg)
+        alpha = np.arcsin(alphaarg)
+        alphaOtherGauge = alpha - pi
+    
+        
+        thetasLine[i] = theta0
+        alphasLine[i] = alpha
+    
+    
+    
+    #differentiate thetas
+    # dCircAngle = 2*pi/(qpoints-1)
+    # dThetadAngle = np.empty(qpoints-1)
+    # dAlphadAngle = np.empty(qpoints-1)
+    # for i in range(qpoints-1):
+    #     dThetadAngle[i] = (thetasLine[i+1] - thetasLine[i])/dCircAngle
+    #     dAlphadAngle[i] = (alphasLine[i+1] - alphasLine[i])/dCircAngle
+    
+    
+    # #plot kline
+    
+    
+    print(VecToStringSave(q0))
+    
+
+    # saveLine = "LineTraj,Euler=4,GroundState,GaugeFixToGamma="+VecToStringSave(q0)+",V1="+VecToStringSave(v1)+",V2="+VecToStringSave(v2)+".png"
+    saveLine = ("SquareLineTraj,Euler=2,GroundState,GaugeFixToGamma="+VecToStringSave(q0)
+                +",v1="+VecToStringSave(v1)+",v2="+VecToStringSave(v2)+".png")
+    # saveLineDifferentiate = "DifferentiatedOverCircle,GroundState,GaugeFixToGamma=(0p6,0),CircleTraj,Centre=0,R=0p6.pdf"
+    saveTheta = "Theta"+saveLine
+    saveAlpha = "Alpha"+saveLine
+    
+    # saveThetaDifferentiated = "Theta"+saveLineDifferentiate
+    # saveAlphaDifferentiated = "Alpha"+saveLineDifferentiate
+    
+    fs = (10,7.5)
+    
+    ms = 0.7
+    multiplier = np.linspace(0, 4, qpoints)
+    
+    fig, ax = plt.subplots(figsize=fs)
+    ax.plot(multiplier[0], thetasLine[0], '.', color=G1colour, markersize = 3, label=r"$\theta_{G1}$")
+    ax.plot(multiplier, thetasLine, '.', color = G1colour, markersize=ms)
+    ax.plot(multiplier, -thetasLine, '.', color = G1colour, markersize=ms)
+    # ax.plot(multiplier, 2*pi-thetasLine, '.', color = G1colour, markersize=3)
+    # ax.plot(multiplier, -2*pi+thetasLine, '.', color = G1colour, markersize=3)
+    ax.plot(multiplier[0], pi - thetasLine[0], '.', color = G2colour, markersize=3, label=r"$\theta_{G2}$")
+    ax.plot(multiplier, pi - thetasLine, '.', color = G2colour, markersize=ms)
+    ax.plot(multiplier, pi + thetasLine, '.', color = G2colour, markersize=ms)
+    ax.plot(multiplier, -pi + thetasLine, '.', color = G2colour, markersize=ms)
+    ax.plot(multiplier, -pi - thetasLine, '.', color = G2colour, markersize=ms)
+    ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
+    # ax.set_yticks([0, pi/2])
+    ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
+                        '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$"])
+    # ax.set_yticklabels(['0',r"$\frac{\pi}{2}$"])
+    # ax.set_ylim(-0.1, pi/2+0.1)
+    ax.set_ylabel(r"$\theta$", rotation=0, labelpad=15)
+    # ax.set_xlabel(r"$q_x$")
+    ax.set_xticks([0,1,2,3,4])
+    ax.set_xticklabels([VecToString(q0), VecToString(q1), VecToString(q2), VecToString(q3), VecToString(q4)])
+    # ax.set_xlabel(r"square path")
+    ax.grid(b=1, color='1')
+    ax.legend(loc="upper right")
+    # plt.savefig(sh+saveTheta, format="png", bbox_inches="tight")
+    plt.show()    
+    
+    
+    
+    
+    # fig, ax = plt.subplots(figsize=fs)
+    # ax.plot(multiplier[0], alphasLine[0], '.', color = G1colour, markersize=3, label=r"$\alpha_{G1}$")
+    # ax.plot(multiplier, alphasLine, '.', color = G1colour, markersize=ms)
+    # ax.plot(multiplier, pi - alphasLine, '.', color = G1colour, markersize=ms)
+    # ax.plot(multiplier, -pi - alphasLine, '.', color = G1colour, markersize=ms)
+    # # ax.plot(multiplier, -2*pi + alphasLine, '.', color = G1colour, markersize=3)
+    # ax.plot(multiplier[0],  - alphasLine[0], '.',color = G2colour,  markersize=3, label=r"$\alpha_{G2}$")
+    # ax.plot(multiplier,  - alphasLine, '.',color = G2colour,  markersize=ms)
+    # ax.plot(multiplier,  - pi + alphasLine, '.',color = G2colour,  markersize=ms)
+    # ax.plot(multiplier,  pi + alphasLine, '.',color = G2colour,  markersize=ms)
+    # # ax.plot(multiplier,  2*pi - alphasLine, '.',color = G2colour,  markersize=3)
+    # # ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), ground band")
+    # ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
+    # # ax.set_yticks([-pi, -pi/2, 0, pi/2, pi])
+    # # ax.set_yticks([-pi/2, 0, pi/2])
+    # # ax.set_yticklabels([ r"$-\pi$", r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$", r"$\pi$"])
+    # ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
+    #                     '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$"])
+    # # ax.set_yticklabels([ r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$"])
+    # # ax.set_ylim([-pi/2-0.1, pi/2+0.1])
+    # ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
+    # # ax.set_xlabel(r"$q_x$")
+    # ax.set_xticks([0,1,2,3,4])
+    # # ax.set_xticklabels([VecToString(q0), VecToString(q0+v1), VecToString(q0+v1+v2), VecToString(q0+v2), VecToString(q0)])
+    # ax.set_xticklabels([VecToString(q0), VecToString(q1), VecToString(q2), VecToString(q3), VecToString(q4)])
+    # ax.grid(b=1, color='1')
+    # ax.legend(loc="upper right")
+    # # plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
+    # plt.show()    
 
 
 
@@ -458,7 +594,7 @@ n1 = 0
 
 
 
-Ham = Euler2Hamiltonian
+Ham = EulerHamiltonian
 #define path
 #num of points
 qpoints = 10000
@@ -651,6 +787,20 @@ z, x, y = data.nonzero()
 
 ax.scatter(x, y, z, c=z, alpha=1)
 plt.show()
+
+
+
+#%%
+
+from fractions import Fraction
+def Coeffs(phi, alpha):
+    print(Fraction(cos(phi)).limit_denominator(1000), Fraction(sin(phi)*sin(alpha)).limit_denominator(1000), Fraction(sin(phi)*cos(alpha)).limit_denominator(1000))
+    print(Fraction(cos(phi)**2).limit_denominator(100), 
+          Fraction((sin(phi)*sin(alpha)**2)).limit_denominator(100),
+          Fraction((sin(phi)*cos(alpha))**2).limit_denominator(100))
+    
+Coeffs(-pi/3, 2*pi/3)
+Coeffs(pi/3, -pi/3)
 
 
     

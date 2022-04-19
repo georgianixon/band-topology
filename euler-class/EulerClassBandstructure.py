@@ -12,7 +12,7 @@ import matplotlib as mpl
 from mpl_toolkits import mplot3d
 import numpy.linalg as la
 
-place = "Georgia"
+place = "Georgia Nixon"
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
@@ -44,8 +44,6 @@ def BerryCurvatureEuler(k, n0, n1, EulerHamiltonian):
     """
     Usually for Euler set n0 = n1 = 2 to look at Berry curvature in the gappend, excited band
     """
-    
-    
     h = 0.0001
     
     H = EulerHamiltonian(k)
@@ -145,13 +143,14 @@ band2 = np.empty([qpoints, qpoints], dtype=np.complex128)
 band3 = np.empty([qpoints, qpoints], dtype=np.complex128)
 
 
+Ham = Euler2Hamiltonian
 # eiglist = np.zeros((qpoints,qpoints,3)) # for three bands
 
 for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
         k = np.array([qx,qy])
 
-        bC, b1, b2, b3 = BerryCurvatureEuler(k,0,0, Euler0Hamiltonian)
+        bC, b1, b2, b3 = BerryCurvatureEuler(k,1,1, Ham)
         
         berrycurve[xi, yi] = bC
 
@@ -159,7 +158,9 @@ for xi, qx in enumerate(K1):
         band2[xi, yi] = b2
         band3[xi, yi] = b3
 
-        
+  
+# chernnumber = (1/2/pi)*np.sum(berrycurve[:-1,:-1])*jacobian
+      
  
 end = time.time()
 print("Time consumed in working: ",end - start)       
@@ -174,10 +175,11 @@ cmap = mpl.cm.get_cmap(cmapstring)
 fig = plt.figure(figsize=(8,6))
 ax = plt.axes(projection='3d')
 ax.view_init(35, -140)
-surf = ax.plot_surface(u1[:50,:50], u2[:50,:50], np.real(berrycurve)[:50,:50], cmap="RdBu")
+# surf = ax.plot_surface(u1[:50,:50], u2[:50,:50], np.real(berrycurve)[:50,:50], cmap="RdBu")
+surf = ax.plot_surface(u1, u2, np.real(berrycurve), cmap="RdBu")
 
 # ax.set_zlim([-5, 15])
-ax.set_title(r"$\Omega $ (gapped band)" )
+# ax.set_title(r"$\Omega $ (gapped band)" )
 ax.set_xlabel(r'$k_x$', labelpad=5)
 ax.set_ylabel(r'$k_y$', labelpad=5)
 fig.colorbar(surf)
@@ -236,7 +238,7 @@ ax.set_xlabel(r'$k_x$', labelpad = 20)
 ax.set_ylabel(r'$k_y$', labelpad=20)
 # ax.set_title(r"Euler Hamiltonian $\xi = 2$ bandstructure",y=0.9)
 plt.margins(0,0,0)
-plt.savefig(sh + "Euler0BS(0,225).pdf", format="pdf", bbox_inches = 'tight', pad_inches = -0.1)
+# plt.savefig(sh + "Euler0BS(0,225).pdf", format="pdf", bbox_inches = 'tight', pad_inches = -0.1)
 plt.show() 
 
 
@@ -367,28 +369,9 @@ cbar = fig.colorbar(pos, cax=cax, extend="min")
 # cbar.ax.set_ylabel(r'$|\psi(t)|^2$', rotation=270, labelpad=0)
 # 
 
-plt.savefig(sh + "EigDif-Euler0-2,1Log.pdf", format="pdf", bbox_inches="tight")
+# plt.savefig(sh + "EigDif-Euler0-2,1Log.pdf", format="pdf", bbox_inches="tight")
 plt.show()
 
-
-
-#%%
-
-
-
-for xi, qx in enumerate(K1):
-    for yi, qy in enumerate(K2):
-        
-
-        
-        bC, b1, b2, b3, b4 = BerryCurvatureEuler([qx, qy])
-        berrycurve[xcnt, ycnt] = bC
-        band1[xcnt, ycnt] = b1
-        band2[xcnt, ycnt] = b2
-        band3[xcnt, ycnt] = b3
-        band4[xcnt, ycnt] = b4
-
-chernnumber = (1/2/pi)*np.sum(berrycurve[:-1,:-1])*jacobian
 
 
 
