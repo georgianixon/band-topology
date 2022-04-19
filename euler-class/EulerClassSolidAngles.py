@@ -39,7 +39,7 @@ mpl.rcParams.update(params)
 params = {
           'xtick.bottom':True,
           'xtick.top':False,
-          'ytick.left': True,
+           'ytick.left': True,
           'ytick.right':False,
           'axes.edgecolor' :'white',
           'xtick.minor.visible': False,
@@ -128,7 +128,10 @@ Theta/alpha/inner manifold over the BZ
 #band that we looking to describe
 n1 = 0
 
-Ham = Euler0Hamiltonian
+
+Ham = Euler2Hamiltonian
+
+
 
 #points in the line
 qpoints=51
