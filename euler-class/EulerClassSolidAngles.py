@@ -138,7 +138,7 @@ qpoints=51
 
 # arbitrary point I guess, but not a dirac point
 
-for value in [  0.1]:
+for value in [ 0.1]:
     gammaPoint = np.array([value,0.1])
     
     #get evecs at gamma point
@@ -281,6 +281,7 @@ for value in [  0.1]:
                   # "S8-Refk=(-0p5,-0p5).pdf"
                   ]
     
+    cmaps = ["RdYlGn", "twilight_shifted_r"]
     plotvars = [
                 thetas0Plot, alphas0Plot, 
                 # thetas1Plot, alphas1Plot,
@@ -288,7 +289,7 @@ for value in [  0.1]:
                 # S30Plot,
                 # S80Plot
                 ]
-    for plotvar, savename in zip(plotvars, plotnames):
+    for plotvar, savename,cmap in zip(plotvars, plotnames, cmaps):
         # to ensure zero is in the middle, optional
         pmin = np.nanmin(plotvar)
         pmax = np.nanmax(plotvar)
@@ -310,7 +311,7 @@ for value in [  0.1]:
     
         fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
         # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
-        plt.savefig(sh+savename, format="png", bbox_inches="tight")
+        # plt.savefig(sh+savename, format="png", bbox_inches="tight")
         plt.show()
 
 
@@ -339,31 +340,22 @@ for value in [  0.1]:
 Theta over a line - 4 BZ
 """
 
-CB91_Blue = 'darkblue'#'#2CBDFE'
-oxfordblue = "#061A40"
-CB91_Green = '#47DBCD'
-CB91_Pink = '#F3A0F2'
-CB91_Purple = '#9D2EC5'
-CB91_Violet = '#661D98'
-CB91_Amber = '#F5B14C'
-red = "#FC4445"
-newred = "#E4265C"
-flame = "#DD6031"
-
-color_list = [CB91_Blue, flame, CB91_Pink, CB91_Green, CB91_Amber,
-                CB91_Purple,
-                # CB91_Violet,
-                'dodgerblue',
-                'slategrey', newred]
-plt.rcParams['axes.prop_cycle'] = plt.cycler(color=color_list)
-
-
 G1colour = 'darkblue'
 G2colour = "#DD6031"
 #band that we looking to describe
 n1 = 0
 
 
+col1 = "darkblue"
+col2 = "#DD6031"
+col4 = "#E980FC"
+col3 = "#9DD1F1"
+col5 = "#F0C808"
+
+def GetInverseSinOutsideRange(alpha):
+    
+def GetInverseCosOutsideRange(alpha):
+    
 
 # fs = (15,9)
 # fs = (12, 9)
@@ -405,7 +397,11 @@ n1 = 0
 Ham = Euler2Hamiltonian
     
 
-for pp in [-0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
+def ProjReal(vec):
+     assert(round(np.imag(vec), 26)==0)
+     return np.real(vec)
+    
+for pp in [0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     pp = round(pp, 2)
     
 
@@ -436,9 +432,12 @@ for pp in [-0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     assert(np.round(np.linalg.norm(evecs[:,n1]),10)==1)
     
     
-    thetasLine = np.zeros(qpoints)
-    alphasLine = np.zeros(qpoints)
-    alphasLineCos = np.zeros(qpoints)
+    thetasLineG1 = np.zeros(qpoints)
+    thetasLineG2 = np.zeros(qpoints)
+    alphasLineG1 = np.zeros(qpoints)
+    alphasLineG2 = np.zeros(qpoints)
+    alphasLineCosG1 = np.zeros(qpoints)
+    alphasLineCosG2 = np.zeros(qpoints)
     
     # go through possible end points for k, get angles
     for i, kpoint in enumerate(kline):
@@ -449,33 +448,41 @@ for pp in [-0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
         uFinal = evecs[:,n1]
         
         #get correct overall phase for uFinal
-        uFinal = AlignGaugeBetweenVecs(u0, uFinal)
+        uFinalG1 = AlignGaugeBetweenVecs(u0, uFinal)
+        uFinalG2 = -uFinalG1
     
         # get params
         
         # get params
-        argument = np.vdot(u0, uFinal)
-        assert(round(np.imag(argument), 26)==0)
-        argument = np.real(argument)
-        
-        theta0 = np.arccos(argument)
+        argumentG1 = ProjReal(np.vdot(u0, uFinalG1))
+        thetaG1 = np.arccos(argumentG1)
         # thetaOtherGauge = pi-theta0
+        argumentG2 = ProjReal(np.vdot(u0, uFinalG2))
+        thetaG2 = np.arccos(argumentG2)
         
-        alphaarg = np.vdot(u1, uFinal)/sin(theta0)
-        assert(round(np.imag(alphaarg), 26)==0)
-        alphaarg = np.real(alphaarg)
-        alpha = np.arcsin(alphaarg)
+        
+        
+        alphaargG1 = ProjReal(np.vdot(u1, uFinalG1)/sin(thetaG1))
+        alphaG1 = np.arcsin(alphaargG1)
         # alphaOtherGauge = alpha - pi
+        
+        alphaargG2 = ProjReal(np.vdot(u1, uFinalG2)/sin(thetaG2))
+        alphaG2 = np.arcsin(alphaargG2)
     
-        alphaCosArg = np.vdot(u2, uFinal)/sin(theta0)
-        assert(round(np.imag(alphaCosArg), 26)==0) 
-        alphaCosArg = np.real(alphaCosArg)
-        alphaCos = np.arccos(alphaCosArg)
-        # alphaOtherGauge = alpha - pi                                  
+    
+        alphaCosArgG1 = ProjReal(np.vdot(u2, uFinalG1)/sin(thetaG1))
+        alphaCosG1 = np.arccos(alphaCosArgG1)
+        
+        alphaCosArgG2 = ProjReal(np.vdot(u2, uFinalG2)/sin(thetaG2))
+        alphaCosG2 = np.arccos(alphaCosArgG2)
+                               
                                               
-        thetasLine[i] = theta0
-        alphasLine[i] = alpha
-        alphasLineCos[i] = alphaCos
+        thetasLineG1[i] = thetaG1
+        thetasLineG2[i] = thetaG2
+        alphasLineG1[i] = alphaG1
+        alphasLineG2[i] = alphaG2
+        alphasLineCosG1[i] = alphaCosG1
+        alphasLineCosG2[i] = alphaCosG2
     
     
     
@@ -507,20 +514,103 @@ for pp in [-0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     
     fs = (10,7.5)
     
-    ms = 0.7
+    ms = 1
     multiplier = np.linspace(0, 4, qpoints)
     
+    # fig, ax = plt.subplots(figsize=fs)
+    # ax.plot(multiplier[0], thetasLine[0], '.', color=G1colour, markersize = 3, label=r"$\theta_{G1}$")
+    # ax.plot(multiplier, thetasLine, '.', color = G1colour, markersize=ms)
+    # ax.plot(multiplier, -thetasLine, '.', color = G1colour, markersize=ms)
+    # # ax.plot(multiplier, 2*pi-thetasLine, '.', color = G1colour, markersize=3)
+    # # ax.plot(multiplier, -2*pi+thetasLine, '.', color = G1colour, markersize=3)
+    # ax.plot(multiplier[0], pi - thetasLine[0], '.', color = G2colour, markersize=3, label=r"$\theta_{G2}$")
+    # ax.plot(multiplier, pi - thetasLine, '.', color = G2colour, markersize=ms)
+    # ax.plot(multiplier, pi + thetasLine, '.', color = G2colour, markersize=ms)
+    # ax.plot(multiplier, -pi + thetasLine, '.', color = G2colour, markersize=ms)
+    # ax.plot(multiplier, -pi - thetasLine, '.', color = G2colour, markersize=ms)
+    # ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
+    # # ax.set_yticks([0, pi/2])
+    # ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
+    #                     '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$"])
+    # # ax.set_yticklabels(['0',r"$\frac{\pi}{2}$"])
+    # # ax.set_ylim(-0.1, pi/2+0.1)
+    # ax.set_ylabel(r"$\theta$", rotation=0, labelpad=15)
+    # # ax.set_xlabel(r"$q_x$")
+    # ax.set_xticks([0,1,2,3,4])
+    # ax.set_xticklabels([VecToString(q0), VecToString(q1), VecToString(q2), VecToString(q3), VecToString(q4)])
+    # # ax.set_xlabel(r"square path")
+    # ax.grid(b=1, color='1')
+    # ax.legend(loc="upper right")
+    # # plt.savefig(sh+saveTheta, format="png", bbox_inches="tight")
+    # plt.show()    
+    
+    
+    
+    
+    # fig, ax = plt.subplots(figsize=fs)
+    # ax.plot(multiplier[0], alphasLine[0], '.', color = G1colour, markersize=3, label=r"$\alpha_{G1}$")
+    # ax.plot(multiplier, alphasLine, '.', color = G1colour, markersize=ms)
+    # ax.plot(multiplier, pi - alphasLine, '.', color = G1colour, markersize=ms)
+    # ax.plot(multiplier, -pi - alphasLine, '.', color = G1colour, markersize=ms)
+    # # ax.plot(multiplier, -2*pi + alphasLine, '.', color = G1colour, markersize=3)
+    # ax.plot(multiplier[0],  - alphasLine[0], '.',color = G2colour,  markersize=3, label=r"$\alpha_{G2}$")
+    # ax.plot(multiplier,  - alphasLine, '.',color = G2colour,  markersize=ms)
+    # ax.plot(multiplier,  - pi + alphasLine, '.',color = G2colour,  markersize=ms)
+    # ax.plot(multiplier,  pi + alphasLine, '.',color = G2colour,  markersize=ms)
+    # # ax.plot(multiplier,  2*pi - alphasLine, '.',color = G2colour,  markersize=3)
+    # ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
+    # # ax.set_yticks([-pi, -pi/2, 0, pi/2, pi])
+    # # ax.set_yticks([-pi/2, 0, pi/2])
+    # # ax.set_yticklabels([ r"$-\pi$", r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$", r"$\pi$"])
+    # ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
+    #                     '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$"])
+    # # ax.set_yticklabels([ r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$"])
+    # # ax.set_ylim([-pi/2-0.1, pi/2+0.1])
+    # ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
+    # # ax.set_xlabel(r"$q_x$")
+    # ax.set_xticks([0,1,2,3,4])
+    # # ax.set_xticklabels([VecToString(q0), VecToString(q0+v1), VecToString(q0+v1+v2), VecToString(q0+v2), VecToString(q0)])
+    # ax.set_xticklabels([VecToString(q0), VecToString(q1), VecToString(q2), VecToString(q3), VecToString(q4)])
+    # ax.grid(b=1, color='1')
+    # ax.legend(loc="upper right")
+    # # plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
+    # plt.show()    
+
+    
+    # fig, ax = plt.subplots(figsize=fs)
+    # ax.plot(multiplier[0], alphasLineCos[0], '.', color = G1colour, markersize=3, label=r"$\alpha_{G1}$")
+    # ax.plot(multiplier, alphasLineCos, '.', color = G1colour, markersize=ms)
+    # ax.plot(multiplier, - alphasLineCos, '.', color = G1colour, markersize=ms)
+
+    # ax.plot(multiplier[0],  pi + alphasLine[0], '.',color = G2colour,  markersize=3, label=r"$\alpha_{G2}$")
+    # ax.plot(multiplier,   alphasLineCos - pi, '.',color = G2colour,  markersize=ms)
+    # ax.plot(multiplier,  pi - alphasLineCos, '.',color = G2colour,  markersize=ms)
+    # ax.plot(multiplier,  pi + alphasLineCos, '.',color = G2colour,  markersize=ms)
+    # ax.plot(multiplier,  -pi - alphasLineCos, '.',color = G2colour,  markersize=ms)
+    # # ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), ground band")
+    # ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
+    # # ax.set_yticks([-pi, -pi/2, 0, pi/2, pi])
+    # # ax.set_yticks([-pi/2, 0, pi/2])
+    # # ax.set_yticklabels([ r"$-\pi$", r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$", r"$\pi$"])
+    # ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
+    #                     '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$"])
+    # # ax.set_yticklabels([ r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$"])
+    # # ax.set_ylim([-pi/2-0.1, pi/2+0.1])
+    # ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
+    # # ax.set_xlabel(r"$q_x$")
+    # ax.set_xticks([0,1,2,3,4])
+    # # ax.set_xticklabels([VecToString(q0), VecToString(q0+v1), VecToString(q0+v1+v2), VecToString(q0+v2), VecToString(q0)])
+    # ax.set_xticklabels([VecToString(q0), VecToString(q1), VecToString(q2), VecToString(q3), VecToString(q4)])
+    # ax.grid(b=1, color='1')
+    # ax.legend(loc="upper right")
+    # # plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
+    # plt.show()    
+    
+    
     fig, ax = plt.subplots(figsize=fs)
-    ax.plot(multiplier[0], thetasLine[0], '.', color=G1colour, markersize = 3, label=r"$\theta_{G1}$")
-    ax.plot(multiplier, thetasLine, '.', color = G1colour, markersize=ms)
-    ax.plot(multiplier, -thetasLine, '.', color = G1colour, markersize=ms)
-    # ax.plot(multiplier, 2*pi-thetasLine, '.', color = G1colour, markersize=3)
-    # ax.plot(multiplier, -2*pi+thetasLine, '.', color = G1colour, markersize=3)
-    ax.plot(multiplier[0], pi - thetasLine[0], '.', color = G2colour, markersize=3, label=r"$\theta_{G2}$")
-    ax.plot(multiplier, pi - thetasLine, '.', color = G2colour, markersize=ms)
-    ax.plot(multiplier, pi + thetasLine, '.', color = G2colour, markersize=ms)
-    ax.plot(multiplier, -pi + thetasLine, '.', color = G2colour, markersize=ms)
-    ax.plot(multiplier, -pi - thetasLine, '.', color = G2colour, markersize=ms)
+    # ax.plot(multiplier[0], thetasLineG1[0], '.', color=G1colour, markersize = 3, label=r"$\theta_{G1}$")
+    ax.plot(multiplier, thetasLineG1, '.',  markersize=ms,label=r"$\theta_{G1}$")
+    ax.plot(multiplier, thetasLineG2, '.',  markersize=ms, label=r"$\theta_{G2}$")
     ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
     # ax.set_yticks([0, pi/2])
     ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
@@ -538,19 +628,11 @@ for pp in [-0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     plt.show()    
     
     
-    
-    
     fig, ax = plt.subplots(figsize=fs)
-    ax.plot(multiplier[0], alphasLine[0], '.', color = G1colour, markersize=3, label=r"$\alpha_{G1}$")
-    ax.plot(multiplier, alphasLine, '.', color = G1colour, markersize=ms)
-    ax.plot(multiplier, pi - alphasLine, '.', color = G1colour, markersize=ms)
-    ax.plot(multiplier, -pi - alphasLine, '.', color = G1colour, markersize=ms)
-    # ax.plot(multiplier, -2*pi + alphasLine, '.', color = G1colour, markersize=3)
-    ax.plot(multiplier[0],  - alphasLine[0], '.',color = G2colour,  markersize=3, label=r"$\alpha_{G2}$")
-    ax.plot(multiplier,  - alphasLine, '.',color = G2colour,  markersize=ms)
-    ax.plot(multiplier,  - pi + alphasLine, '.',color = G2colour,  markersize=ms)
-    ax.plot(multiplier,  pi + alphasLine, '.',color = G2colour,  markersize=ms)
-    # ax.plot(multiplier,  2*pi - alphasLine, '.',color = G2colour,  markersize=3)
+    ax.plot(multiplier, alphasLineG1, '.',  color = col1, markersize=ms+5, label=r"$\alpha_{G1}$")
+    ax.plot(multiplier, alphasLineG2, '.', color = col2, markersize=ms+5, label=r"$\alpha_{G2}$")
+    ax.plot(multiplier, alphasLineCosG1, '.',  color = col3, markersize=ms, label=r"$\alpha_{G1} (Cos)$")
+    ax.plot(multiplier, alphasLineCosG2, '.', color = col5, markersize=ms, label=r"$\alpha_{G2} (Cos)$")
     ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
     # ax.set_yticks([-pi, -pi/2, 0, pi/2, pi])
     # ax.set_yticks([-pi/2, 0, pi/2])
@@ -567,63 +649,8 @@ for pp in [-0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     ax.grid(b=1, color='1')
     ax.legend(loc="upper right")
     # plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
-    plt.show()    
-
+    plt.show()  
     
-    fig, ax = plt.subplots(figsize=fs)
-    ax.plot(multiplier[0], alphasLineCos[0], '.', color = G1colour, markersize=3, label=r"$\alpha_{G1}$")
-    ax.plot(multiplier, alphasLineCos, '.', color = G1colour, markersize=ms)
-    ax.plot(multiplier, - alphasLineCos, '.', color = G1colour, markersize=ms)
-
-    ax.plot(multiplier[0],  pi + alphasLine[0], '.',color = G2colour,  markersize=3, label=r"$\alpha_{G2}$")
-    ax.plot(multiplier,   alphasLineCos - pi, '.',color = G2colour,  markersize=ms)
-    ax.plot(multiplier,  pi - alphasLineCos, '.',color = G2colour,  markersize=ms)
-    ax.plot(multiplier,  pi + alphasLineCos, '.',color = G2colour,  markersize=ms)
-    ax.plot(multiplier,  -pi - alphasLineCos, '.',color = G2colour,  markersize=ms)
-    # ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), ground band")
-    ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
-    # ax.set_yticks([-pi, -pi/2, 0, pi/2, pi])
-    # ax.set_yticks([-pi/2, 0, pi/2])
-    # ax.set_yticklabels([ r"$-\pi$", r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$", r"$\pi$"])
-    ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
-                        '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$"])
-    # ax.set_yticklabels([ r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$"])
-    # ax.set_ylim([-pi/2-0.1, pi/2+0.1])
-    ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
-    # ax.set_xlabel(r"$q_x$")
-    ax.set_xticks([0,1,2,3,4])
-    # ax.set_xticklabels([VecToString(q0), VecToString(q0+v1), VecToString(q0+v1+v2), VecToString(q0+v2), VecToString(q0)])
-    ax.set_xticklabels([VecToString(q0), VecToString(q1), VecToString(q2), VecToString(q3), VecToString(q4)])
-    ax.grid(b=1, color='1')
-    ax.legend(loc="upper right")
-    # plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
-    plt.show()    
-
-# fig, ax = plt.subplots(figsize=fs)
-# ax.plot(multiplier[:-1], dThetadAngle, '.', markersize=3)
-# # ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), ground band")
-# ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
-# ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
-# # ax.set_yticks([0, pi/2, pi])
-# # ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
-# ax.set_ylabel(r"$\frac{\partial \theta}{\partial \phi}$", rotation=0, labelpad=15)
-# ax.set_xlabel(r"$\phi$")
-# # plt.savefig(sh+saveThetaDifferentiated, format="pdf", bbox_inches="tight")
-# plt.show()  
-
-
-# fig, ax = plt.subplots(figsize=fs)
-# ax.plot(multiplier[:-1], dAlphadAngle, '.', markersize=3)
-# # ax.set_xlabel(r"final quasimomentum, going around circle with centre (0,0), ground band")
-# ax.set_xticks([0, pi/2, pi, 3*pi/2, 2*pi])
-# ax.set_xticklabels(['0', "", r"$\pi$", "",  r"$2\pi$"])
-# ax.set_ylim([-2.5,2.5])
-# # ax.set_yticks([0, pi/2, pi])
-# # ax.set_yticklabels(['0',r"$\frac{\pi}{2}$", r"$\pi$"])
-# ax.set_ylabel(r"$\frac{\partial \alpha}{\partial \phi}$", rotation=0, labelpad=15)
-# ax.set_xlabel(r"$\phi$")
-# plt.savefig(sh+saveAlphaDifferentiated, format="pdf", bbox_inches="tight")
-# plt.show()    
 
 
 #%% 
