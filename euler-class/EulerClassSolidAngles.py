@@ -5,7 +5,7 @@ Created on Tue Jun 15 09:03:44 2021
 @author: Georgia Nixon
 """
 
-place = "Georgia Nixon"
+place = "Georgia"
 import numpy as np
 from numpy import cos, sin, exp, pi, tan
 import sys
@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from numpy.linalg import eig
 from numpy.linalg import norm
 import matplotlib as mpl
+from Funcs import VecToStringSave, ProjReal, InverseSin, InverseCos, FindOverlap, VecToString
 
 sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/Euler Class/"
 
@@ -50,74 +51,6 @@ params = {
 
 mpl.rcParams.update(params)
 
-def RoundComplex(num, dp):
-    return np.round(num.real, dp) + np.round(num.imag, dp) * 1j
-
-def CreateCircleLine(r, points, centre=[0,0]):
-    CircleLine =  np.array([[cos(x)*r+centre[0],sin(x)*r+centre[1]] for x in np.linspace(0, 2*pi, points, endpoint=True)])
-    return CircleLine
-
-def CircleDiff(points, radius):
-    """
-    Gives vectors tangent to the circle for various theta between 0 and 2*pi
-    Vector size = distance between points on the circle
-    """
-    circleDiffNormalised = np.array([[-sin(theta),cos(theta)] for theta in np.linspace(0, 2*pi, points, endpoint=True)])
-    dtheta = 2*pi/(points-1)
-    dqlength = 2*radius*sin(dtheta)
-    circleDiff = circleDiffNormalised*dqlength
-    return circleDiff
-
-def CreateLinearLine(qBegin, qEnd,  qpoints):
-    kline = np.linspace(qBegin, qEnd, qpoints)
-    return kline
-
-
-
-def VecToStringSave(q0):
-    a = q0[0]
-    b = q0[1]
-    if type(a) != int and type(a) != np.int32:
-        
-        if a.is_integer():
-            a = int(a)
-    if type(b) != int and type(b) != np.int32:
-        if b.is_integer():
-            b = int(b)
-        
-    return "("+str(a).replace(".", "p")+","+str(b).replace(".", "p")+")"
-
-
-def VecToString(q0):
-    a = q0[0]
-    b = q0[1]
-    if type(a) != int and type(a) != np.int32:
-        
-        if a.is_integer():
-            a = int(a)
-        else:
-            a = round(a, 2)
-    if type(b) != int and type(b) != np.int32:
-        if b.is_integer():
-            b = int(b)
-        else:
-            b = round(b,2)
-
-    return "("+str(a)+","+str(b)+")"
-
-def SquareLine(q0, v1, v2, qpoints):
-    kline = np.linspace(q0, q0+v1, qpoints)
-    kline2 = np.linspace(q0+v1, q0+v1+v2, qpoints)[1:]
-    kline3 = np.linspace(q0+v1+v2, q0+v2, qpoints)[1:]
-    kline4 = np.linspace(q0+v2, q0, qpoints)[1:]
-    return np.vstack([kline, kline2, kline3, kline4])
-
-def FivePointLine(q0, q1, q2, q3, q4, qpoints):
-    kline = np.linspace(q0, q1, qpoints)
-    kline2 = np.linspace(q1, q2, qpoints)[1:]
-    kline3 = np.linspace(q2, q3, qpoints)[1:]
-    kline4 = np.linspace(q3, q4, qpoints)[1:]
-    return np.vstack([kline, kline2, kline3, kline4])
 
 
 #%% 
@@ -138,8 +71,8 @@ qpoints=51
 
 # arbitrary point I guess, but not a dirac point
 
-for value in [ 0.1]:
-    gammaPoint = np.array([value,0.1])
+for value in [ 0.9]:
+    gammaPoint = np.array([value,0])
     
     #get evecs at gamma point
     H = Ham(gammaPoint)
@@ -158,8 +91,22 @@ for value in [ 0.1]:
     K1 = np.linspace(kmin, kmax, qpoints, endpoint=True)
     K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
     
-    thetas0 = np.zeros((qpoints,qpoints))
-    alphas0 = np.zeros((qpoints, qpoints))
+    thetasG1 = np.zeros((qpoints,qpoints))
+    thetasG2 = np.zeros((qpoints,qpoints))
+    
+    
+    alphasG1 = np.zeros((qpoints, qpoints))
+    alphasG2 = np.zeros((qpoints, qpoints))
+    
+    
+    # alphasG11 = np.zeros((qpoints, qpoints))
+    # alphasG12 = np.zeros((qpoints, qpoints))
+    # alphasG13 = np.zeros((qpoints, qpoints))
+    # alphasG14 = np.zeros((qpoints, qpoints))
+    # alphasG21 = np.zeros((qpoints, qpoints))
+    # alphasG22 = np.zeros((qpoints, qpoints))
+    # alphasG23 = np.zeros((qpoints, qpoints))
+    # alphasG24 = np.zeros((qpoints, qpoints))
     
     # S3 = np.zeros((qpoints, qpoints))
     # S8 = np.zeros((qpoints, qpoints))
@@ -180,30 +127,77 @@ for value in [ 0.1]:
         for yi, qy in enumerate(K2):
             k = np.array([qx,qy])
             H = Ham(k)
-            eigs, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix=0) # will gauge fix later
+            _, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix=0) # will gauge fix later
     
             uFinal = evecs[:,n1]
             # uFinal0 = uFinal
         
             #get correct overall phase for uFinal
-            uFinal0 = AlignGaugeBetweenVecs(u0, uFinal)
+            uFinalG1 = AlignGaugeBetweenVecs(u0, uFinal)
+            uFinalG2 = -uFinalG1
+            
             # uFinal1 = AlignGaugeBetweenVecs(u1, uFinal)
             # uFinal2 = AlignGaugeBetweenVecs(u2, uFinal)
             
-            # get params
-            argument = np.vdot(u0, uFinal0)
-            assert(round(np.imag(argument), 26)==0)
-            argument = np.real(argument)
+            # # get params
+            # argument = np.vdot(u0, uFinal0)
+            # assert(round(np.imag(argument), 26)==0)
+            # argument = np.real(argument)
             
-            theta0 = np.arccos(argument)
-            thetas0[xi,yi] = theta0
+            # theta0 = np.arccos(argument)
+            # thetas0[xi,yi] = theta0
     
-            alphaarg = np.vdot(u1, uFinal0)/sin(theta0)
-            assert(round(np.imag(alphaarg), 26)==0)
-            alphaarg = np.real(alphaarg)
-            alpha0 = np.arcsin(alphaarg)
-            alphas0[xi,yi] = alpha0
+            # alphaarg = np.vdot(u1, uFinal0)/sin(theta0)
+            # assert(round(np.imag(alphaarg), 26)==0)
+            # alphaarg = np.real(alphaarg)
+            # alpha0 = np.arcsin(alphaarg)
+            # alphas0[xi,yi] = alpha0
     
+    
+        
+            
+            # get params
+            argumentG1 = ProjReal(np.vdot(u0, uFinalG1))
+            #only want the values of theta between 0 and pi because we on bloch sphere
+            # therefore we neglect second arccos value
+            thetaG1 = np.arccos(argumentG1)
+            # thetaOtherGauge = pi-theta0
+            argumentG2 = ProjReal(np.vdot(u0, uFinalG2))
+            thetaG2 = np.arccos(argumentG2)
+            
+            
+            
+            alphaargG1 = ProjReal(np.vdot(u1, uFinalG1)/sin(thetaG1))
+            alphaG1_1, alphaG1_2 = InverseSin(alphaargG1)
+            # alphaOtherGauge = alpha - pi
+            
+            alphaargG2 = ProjReal(np.vdot(u1, uFinalG2)/sin(thetaG2))
+            alphaG2_1, alphaG2_2 = InverseSin(alphaargG2)
+        
+        
+            alphaCosArgG1 = ProjReal(np.vdot(u2, uFinalG1)/sin(thetaG1))
+            alphaCosG1_1, alphaCosG1_2 = InverseCos(alphaCosArgG1)
+            
+            alphaCosArgG2 = ProjReal(np.vdot(u2, uFinalG2)/sin(thetaG2))
+            alphaCosG2_1, alphaCosG2_2 = InverseCos(alphaCosArgG2)
+                                   
+                                                  
+            thetasG1[xi, yi] = thetaG1
+            thetasG2[xi, yi] = thetaG2
+            
+            # alphasG11[xi, yi] = alphaG1_1
+            # alphasG12[xi, yi] = alphaG1_2
+            # alphasG13[xi, yi] = alphaCosG1_1
+            # alphasG14[xi, yi] = alphaCosG1_2
+            
+            # alphasG21[xi, yi] = alphaG2_1
+            # alphasG22[xi, yi] = alphaG2_2
+            # alphasG23[xi, yi] = alphaCosG2_1
+            # alphasG24[xi, yi] = alphaCosG2_2
+            
+            alphasG1[xi, yi] = FindOverlap(alphaG1_1, alphaG1_2, alphaCosG1_1, alphaCosG1_2)
+            alphasG2[xi, yi] = FindOverlap(alphaG2_1, alphaG2_2, alphaCosG2_1, alphaCosG2_2)
+            
             
             # calculate interior sphere only
             # u0overlap = np.vdot(u0, uFinal)
@@ -252,8 +246,10 @@ for value in [ 0.1]:
     cmap = "RdYlGn"#"plasma"#"RdYlGn"#"plasma"
     
     # turn x -> along bottom, y |^ along LHS
-    thetas0Plot =  np.flip(thetas0.T, axis=0)
-    alphas0Plot =  np.flip(alphas0.T, axis=0)
+    thetasG1Plot =  np.flip(thetasG1.T, axis=0)
+    thetasG2Plot =  np.flip(thetasG2.T, axis=0)
+    alphasG1Plot =  np.flip(alphasG1.T, axis=0)
+    alphasG2Plot =  np.flip(alphasG2.T, axis=0)
     # S30Plot = np.flip(S3.T, axis=0)
     # S80Plot = np.flip(S8.T, axis=0)
     # thetas1Plot =  np.flip(thetas1.T, axis=0)
@@ -266,71 +262,147 @@ for value in [ 0.1]:
     
     # xx = "0p5"
     # yy = "0"
-    plotnames = [
-                # "ThetaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-                  # "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-                  "ThetaOverBZ,Euler0,Gamma="+VecToStringSave(gammaPoint)+",FixGaugeTo-u0.png",
-                  "AlphaOverBZ,Euler0,Gamma="+VecToStringSave(gammaPoint)+",FixGaugeTo-u0.png",
-                  # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-                  # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
-                    # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
-                    # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
-                    # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
-                    # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
     
-                  # "S8-Refk=(-0p5,-0p5).pdf"
-                  ]
+    #plot theta
+    # to ensure zero is in the middle, optional
+    plotvar = thetasG1Plot
+    # pmin = np.nanmin(plotvar)
+    # pmax = np.nanmax(plotvar)
+    # bignum = np.max([np.abs(pmin), np.abs(pmax)])
+    # if bignum < pi/2:
+    #     bignum = pi/2
+    normaliser = mpl.colors.Normalize(vmin=0, vmax=pi)
     
-    cmaps = ["RdYlGn", "twilight_shifted_r"]
-    plotvars = [
-                thetas0Plot, alphas0Plot, 
-                # thetas1Plot, alphas1Plot,
-                # thetas2Plot, alphas2Plot,
-                # S30Plot,
-                # S80Plot
-                ]
-    for plotvar, savename,cmap in zip(plotvars, plotnames, cmaps):
-        # to ensure zero is in the middle, optional
-        pmin = np.nanmin(plotvar)
-        pmax = np.nanmax(plotvar)
-        bignum = np.max([np.abs(pmin), np.abs(pmax)])
-        if bignum < pi/2:
-            bignum = pi/2
-        normaliser = mpl.colors.Normalize(vmin=-bignum, vmax=bignum)
+    # plot 
+    sz = 15
+    fig, ax = plt.subplots(figsize=(sz/2,sz/2))
+    pos = plt.imshow(plotvar, cmap="RdYlGn", norm=normaliser)
+    ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
+    ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
+    ax.set_xticklabels([kmin, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmax])
+    ax.set_yticklabels([kmax, round(kmin+3*(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+(kmax-kmin)/4, 2), kmin])
+    ax.set_xlabel(r"$k_x$")
+    ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
+
+    cbar = fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
+    # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
+    cbar.set_ticks([0, pi/2, pi])
+    cbar.set_ticklabels(["0", r"$\frac{\pi}{2}$", r"$\pi$"])
+    plt.savefig(sh+"ThetaOverBZ,G1,Euler2,Gamma="+VecToStringSave(gammaPoint)+".png", format="png", bbox_inches="tight")
+    plt.show()
+    
+    
+    # plot 
+    plotvar = thetasG2Plot
+    sz = 15
+    fig, ax = plt.subplots(figsize=(sz/2,sz/2))
+    pos = plt.imshow(plotvar, cmap="RdYlGn", norm=normaliser)
+    ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
+    ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
+    ax.set_xticklabels([kmin, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmax])
+    ax.set_yticklabels([kmax, round(kmin+3*(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+(kmax-kmin)/4, 2), kmin])
+    ax.set_xlabel(r"$k_x$")
+    ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
+
+    cbar = fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
+    cbar.set_ticks([0, pi/2, pi])
+    cbar.set_ticklabels(["0", r"$\frac{\pi}{2}$", r"$\pi$"])
+    # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
+    plt.savefig(sh+"ThetaOverBZ,G2,Euler2,Gamma="+VecToStringSave(gammaPoint)+".png", format="png", bbox_inches="tight")
+    plt.show()
+    
+    
+    plotvar = alphasG1Plot
+    normaliser = mpl.colors.Normalize(vmin=0, vmax=2*pi)
+    
+    # plot 
+    sz = 15
+    fig, ax = plt.subplots(figsize=(sz/2,sz/2))
+    pos = plt.imshow(plotvar, cmap="twilight_shifted_r", norm=normaliser)
+    ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
+    ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
+    ax.set_xticklabels([kmin, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmax])
+    ax.set_yticklabels([kmax, round(kmin+3*(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+(kmax-kmin)/4, 2), kmin])
+    ax.set_xlabel(r"$k_x$")
+    ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
+
+    cbar = fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
+    # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
+    cbar.set_ticks([0, pi/2, pi, 3*pi/2, 2*pi])
+    cbar.set_ticklabels(["0", r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$", r"$2 \pi$"])
+    plt.savefig(sh+"AlphaOverBZ,G1,Euler2,Gamma="+VecToStringSave(gammaPoint)+".png", format="png", bbox_inches="tight")
+    plt.show()
+    
+    
+    plotvar = alphasG2Plot
+    normaliser = mpl.colors.Normalize(vmin=0, vmax=2*pi)
+    
+    # plot 
+    sz = 15
+    fig, ax = plt.subplots(figsize=(sz/2,sz/2))
+    pos = plt.imshow(plotvar, cmap="twilight_shifted_r", norm=normaliser)
+    ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
+    ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
+    ax.set_xticklabels([kmin, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmax])
+    ax.set_yticklabels([kmax, round(kmin+3*(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+(kmax-kmin)/4, 2), kmin])
+    ax.set_xlabel(r"$k_x$")
+    ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
+
+    cbar = fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
+    cbar.set_ticks([0, pi/2, pi, 3*pi/2, 2*pi])
+    cbar.set_ticklabels(["0", r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$", r"$2 \pi$"])
+    # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
+    plt.savefig(sh+"AlphaOverBZ,G2,Euler2,Gamma="+VecToStringSave(gammaPoint)+".png", format="png", bbox_inches="tight")
+    plt.show()
+
+    
+    # plotnames = [
+    #             # "ThetaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+    #               # "AlphaOverBZ-Euler4-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+    #               "ThetaOverBZ,Euler0,Gamma="+VecToStringSave(gammaPoint)+",FixGaugeTo-u0.png",
+    #               "AlphaOverBZ,Euler0,Gamma="+VecToStringSave(gammaPoint)+",FixGaugeTo-u0.png",
+    #               # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+    #               # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u0.pdf",
+    #                 # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
+    #                 # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u1.pdf",
+    #                 # "CompareGauge-HalfThetaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
+    #                 # "CompareGauge-HalfAlphaOverBZ-Euler2-,Gamma=("+xx+","+yy+"),FixGaugeTo-u2.pdf",
+    
+    #               # "S8-Refk=(-0p5,-0p5).pdf"
+    #               ]
+    
+    # cmaps = ["RdYlGn", "twilight_shifted_r"]
+    # plotvars = [
+    #             thetasG1Plot, alphasG1Plot, 
+    #             # thetas1Plot, alphas1Plot,
+    #             # thetas2Plot, alphas2Plot,
+    #             # S30Plot,
+    #             # S80Plot
+    #             ]
+    # for plotvar, savename,cmap in zip(plotvars, plotnames, cmaps):
+    #     # to ensure zero is in the middle, optional
+    #     pmin = np.nanmin(plotvar)
+    #     pmax = np.nanmax(plotvar)
+    #     bignum = np.max([np.abs(pmin), np.abs(pmax)])
+    #     if bignum < pi/2:
+    #         bignum = pi/2
+    #     normaliser = mpl.colors.Normalize(vmin=-bignum, vmax=bignum)
         
-        # plot 
-        sz = 15
-        fig, ax = plt.subplots(figsize=(sz/2,sz/2))
-        pos = plt.imshow(plotvar, cmap=cmap, norm=normaliser)
-        ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
-        ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
-        ax.set_xticklabels([kmin, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmax])
-        ax.set_yticklabels([kmax, round(kmin+3*(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+(kmax-kmin)/4, 2), kmin])
-        ax.set_xlabel(r"$k_x$")
-        ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
+    #     # plot 
+    #     sz = 15
+    #     fig, ax = plt.subplots(figsize=(sz/2,sz/2))
+    #     pos = plt.imshow(plotvar, cmap=cmap, norm=normaliser)
+    #     ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
+    #     ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
+    #     ax.set_xticklabels([kmin, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmax])
+    #     ax.set_yticklabels([kmax, round(kmin+3*(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+(kmax-kmin)/4, 2), kmin])
+    #     ax.set_xlabel(r"$k_x$")
+    #     ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
     
-        fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
-        # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
-        # plt.savefig(sh+savename, format="png", bbox_inches="tight")
-        plt.show()
-
-
-# # turn x -> along bottom, y |^ along LHS
-# alphasPlot =  np.flip(alphas.T, axis=0)
-
-# # plot 
-# sz = 15
-# fig, ax = plt.subplots(figsize=(sz/2,sz/2))
-# pos = plt.imshow(alphasPlot, cmap='plasma')
-# ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
-# ax.set_yticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4, qpoints-1])
-# ax.set_xticklabels([kmin, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmax])
-# ax.set_yticklabels([kmax, round(kmin+(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+3*(kmax-kmin)/4, 2), kmin])
-# ax.set_xlabel(r"$k_x$")
-# ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
-# fig.colorbar(pos)
-# # plt.savefig(sh+"ThetaOverBZ-Euler4-,Gamma=(0p5,0).pdf", format="pdf", bbox_inches="tight")
-# plt.show()
+    #     fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
+    #     # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
+    #     # plt.savefig(sh+savename, format="png", bbox_inches="tight")
+    #     plt.show()
 
 
 
@@ -352,9 +424,9 @@ col4 = "#E980FC"
 col3 = "#9DD1F1"
 col5 = "#F0C808"
 
-def GetInverseSinOutsideRange(alpha):
+
     
-def GetInverseCosOutsideRange(alpha):
+# def GetInverseCosOutsideRange(alpha):
     
 
 # fs = (15,9)
@@ -397,11 +469,9 @@ def GetInverseCosOutsideRange(alpha):
 Ham = Euler2Hamiltonian
     
 
-def ProjReal(vec):
-     assert(round(np.imag(vec), 26)==0)
-     return np.real(vec)
+
     
-for pp in [0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
+for pp in [0.9, 0.7, 0.6, 0.4, 0.2]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     pp = round(pp, 2)
     
 
@@ -425,6 +495,7 @@ for pp in [0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     #get evecs at gamma point
     H = Ham(q0)
     _, evecs = GetEvalsAndEvecsEuler(H, debug=1, gaugeFix = 1) # may as well gauge fix here
+    #define our basis
     u0 = evecs[:,0]
     u1 = evecs[:,1]
     u2 = evecs[:,2]
@@ -434,10 +505,18 @@ for pp in [0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     
     thetasLineG1 = np.zeros(qpoints)
     thetasLineG2 = np.zeros(qpoints)
+    
     alphasLineG1 = np.zeros(qpoints)
     alphasLineG2 = np.zeros(qpoints)
-    alphasLineCosG1 = np.zeros(qpoints)
-    alphasLineCosG2 = np.zeros(qpoints)
+    
+    # alphasLineG11 = np.zeros(qpoints)
+    # alphasLineG12 = np.zeros(qpoints)
+    # alphasLineG21 = np.zeros(qpoints)
+    # alphasLineG22 = np.zeros(qpoints)
+    # alphasLineCosG11 = np.zeros(qpoints)
+    # alphasLineCosG12 = np.zeros(qpoints)
+    # alphasLineCosG21 = np.zeros(qpoints)
+    # alphasLineCosG22 = np.zeros(qpoints)
     
     # go through possible end points for k, get angles
     for i, kpoint in enumerate(kline):
@@ -455,6 +534,8 @@ for pp in [0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
         
         # get params
         argumentG1 = ProjReal(np.vdot(u0, uFinalG1))
+        #only want the values of theta between 0 and pi because we on bloch sphere
+        # therefore we neglect second arccos value
         thetaG1 = np.arccos(argumentG1)
         # thetaOtherGauge = pi-theta0
         argumentG2 = ProjReal(np.vdot(u0, uFinalG2))
@@ -463,40 +544,36 @@ for pp in [0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
         
         
         alphaargG1 = ProjReal(np.vdot(u1, uFinalG1)/sin(thetaG1))
-        alphaG1 = np.arcsin(alphaargG1)
+        alphaG1_1, alphaG1_2 = InverseSin(alphaargG1)
         # alphaOtherGauge = alpha - pi
         
         alphaargG2 = ProjReal(np.vdot(u1, uFinalG2)/sin(thetaG2))
-        alphaG2 = np.arcsin(alphaargG2)
+        alphaG2_1, alphaG2_2 = InverseSin(alphaargG2)
     
     
         alphaCosArgG1 = ProjReal(np.vdot(u2, uFinalG1)/sin(thetaG1))
-        alphaCosG1 = np.arccos(alphaCosArgG1)
+        alphaCosG1_1, alphaCosG1_2 = InverseCos(alphaCosArgG1)
         
         alphaCosArgG2 = ProjReal(np.vdot(u2, uFinalG2)/sin(thetaG2))
-        alphaCosG2 = np.arccos(alphaCosArgG2)
+        alphaCosG2_1, alphaCosG2_2 = InverseCos(alphaCosArgG2)
                                
                                               
         thetasLineG1[i] = thetaG1
         thetasLineG2[i] = thetaG2
-        alphasLineG1[i] = alphaG1
-        alphasLineG2[i] = alphaG2
-        alphasLineCosG1[i] = alphaCosG1
-        alphasLineCosG2[i] = alphaCosG2
+        
+        alphasLineG1[i] = FindOverlap(alphaG1_1, alphaG1_2, alphaCosG1_1, alphaCosG1_2)
+        alphasLineG2[i] = FindOverlap(alphaG2_1, alphaG2_2, alphaCosG2_1, alphaCosG2_2)
+        
+        # alphasLineG11[i] = alphaG1_1
+        # alphasLineG12[i] = alphaG1_2
+        # alphasLineG21[i] = alphaG2_1
+        # alphasLineG22[i] = alphaG2_2
+        # alphasLineCosG11[i] = alphaCosG1_1
+        # alphasLineCosG12[i] = alphaCosG1_2
+        # alphasLineCosG21[i] = alphaCosG2_1
+        # alphasLineCosG22[i] = alphaCosG2_2
     
-    
-    
-    #differentiate thetas
-    # dCircAngle = 2*pi/(qpoints-1)
-    # dThetadAngle = np.empty(qpoints-1)
-    # dAlphadAngle = np.empty(qpoints-1)
-    # for i in range(qpoints-1):
-    #     dThetadAngle[i] = (thetasLine[i+1] - thetasLine[i])/dCircAngle
-    #     dAlphadAngle[i] = (alphasLine[i+1] - alphasLine[i])/dCircAngle
-    
-    
-    # #plot kline
-    
+
     
     print(VecToStringSave(q0))
     
@@ -504,15 +581,15 @@ for pp in [0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     # saveLine = "LineTraj,Euler=4,GroundState,GaugeFixToGamma="+VecToStringSave(q0)+",V1="+VecToStringSave(v1)+",V2="+VecToStringSave(v2)+".png"
     # saveLine = ("LineTraj,Euler=4,GroundState,GaugeFixToGamma="+VecToStringSave(q0)
     #             +",v1="+VecToStringSave(v1)+",v2="+VecToStringSave(v2)+".png")
-    saveLine = ("LineTraj,Euler=4,GroundState,GaugeFixToGamma="+VecToStringSave(q0)
-                +",qf="+VecToStringSave(q0+4*v1)+".png")
+    saveLine = ("LineTraj,Euler=2,GroundState,GaugeFixToGamma="+VecToStringSave(q0)
+                +",v="+VecToStringSave(4*v1)+".png")
     saveTheta = "Theta"+saveLine
     saveAlpha = "Alpha"+saveLine
     # ThetaLineTraj,Euler=4,GroundState,GaugeFixToGamma=(-0p8,0),qf=(-0p8,8).png
     # saveThetaDifferentiated = "Theta"+saveLineDifferentiate
     # saveAlphaDifferentiated = "Alpha"+saveLineDifferentiate
     
-    fs = (10,7.5)
+    # fs = (10,7.5)
     
     ms = 1
     multiplier = np.linspace(0, 4, qpoints)
@@ -606,15 +683,14 @@ for pp in [0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     # # plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
     # plt.show()    
     
-    
+    fs = (10,3.5)
     fig, ax = plt.subplots(figsize=fs)
     # ax.plot(multiplier[0], thetasLineG1[0], '.', color=G1colour, markersize = 3, label=r"$\theta_{G1}$")
-    ax.plot(multiplier, thetasLineG1, '.',  markersize=ms,label=r"$\theta_{G1}$")
-    ax.plot(multiplier, thetasLineG2, '.',  markersize=ms, label=r"$\theta_{G2}$")
-    ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
+    ax.plot(multiplier, thetasLineG1,'.', color = col1,  markersize=ms,label=r"$\theta_{G1}$")
+    ax.plot(multiplier, thetasLineG2, '.', color = col2,  markersize=ms, label=r"$\theta_{G2}$")
+    ax.set_yticks([ 0, pi/2, pi])
     # ax.set_yticks([0, pi/2])
-    ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
-                        '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$"])
+    ax.set_yticklabels([ "0",r"$\frac{\pi}{2}$", r"$\pi$"])
     # ax.set_yticklabels(['0',r"$\frac{\pi}{2}$"])
     # ax.set_ylim(-0.1, pi/2+0.1)
     ax.set_ylabel(r"$\theta$", rotation=0, labelpad=15)
@@ -624,21 +700,18 @@ for pp in [0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     # ax.set_xlabel(r"square path")
     ax.grid(b=1, color='1')
     ax.legend(loc="upper right")
-    # plt.savefig(sh+saveTheta, format="png", bbox_inches="tight")
+    plt.savefig(sh+saveTheta, format="png", bbox_inches="tight")
     plt.show()    
     
-    
+    fs = (10,6.5)
     fig, ax = plt.subplots(figsize=fs)
-    ax.plot(multiplier, alphasLineG1, '.',  color = col1, markersize=ms+5, label=r"$\alpha_{G1}$")
-    ax.plot(multiplier, alphasLineG2, '.', color = col2, markersize=ms+5, label=r"$\alpha_{G2}$")
-    ax.plot(multiplier, alphasLineCosG1, '.',  color = col3, markersize=ms, label=r"$\alpha_{G1} (Cos)$")
-    ax.plot(multiplier, alphasLineCosG2, '.', color = col5, markersize=ms, label=r"$\alpha_{G2} (Cos)$")
-    ax.set_yticks([-3*pi/2, -pi, -pi/2, 0, pi/2, pi, 3*pi/2])
+    ax.plot(multiplier, alphasLineG1, '.',  color = col1, markersize=ms, label=r"$\alpha_{G1}$")
+    ax.plot(multiplier, alphasLineG2, '.',  color = col2, markersize=ms, label=r"$\alpha_{G2}$")
+    ax.set_yticks([ 0, pi/2, pi, 3*pi/2, 2*pi])
     # ax.set_yticks([-pi, -pi/2, 0, pi/2, pi])
     # ax.set_yticks([-pi/2, 0, pi/2])
     # ax.set_yticklabels([ r"$-\pi$", r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$", r"$\pi$"])
-    ax.set_yticklabels([ r"$-\frac{3 \pi}{2}$", r"$-\pi$", r"$-\frac{\pi}{2}$",
-                        '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$"])
+    ax.set_yticklabels([ '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$", r"$2 \pi$"])
     # ax.set_yticklabels([ r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$"])
     # ax.set_ylim([-pi/2-0.1, pi/2+0.1])
     ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
@@ -648,10 +721,12 @@ for pp in [0.1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
     ax.set_xticklabels([VecToString(q0), VecToString(q1), VecToString(q2), VecToString(q3), VecToString(q4)])
     ax.grid(b=1, color='1')
     ax.legend(loc="upper right")
-    # plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
+    plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
     plt.show()  
-    
 
+
+
+        
 
 #%% 
 
