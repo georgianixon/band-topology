@@ -30,12 +30,12 @@ def VecToString(q0):
         if a.is_integer():
             a = int(a)
         else:
-            a = round(a, 2)
+            a = round(a, 4)
     if type(b) != int and type(b) != np.int32:
         if b.is_integer():
             b = int(b)
         else:
-            b = round(b,2)
+            b = round(b,4)
 
     return "("+str(a)+","+str(b)+")"
 
@@ -78,6 +78,32 @@ def FivePointLine(q0, q1, q2, q3, q4, qpoints):
     kline3 = np.linspace(q2, q3, qpoints)[1:]
     kline4 = np.linspace(q3, q4, qpoints)[1:]
     return np.vstack([kline, kline2, kline3, kline4])
+
+
+def AlignGaugeBetweenVecs(vec1, vec2):
+    """
+    Make <vec1|vec2> real and positive by shifting overall phase of vec2
+    Return phase shifted vec2
+    """
+    #overlap between vec1 and vec2
+    c = np.vdot(vec1, vec2)
+    #find conj phase of overlap
+    conjPhase = np.conj(c)/np.abs(c)
+    #remove phase, so overlap is real and positive
+    vec2 = conjPhase*vec2
+    
+    # make sure vec1 is in the right gauge, to 20dp
+    c = np.dot(np.conj(vec1), vec2)
+    
+    #try again if still not within..
+    if round(np.imag(c), 30)!=0:
+        conjPhase = np.conj(c)/np.abs(c)
+        vec2 = conjPhase*vec2
+        c = np.dot(np.conj(vec1), vec2)
+        assert(round(np.imag(c), 9)==0)
+    
+    return vec2
+
 
 
 def FindOverlapLine(line1, line2, line3, line4):

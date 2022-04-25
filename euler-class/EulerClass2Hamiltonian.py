@@ -142,26 +142,3 @@ def GetEvalsAndEvecsEuler(HF, gaugeFix=1, debug = 1):
     
     return evals, evecs
 
-def AlignGaugeBetweenVecs(vec1, vec2):
-    """
-    Make <vec1|vec2> real and positive by shifting overall phase of vec2
-    Return phase shifted vec2
-    """
-    #overlap between vec1 and vec2
-    c = np.vdot(vec1, vec2)
-    #find conj phase of overlap
-    conjPhase = np.conj(c)/np.abs(c)
-    #remove phase, so overlap is real and positive
-    vec2 = conjPhase*vec2
-    
-    # make sure vec1 is in the right gauge, to 20dp
-    c = np.dot(np.conj(vec1), vec2)
-    
-    #try again if still not within..
-    if round(np.imag(c), 30)!=0:
-        conjPhase = np.conj(c)/np.abs(c)
-        vec2 = conjPhase*vec2
-        c = np.dot(np.conj(vec1), vec2)
-        assert(round(np.imag(c), 9)==0)
-    
-    return vec2

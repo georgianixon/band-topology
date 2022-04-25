@@ -11,7 +11,7 @@ from numpy import cos, sin, exp, pi, tan
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
-from EulerClass2Hamiltonian import  Euler2Hamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
+from EulerClass2Hamiltonian import  Euler2Hamiltonian, GetEvalsAndEvecsEuler
 from EulerClass4Hamiltonian import Euler4Hamiltonian
 from EulerClass0Hamiltonian import Euler0Hamiltonian
 
@@ -20,8 +20,14 @@ import matplotlib.pyplot as plt
 from numpy.linalg import eig
 from numpy.linalg import norm
 import matplotlib as mpl
-from Funcs import VecToStringSave, ProjReal, InverseSin, InverseCos, FindOverlap, VecToString
+from Funcs import VecToStringSave, ProjReal, InverseSin, InverseCos, FindOverlap, VecToString, FivePointLine, AlignGaugeBetweenVecs
 
+def FirstElementVecPositive(vec):
+    if vec[0] >= 0:
+        return vec
+    else:
+        return -vec
+    
 sh = "/Users/"+place+"/OneDrive - University of Cambridge/MBQD/Notes/Topology Bloch Bands/Euler Class/"
 
 
@@ -62,7 +68,7 @@ Theta/alpha/inner manifold over the BZ
 n1 = 0
 
 
-Ham = Euler2Hamiltonian
+Ham = Euler4Hamiltonian
 
 
 
@@ -71,7 +77,7 @@ qpoints=51
 
 # arbitrary point I guess, but not a dirac point
 
-for value in [ 0.9]:
+for value in [0, 0.1, 0.3, 0.5, 0.8, 1]:
     gammaPoint = np.array([value,0])
     
     #get evecs at gamma point
@@ -134,6 +140,7 @@ for value in [ 0.9]:
         
             #get correct overall phase for uFinal
             uFinalG1 = AlignGaugeBetweenVecs(u0, uFinal)
+            
             uFinalG2 = -uFinalG1
             
             # uFinal1 = AlignGaugeBetweenVecs(u1, uFinal)
@@ -288,7 +295,7 @@ for value in [ 0.9]:
     # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
     cbar.set_ticks([0, pi/2, pi])
     cbar.set_ticklabels(["0", r"$\frac{\pi}{2}$", r"$\pi$"])
-    plt.savefig(sh+"ThetaOverBZ,G1,Euler2,Gamma="+VecToStringSave(gammaPoint)+".png", format="png", bbox_inches="tight")
+    plt.savefig(sh+"ThetaOverBZ,G1,Euler4,Gamma="+VecToStringSave(gammaPoint)+".png", format="png", bbox_inches="tight")
     plt.show()
     
     
@@ -308,7 +315,7 @@ for value in [ 0.9]:
     cbar.set_ticks([0, pi/2, pi])
     cbar.set_ticklabels(["0", r"$\frac{\pi}{2}$", r"$\pi$"])
     # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
-    plt.savefig(sh+"ThetaOverBZ,G2,Euler2,Gamma="+VecToStringSave(gammaPoint)+".png", format="png", bbox_inches="tight")
+    plt.savefig(sh+"ThetaOverBZ,G2,Euler4,Gamma="+VecToStringSave(gammaPoint)+".png", format="png", bbox_inches="tight")
     plt.show()
     
     
@@ -330,7 +337,7 @@ for value in [ 0.9]:
     # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
     cbar.set_ticks([0, pi/2, pi, 3*pi/2, 2*pi])
     cbar.set_ticklabels(["0", r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$", r"$2 \pi$"])
-    plt.savefig(sh+"AlphaOverBZ,G1,Euler2,Gamma="+VecToStringSave(gammaPoint)+".png", format="png", bbox_inches="tight")
+    plt.savefig(sh+"AlphaOverBZ,G1,Euler4,Gamma="+VecToStringSave(gammaPoint)+".png", format="png", bbox_inches="tight")
     plt.show()
     
     
@@ -352,7 +359,7 @@ for value in [ 0.9]:
     cbar.set_ticks([0, pi/2, pi, 3*pi/2, 2*pi])
     cbar.set_ticklabels(["0", r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$", r"$2 \pi$"])
     # fig.colorbar(pos, cax = plt.axes([0.98, 0.145, 0.045, 0.79]))
-    plt.savefig(sh+"AlphaOverBZ,G2,Euler2,Gamma="+VecToStringSave(gammaPoint)+".png", format="png", bbox_inches="tight")
+    plt.savefig(sh+"AlphaOverBZ,G2,Euler4,Gamma="+VecToStringSave(gammaPoint)+".png", format="png", bbox_inches="tight")
     plt.show()
 
     
@@ -466,13 +473,13 @@ col5 = "#F0C808"
 # plt.savefig(sh+"VerticalLineTrajes,Euler=2,V1=(0,8).png", format="png", bbox_inches="tight")
 # plt.show()
 
-Ham = Euler2Hamiltonian
+Ham = Euler4Hamiltonian
     
 
 
     
-for pp in [0.9, 0.7, 0.6, 0.4, 0.2]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
-    pp = round(pp, 2)
+for pp in [0, 0.1, 0.3, 0.5, 0.8, 1]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,21):
+    pp = round(pp, 4)
     
 
     #define path
@@ -509,14 +516,14 @@ for pp in [0.9, 0.7, 0.6, 0.4, 0.2]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,2
     alphasLineG1 = np.zeros(qpoints)
     alphasLineG2 = np.zeros(qpoints)
     
-    # alphasLineG11 = np.zeros(qpoints)
-    # alphasLineG12 = np.zeros(qpoints)
-    # alphasLineG21 = np.zeros(qpoints)
-    # alphasLineG22 = np.zeros(qpoints)
-    # alphasLineCosG11 = np.zeros(qpoints)
-    # alphasLineCosG12 = np.zeros(qpoints)
-    # alphasLineCosG21 = np.zeros(qpoints)
-    # alphasLineCosG22 = np.zeros(qpoints)
+    alphasLineG11 = np.zeros(qpoints)
+    alphasLineG12 = np.zeros(qpoints)
+    alphasLineG21 = np.zeros(qpoints)
+    alphasLineG22 = np.zeros(qpoints)
+    alphasLineCosG11 = np.zeros(qpoints)
+    alphasLineCosG12 = np.zeros(qpoints)
+    alphasLineCosG21 = np.zeros(qpoints)
+    alphasLineCosG22 = np.zeros(qpoints)
     
     # go through possible end points for k, get angles
     for i, kpoint in enumerate(kline):
@@ -528,6 +535,7 @@ for pp in [0.9, 0.7, 0.6, 0.4, 0.2]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,2
         
         #get correct overall phase for uFinal
         uFinalG1 = AlignGaugeBetweenVecs(u0, uFinal)
+        # uFinalG1 = FirstElementVecPositive(uFinal)
         uFinalG2 = -uFinalG1
     
         # get params
@@ -556,6 +564,8 @@ for pp in [0.9, 0.7, 0.6, 0.4, 0.2]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,2
         
         alphaCosArgG2 = ProjReal(np.vdot(u2, uFinalG2)/sin(thetaG2))
         alphaCosG2_1, alphaCosG2_2 = InverseCos(alphaCosArgG2)
+        
+        # print(alphaargG1)
                                
                                               
         thetasLineG1[i] = thetaG1
@@ -564,14 +574,14 @@ for pp in [0.9, 0.7, 0.6, 0.4, 0.2]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,2
         alphasLineG1[i] = FindOverlap(alphaG1_1, alphaG1_2, alphaCosG1_1, alphaCosG1_2)
         alphasLineG2[i] = FindOverlap(alphaG2_1, alphaG2_2, alphaCosG2_1, alphaCosG2_2)
         
-        # alphasLineG11[i] = alphaG1_1
-        # alphasLineG12[i] = alphaG1_2
-        # alphasLineG21[i] = alphaG2_1
-        # alphasLineG22[i] = alphaG2_2
-        # alphasLineCosG11[i] = alphaCosG1_1
-        # alphasLineCosG12[i] = alphaCosG1_2
-        # alphasLineCosG21[i] = alphaCosG2_1
-        # alphasLineCosG22[i] = alphaCosG2_2
+        alphasLineG11[i] = alphaG1_1
+        alphasLineG12[i] = alphaG1_2
+        alphasLineG21[i] = alphaG2_1
+        alphasLineG22[i] = alphaG2_2
+        alphasLineCosG11[i] = alphaCosG1_1
+        alphasLineCosG12[i] = alphaCosG1_2
+        alphasLineCosG21[i] = alphaCosG2_1
+        alphasLineCosG22[i] = alphaCosG2_2
     
 
     
@@ -581,8 +591,8 @@ for pp in [0.9, 0.7, 0.6, 0.4, 0.2]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,2
     # saveLine = "LineTraj,Euler=4,GroundState,GaugeFixToGamma="+VecToStringSave(q0)+",V1="+VecToStringSave(v1)+",V2="+VecToStringSave(v2)+".png"
     # saveLine = ("LineTraj,Euler=4,GroundState,GaugeFixToGamma="+VecToStringSave(q0)
     #             +",v1="+VecToStringSave(v1)+",v2="+VecToStringSave(v2)+".png")
-    saveLine = ("LineTraj,Euler=2,GroundState,GaugeFixToGamma="+VecToStringSave(q0)
-                +",v="+VecToStringSave(4*v1)+".png")
+    saveLine = ("LineTraj,Euler=4,GroundState,GaugeFixToGamma="+VecToStringSave(q0)
+                +",qf="+VecToStringSave(4*v1)+".png")
     saveTheta = "Theta"+saveLine
     saveAlpha = "Alpha"+saveLine
     # ThetaLineTraj,Euler=4,GroundState,GaugeFixToGamma=(-0p8,0),qf=(-0p8,8).png
@@ -683,6 +693,13 @@ for pp in [0.9, 0.7, 0.6, 0.4, 0.2]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,2
     # # plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
     # plt.show()    
     
+
+    
+
+
+
+
+    
     fs = (10,3.5)
     fig, ax = plt.subplots(figsize=fs)
     # ax.plot(multiplier[0], thetasLineG1[0], '.', color=G1colour, markersize = 3, label=r"$\theta_{G1}$")
@@ -701,7 +718,36 @@ for pp in [0.9, 0.7, 0.6, 0.4, 0.2]:#p.linspace(0,1,21):#[0]:#np.linspace(-1,1,2
     ax.grid(b=1, color='1')
     ax.legend(loc="upper right")
     plt.savefig(sh+saveTheta, format="png", bbox_inches="tight")
-    plt.show()    
+    plt.show()   
+    
+    fs = (10,6.5)
+    fig, ax = plt.subplots(figsize=fs)
+    
+    ax.plot(multiplier, alphasLineG11, '.',  color = col1, markersize=ms+5, label=r"$\alpha_{G1}^1$")
+    ax.plot(multiplier, alphasLineG12, '.',  color = col1, markersize=ms+5, label=r"$\alpha_{G1}^1$")
+    ax.plot(multiplier, alphasLineG21, '.',  color = col2, markersize=ms+5, label=r"$\alpha_{G2}^1$")
+    ax.plot(multiplier, alphasLineG22, '.',  color = col2, markersize=ms+5, label=r"$\alpha_{G2}^1$")
+    
+    ax.plot(multiplier, alphasLineCosG11, '.',  color = col3, markersize=ms, label=r"$\alpha_{G1}^2$")
+    ax.plot(multiplier, alphasLineCosG12, '.',  color = col3, markersize=ms, label=r"$\alpha_{G1}^2$")
+    ax.plot(multiplier, alphasLineCosG21, '.',  color = col5, markersize=ms, label=r"$\alpha_{G2}^2$")
+    ax.plot(multiplier, alphasLineCosG22, '.',  color = col5, markersize=ms, label=r"$\alpha_{G2}^2$")
+    ax.set_yticks([ 0, pi/2, pi, 3*pi/2, 2*pi])
+    # ax.set_yticks([-pi, -pi/2, 0, pi/2, pi])
+    # ax.set_yticks([-pi/2, 0, pi/2])
+    # ax.set_yticklabels([ r"$-\pi$", r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$", r"$\pi$"])
+    ax.set_yticklabels([ '0',r"$\frac{\pi}{2}$", r"$\pi$", r"$\frac{3 \pi}{2}$", r"$2 \pi$"])
+    # ax.set_yticklabels([ r"$-\frac{\pi}{2}$",'0',r"$\frac{\pi}{2}$"])
+    # ax.set_ylim([-pi/2-0.1, pi/2+0.1])
+    ax.set_ylabel(r"$\alpha$", rotation=0, labelpad=15)
+    # ax.set_xlabel(r"$q_x$")
+    ax.set_xticks([0,1,2,3,4])
+    # ax.set_xticklabels([VecToString(q0), VecToString(q0+v1), VecToString(q0+v1+v2), VecToString(q0+v2), VecToString(q0)])
+    ax.set_xticklabels([VecToString(q0), VecToString(q1), VecToString(q2), VecToString(q3), VecToString(q4)])
+    ax.grid(b=1, color='1')
+    # ax.legend(loc="upper right")
+    # plt.savefig(sh+saveAlpha, format="png", bbox_inches="tight")
+    plt.show()  
     
     fs = (10,6.5)
     fig, ax = plt.subplots(figsize=fs)

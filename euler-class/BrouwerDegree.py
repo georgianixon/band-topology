@@ -10,10 +10,10 @@ from numpy import cos, sin, exp, pi, tan
 import sys
 sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
-from EulerClass2Hamiltonian import  Euler2Hamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
+from EulerClass2Hamiltonian import  Euler2Hamiltonian, GetEvalsAndEvecsEuler
 from EulerClass4Hamiltonian import Euler4Hamiltonian
 from EulerClass0Hamiltonian import Euler0Hamiltonian
-from Funcs import VecToStringSave
+from Funcs import VecToStringSave, AlignGaugeBetweenVecs
 # from hamiltonians import GetEvalsAndEvecs
 import matplotlib.pyplot as plt
 from numpy.linalg import eig
@@ -45,12 +45,12 @@ Brouwer Degree over the BZ
 n1 = 0
 h = 0.0001
 
-Ham = Euler2Hamiltonian
+Ham = Euler0Hamiltonian
 
 #points in the line
 qpoints=51
 
-for xval in [0.99, 0.8, 0.5, 0.3, 0.1, 0.01]:
+for xval in [ 0]:
         
     # arbitrary point I guess, but not a dirac point
     gammaPoint = np.array([xval,0])
@@ -116,12 +116,12 @@ for xval in [0.99, 0.8, 0.5, 0.3, 0.1, 0.01]:
             yder_G2 = (uKy_G2-uK_G2)/h
     
             brouwD_G1 = (uK_G1[0]*(xder_G1[1]*yder_G1[2] - xder_G1[2]*yder_G1[1]) 
-                      + uK_G1[1]*(xder_G1[2]*yder_G1[0] - xder_G1[0]*yder_G1[2]) 
-                      + uK_G1[2]*(xder_G1[0]*yder_G1[1] - xder_G1[1]*yder_G1[0]))
+                       + uK_G1[1]*(xder_G1[2]*yder_G1[0] - xder_G1[0]*yder_G1[2]) 
+                       + uK_G1[2]*(xder_G1[0]*yder_G1[1] - xder_G1[1]*yder_G1[0]))
             
             brouwD_G2 = (uK_G2[0]*(xder_G2[1]*yder_G2[2] - xder_G2[2]*yder_G2[1]) 
-                      + uK_G2[1]*(xder_G2[2]*yder_G2[0] - xder_G2[0]*yder_G2[2]) 
-                      + uK_G2[2]*(xder_G2[0]*yder_G2[1] - xder_G2[1]*yder_G2[0]))
+                       + uK_G2[1]*(xder_G2[2]*yder_G2[0] - xder_G2[0]*yder_G2[2]) 
+                       + uK_G2[2]*(xder_G2[0]*yder_G2[1] - xder_G2[1]*yder_G2[0]))
             
             brouwerDegG1[xi,yi] = brouwD_G1
             brouwerDegG2[xi,yi] = brouwD_G2
@@ -135,7 +135,8 @@ for xval in [0.99, 0.8, 0.5, 0.3, 0.1, 0.01]:
     
     
     sz = 9
-    savename = "BrouwerDeg,G1,Ref="+VecToStringSave(gammaPoint)+".png"
+    title = "sum="+str(int(np.sum(brouwerDegSignPlotG1)))
+    savename = "BrouwerDeg,Euler=0,G1,Ref="+VecToStringSave(gammaPoint)+".png"
     fig, ax = plt.subplots(figsize=(sz/2,sz/2))
     pos = plt.imshow(brouwerDegSignPlotG1)
     ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
@@ -144,15 +145,17 @@ for xval in [0.99, 0.8, 0.5, 0.3, 0.1, 0.01]:
     ax.set_yticklabels([kmax, round(kmin+3*(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+(kmax-kmin)/4, 2), kmin])
     ax.set_xlabel(r"$k_x$")
     ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
+    ax.set_title(title)
     cbar = fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
     cbar.set_ticks([-1, +1])
     cbar.set_ticklabels(["-1", "+1"])
     plt.savefig(sh+savename, format="png", bbox_inches="tight")
     plt.show()
     
-    savename = "BrouwerDeg,G2,Ref="+VecToStringSave(gammaPoint)+".png"
+    savename = "BrouwerDeg,Euler=0,G2,Ref="+VecToStringSave(gammaPoint)+".png"
     
     sz = 9
+    title = "sum="+str(int(np.sum(brouwerDegSignPlotG2)))
     fig, ax = plt.subplots(figsize=(sz/2,sz/2))
     pos = plt.imshow(brouwerDegSignPlotG2)
     ax.set_xticks([0, (qpoints-1)/4, (qpoints-1)/2, 3*(qpoints-1)/4,  qpoints-1])
@@ -161,6 +164,7 @@ for xval in [0.99, 0.8, 0.5, 0.3, 0.1, 0.01]:
     ax.set_yticklabels([kmax, round(kmin+3*(kmax-kmin)/4, 2), int((kmin+kmax)/2), round(kmin+(kmax-kmin)/4, 2), kmin])
     ax.set_xlabel(r"$k_x$")
     ax.set_ylabel(r"$k_y$", rotation=0, labelpad=15)
+    ax.set_title(title)
     cbar = fig.colorbar(pos, cax = plt.axes([0.93, 0.128, 0.04, 0.752]))
     cbar.set_ticks([-1, +1])
     cbar.set_ticklabels(["-1", "+1"])
