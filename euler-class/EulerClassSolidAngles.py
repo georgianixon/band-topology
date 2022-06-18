@@ -68,8 +68,9 @@ Theta/alpha/inner manifold over the BZ
 n1 = 0
 
 
-Ham = Euler4Hamiltonian
 
+
+Ham = Euler4Hamiltonian
 
 
 #points in the line
@@ -77,7 +78,9 @@ qpoints=51
 
 # arbitrary point I guess, but not a dirac point
 
-for value in [0, 0.1, 0.3, 0.5, 0.8, 1]:
+
+for value in [ 0]:
+
     gammaPoint = np.array([value,0])
     
     #get evecs at gamma point
@@ -1139,47 +1142,6 @@ plt.show()
 # plt.show()    
   
 
-
-#%%
-
-
-
-import numpy as np
-from matplotlib import pyplot as plt
-
-plt.rcParams["figure.autolayout"] = True
-fig = plt.figure(figsize=(7,3.5))
-ax = fig.add_subplot(111, projection='3d')
-m = 1
-N = 3
-data = np.empty((100,100,3))
-for i, kx in enumerate(np.linspace(-1, 1, 100)):
-    for j, ky in enumerate(np.linspace(-1,1, 100)):
-        data[i, j, 0] = m - cos(kx) - cos(ky)
-        data[i, j, 1] = sin(kx)
-        data[i, j, 2] = sin(ky)
-data = data/N
-z, x, y = data.nonzero()
-
-ax.scatter(x, y, z, c=z, alpha=1)
-plt.show()
-
-
-
-#%%
-
-from fractions import Fraction
-def Coeffs(phi, alpha):
-    print(Fraction(cos(phi)).limit_denominator(1000), Fraction(sin(phi)*sin(alpha)).limit_denominator(1000), Fraction(sin(phi)*cos(alpha)).limit_denominator(1000))
-    print(Fraction(cos(phi)**2).limit_denominator(100), 
-          Fraction((sin(phi)*sin(alpha)**2)).limit_denominator(100),
-          Fraction((sin(phi)*cos(alpha))**2).limit_denominator(100))
-    
-Coeffs(-pi/3, 2*pi/3)
-Coeffs(pi/3, -pi/3)
-
-
-    
 
 
 
