@@ -14,7 +14,7 @@ import numpy.linalg as la
 
 place = "Georgia Nixon"
 import sys
-sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class')
+sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class/')
 sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
 from EulerClass2Hamiltonian import  Euler2Hamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
 from EulerClass4Hamiltonian import  Euler4Hamiltonian
