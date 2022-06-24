@@ -14,9 +14,11 @@ import numpy.linalg as la
 
 place = "Georgia Nixon"
 import sys
-sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/euler-class/')
-sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')
-from EulerClass2Hamiltonian import  Euler2Hamiltonian, GetEvalsAndEvecsEuler, AlignGaugeBetweenVecs
+sys.path.append('/Users/'+place+'/Code/MBQD/band-topology/')
+sys.path.append('/Users/'+place+'/Code/MBQD/floquet-simulations/src')\
+    
+from FuncsGeneral import AlignGaugeBetweenVecs
+from EulerClass2Hamiltonian import  Euler2Hamiltonian, GetEvalsAndEvecsEuler
 from EulerClass4Hamiltonian import  Euler4Hamiltonian
 from EulerClass0Hamiltonian import Euler0Hamiltonian
 from hamiltonians import GetEvalsAndEvecsGen
@@ -29,8 +31,6 @@ def CreateCircleLineIntVals(r, points, centre=[0,0]):
     CircleLine = list(dict.fromkeys(CircleLine))
     return CircleLine
 
-
-
 def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     kline = np.linspace(np.array([qxBegin,qyBegin]), np.array([qxEnd,qyEnd]), qpoints)
     kline = np.around(kline)
@@ -39,18 +39,17 @@ def CreateLinearLine(qxBegin, qyBegin, qxEnd, qyEnd, qpoints):
     return kline
 
 
-
 def BerryCurvatureEuler(k, n0, n1, EulerHamiltonian):
     """
     Usually for Euler set n0 = n1 = 2 to look at Berry curvature in the gappend, excited band
     """
-    h = 0.0001
+    h = 0.00001
     
     H = EulerHamiltonian(k)
     
     d0,v0 = GetEvalsAndEvecsEuler(H)
                 
-    # excited (gapped) eigenvector
+    # get appropriate eigenvector
     u0bx=v0[:,n0]
     u0by=v0[:,n1]
     
@@ -80,7 +79,7 @@ def BerryCurvatureEuler(k, n0, n1, EulerHamiltonian):
     xder = (ux-u0bx)/h
     yder = (uy-u0by)/h
     
-    berrycurve = 2*np.imag(np.vdot(xder, yder))
+    berrycurve = 2*np.imag(np.dot(np.conj(xder), yder))
     
     return berrycurve, band1, band2, band3
 
@@ -136,7 +135,8 @@ K2 = np.linspace(kmin, kmax, qpoints, endpoint=True)
 u1, u2 = np.meshgrid(K1, K2)
 
 berrycurve = np.empty([qpoints, qpoints], dtype=np.complex128)
-
+berrycurveband0 = 1
+berrycurveband1 = 1
 
 band1 = np.empty([qpoints, qpoints], dtype=np.complex128)
 band2 = np.empty([qpoints, qpoints], dtype=np.complex128)
@@ -150,7 +150,7 @@ for xi, qx in enumerate(K1):
     for yi, qy in enumerate(K2):
         k = np.array([qx,qy])
 
-        bC, b1, b2, b3 = BerryCurvatureEuler(k,1,1, Ham)
+        bC, b1, b2, b3 = BerryCurvatureEuler(k,berrycurveband0,berrycurveband1, Ham)
         
         berrycurve[xi, yi] = bC
 
@@ -182,6 +182,8 @@ surf = ax.plot_surface(u1, u2, np.real(berrycurve), cmap="RdBu")
 # ax.set_title(r"$\Omega $ (gapped band)" )
 ax.set_xlabel(r'$k_x$', labelpad=5)
 ax.set_ylabel(r'$k_y$', labelpad=5)
+ax.set_title(r"$\Omega_{-} Real$")
+
 fig.colorbar(surf)
 # plt.savefig(sh+"BerryCurvEulerBand2.pdf", format="pdf")
 plt.show()       
@@ -190,10 +192,10 @@ plt.show()
 
 """plot berry curve"""
 fig, ax = plt.subplots()
-img = ax.imshow(np.real(np.flip(np.transpose(berrycurve), axis=0)), 
+img = ax.imshow(np.imag(np.flip(np.transpose(berrycurve), axis=0)), 
                 cmap="RdBu", aspect="auto",
                 interpolation='none', extent=[-1,1,-1,1])
-ax.set_title(r"$\Omega_{-}$")
+ax.set_title(r"$\Omega_{-} Imaginary$")
 ax.set_xlabel(r"$k_x$")
 label_list = [r'$-1$', r"$0$", r"$1$"]
 ax.set_xticks([-pi,0,pi])

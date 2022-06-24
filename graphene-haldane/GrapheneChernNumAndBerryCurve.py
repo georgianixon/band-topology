@@ -18,8 +18,8 @@ import sys
 sys.path.append("/Users/"+place+"/Code/MBQD/floquet-simulations/src")
 sys.path.append("/Users/"+place+"/Code/MBQD/band-topology/graphene-haldane")
 sys.path.append("/Users/"+place+"/Code/MBQD/band-topology/")
-from Funcs import BerryCurvature
-from GrapheneFuncs import HaldaneHamiltonian, HaldaneHamiltonianNur,  HaldaneHamiltonianPaulis
+
+from GrapheneFuncs import HaldaneHamiltonian, HaldaneHamiltonianNur,  HaldaneHamiltonianPaulis, BerryCurvature
 from hamiltonians import GetEvalsAndEvecsGen, PhiString
 cmapstring = 'twilight'
 cmap = mpl.cm.get_cmap(cmapstring)
@@ -47,10 +47,10 @@ mpl.rcParams.update(params)
 #%%
 """print Hamiltonian, sometimes handy"""
 
-phi=pi/7;
-t1=3;
-t2=0.9;
-M=0.5#t2*3*sqrt(3)*sin(phi)-0.1;
+phi=pi/3;
+t1=1;
+t2=0;
+M=0.2#t2*3*sqrt(3)*sin(phi)-0.1;
 params = [phi, M, t1, t2]
 
 
@@ -96,10 +96,10 @@ for H in [HN, HM, HP]:
 """Berry Curvature and Bands"""
 
 
-phi=3*pi/2;
+phi=0#3*pi/2;
 t1=1;
-t2=0.1;
-M=t2*3*sqrt(3)*sin(phi)-0.5;
+t2=-0.7;
+M=0.2#t2*3*sqrt(3)*sin(phi)-0.5;
 params = [phi, M, t1, t2]
 
 #reiprocal lattice vectors
@@ -122,6 +122,7 @@ berrycurve = np.zeros([qpoints, qpoints], dtype=np.complex128)
 lowerband = np.zeros([qpoints, qpoints], dtype=np.complex128)
 upperband = np.zeros([qpoints, qpoints], dtype=np.complex128)
 
+n0 = 0; n1 = 0
 
 for xcnt in range(len(u10)):
     for ycnt in range(len(u10)):
@@ -129,7 +130,7 @@ for xcnt in range(len(u10)):
         #pick momentum point in meshgrid
         k = np.array([kx[xcnt, ycnt], ky[xcnt,ycnt]])
         
-        bC, lB, uB = BerryCurvature(HaldaneHamiltonian, k, params)
+        bC, lB, uB = BerryCurvature(HaldaneHamiltonian, k, n0, n1, params)
         berrycurve[xcnt, ycnt] = bC
         lowerband[xcnt, ycnt] = lB
         upperband[xcnt, ycnt] = uB
@@ -139,28 +140,11 @@ sumchern = (1/2/pi)*np.sum(berrycurve[:-1,:-1])*jacobian
 
 
 
-fig = plt.figure(figsize=(8,6))
-ax = plt.axes(projection='3d')
-ax.view_init(0, -140)
-ax.plot_surface(kx/pi, ky/pi, np.real(upperband), color='b')#, norm=normaliser)
-ax.plot_surface(kx/pi, ky/pi, np.real(lowerband), color='r')#, norm=normaliser)
-#ax.set_xticks([-1, 0, 1])
-#ax.set_xticklabels([1, 0, r"$1$"])
-#ax.set_yticks([-1, 0, 1])
-#ax.set_yticklabels([-1, 0, r"$1$"])
-ax.set_xlabel(r'$k_x/\pi$')
-ax.set_ylabel(r'$k_y/\pi$')
-fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(np.round(M,2)) + r" \quad t_2 = "
-              +str(t2)+r" \quad \phi = "+PhiString(phi)+
-              r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))+r"$", y=0.99)
-# plt.savefig(sh + "BerryCurvature3-lowerband.pdf", format="pdf")
-plt.show()  
-
 #%%
 fig = plt.figure(figsize=(8,6))
 ax = plt.axes(projection='3d')
 ax.view_init(35, -140)
-ax.plot_surface(kx/pi, ky/pi, np.real(berrycurve), cmap=cmap)
+surf = ax.plot_surface(kx/pi, ky/pi, np.real(berrycurve), cmap=cmap)
 #ax.set_xticks([ -1,0, 1])
 #ax.set_xticklabels([ -1,0, r"$1$"])
 #ax.set_yticks([-1, 0, 1])
@@ -169,14 +153,37 @@ ax.set_zlim([-5, 15])
 ax.set_title(r"$\Omega_{-}$" + " where total chern number="+str(np.round(np.real(sumchern), 6)))
 ax.set_xlabel(r'$k_x/\pi$', labelpad=5)
 ax.set_ylabel(r'$k_y/\pi$', labelpad=5)
+
 fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(np.round(M,2)) + r" \quad t_2 = "
-             +str(t2)+r" \quad \phi = 0"+
-             r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))+r"$", 
+             +str(t2)+r" \quad \phi = "+str(round(phi, 5))
+             # r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))
+             +r"$", 
              y=1.05)
+plt.colorbar(surf)
 # plt.savefig(sh + ".pdf", format="pdf")
 plt.show()       
 
+fig = plt.figure(figsize=(8,6))
+ax = plt.axes(projection='3d')
+ax.view_init(35, -140)
+surf = ax.plot_surface(kx/pi, ky/pi, np.imag(berrycurve), cmap=cmap)
+#ax.set_xticks([ -1,0, 1])
+#ax.set_xticklabels([ -1,0, r"$1$"])
+#ax.set_yticks([-1, 0, 1])
+#ax.set_yticklabels([-1, 0, r"$1$"])
+ax.set_zlim([-5, 15])
+ax.set_title(r"Imag($\Omega_{-}$)" + " where total chern number="+str(np.round(np.real(sumchern), 6)))
+ax.set_xlabel(r'$k_x/\pi$', labelpad=5)
+ax.set_ylabel(r'$k_y/\pi$', labelpad=5)
 
+fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(np.round(M,2)) + r" \quad t_2 = "
+             +str(t2)+r" \quad \phi = "+str(round(phi, 5))
+             # r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))
+             +r"$", 
+             y=1.05)
+plt.colorbar(surf)
+# plt.savefig(sh + ".pdf", format="pdf")
+plt.show()   
 
 # normaliser = mpl.colors.Normalize(vmin=-110, vmax=110)
 fig, ax = plt.subplots()
@@ -196,6 +203,10 @@ fig.colorbar(img)
 #             +str(t2)+r" \quad \phi = "+phistring(phi)+r"\quad \Delta / t_2 = "+str(np.round(delta/t2, 2))+r"$", y=0.99)
 plt.show()
 
+#%%
+"""
+plot bands
+"""
 
 fig = plt.figure(figsize=(8,6))
 ax = plt.axes(projection='3d')
@@ -243,11 +254,29 @@ ax.plot_surface(kx/pi, ky/pi, np.real(lowerband), color='r')#, norm=normaliser)
 #ax.set_xticklabels([1, 0, r"$1$"])
 #ax.set_yticks([-1, 0, 1])
 #ax.set_yticklabels([-1, 0, r"$1$"])
+ax.set_xlabel(r'$k_x/\pi$')
+ax.set_ylabel(r'$k_y/\pi$')
+fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(np.round(M,2)) + r" \quad t_2 = "
+              +str(t2)+r" \quad \phi = "+PhiString(phi)+
+              r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))+r"$", y=0.99)
+# plt.savefig(sh + "BerryCurvature3-lowerband.pdf", format="pdf")
+plt.show()  
+
+
+fig = plt.figure(figsize=(8,6))
+ax = plt.axes(projection='3d')
+ax.view_init(0, -140)
+ax.plot_surface(kx/pi, ky/pi, np.real(upperband), color='b')#, norm=normaliser)
+ax.plot_surface(kx/pi, ky/pi, np.real(lowerband), color='r')#, norm=normaliser)
+#ax.set_xticks([-1, 0, 1])
+#ax.set_xticklabels([1, 0, r"$1$"])
+#ax.set_yticks([-1, 0, 1])
+#ax.set_yticklabels([-1, 0, r"$1$"])
 ax.set_title('lowerband')
 ax.set_xlabel(r'$k_x/\pi$')
 ax.set_ylabel(r'$k_y/\pi$')
 fig.suptitle(r"$t="+str(t1)+r" \quad \Delta ="+str(np.round(M,2)) + r" \quad t_2 = "
-              +str(t2)+r" \quad \phi = 0"+
+              +str(t2)+
               r"\quad \frac{\Delta}{ t_2 }\frac{1}{3 \sqrt{3}} = "+str(np.round(M/t2/(3*sqrt(3)),2))+r"$", y=0.99)
 # plt.savefig(sh + "BerryCurvature3-lowerband.pdf", format="pdf")
 plt.show()  

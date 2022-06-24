@@ -12,72 +12,7 @@ sys.path.append("/Users/"+place+"/Code/MBQD/floquet-simulations/src")
 from hamiltonians import GetEvalsAndEvecsGen, PhiString, getevalsandevecs
 
 
-def BerryCurvature(Hamiltonian, k, params):
-    
-    h = 0.0001
-    
-    H = Hamiltonian(k,params)
-    
-    d0,v0 = GetEvalsAndEvecsGen(H)
-                
-    #first eigenvector
-    u0=v0[:,0]
-    
-    #eigenvalues
-    lowerband = d0[0]
-    upperband = d0[1] 
-    
-    #dx direction
-    kxx = k + np.array([h,0])
-    H = Hamiltonian(kxx, params)
-    dx,vx = GetEvalsAndEvecsGen(H)
-    ux = vx[:,0] # first eigenvector
-    
-    #dy direction
-    kyy = k+np.array([0,h])
-    H = Hamiltonian(kyy, params)
-    dy,vy = GetEvalsAndEvecsGen(H)
-    uy=vy[:,0] # first eigenvector
 
-    xder = (ux-u0)/h
-    yder = (uy-u0)/h
-    
-    berrycurve = 2*np.imag(np.dot(np.conj(xder), yder))
-    
-    return berrycurve, lowerband, upperband
-
-
-def BerryCurvature2(Hamiltonian, k, params):
-    
-    h = 0.0001
-    
-    H = Hamiltonian(k,params)
-    
-    d0,v0 = getevalsandevecs(H)
-                
-    #first eigenvector
-    u0=v0[:,0]
-    lowerband = d0[0]
-    upperband = d0[1] 
-    
-    #dx direction
-    kxx = k + np.array([h,0])
-    H = Hamiltonian(kxx, params)
-    dx,vx = getevalsandevecs(H)
-    ux = vx[:,0]
-    
-    #dy direction
-    kyy = k+np.array([0,h])
-    H = Hamiltonian(kyy, params)
-    dy,vy = getevalsandevecs(H)
-    uy=vy[:,0]
-
-    xder = (ux-u0)/h
-    yder = (uy-u0)/h
-    
-    berrycurve = 2*np.imag(np.dot(np.conj(xder), yder))
-    
-    return berrycurve, lowerband, upperband
 
 
 def AbelianCalcWilsonLine(evecsFinal, evecsInitial, dgbands=2):
@@ -90,7 +25,29 @@ def AbelianCalcWilsonLine(evecsFinal, evecsInitial, dgbands=2):
 
 
 
-
+def AlignGaugeBetweenVecs(vec1, vec2):
+    """
+    Make <vec1|vec2> real and positive by shifting overall phase of vec2
+    Return phase shifted vec2
+    """
+    #overlap between vec1 and vec2
+    c = np.vdot(vec1, vec2)
+    #find conj phase of overlap
+    conjPhase = np.conj(c)/np.abs(c)
+    #remove phase, so overlap is real and positive
+    vec2 = conjPhase*vec2
+    
+    # make sure vec1 is in the right gauge, to 20dp
+    c = np.dot(np.conj(vec1), vec2)
+    
+    #try again if still not within..
+    if round(np.imag(c), 30)!=0:
+        conjPhase = np.conj(c)/np.abs(c)
+        vec2 = conjPhase*vec2
+        c = np.dot(np.conj(vec1), vec2)
+        assert(round(np.imag(c), 9)==0)
+    
+    return vec2
 
 
 def DifferenceLine(array2D):

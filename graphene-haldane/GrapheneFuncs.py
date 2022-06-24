@@ -10,8 +10,9 @@ import numpy as np
 from numpy import sqrt, sin, cos
 import sys
 sys.path.append("/Users/"+place+"/Code/MBQD/floquet-simulations/src")
+sys.path.append("/Users/"+place+"/Code/MBQD/band-topology/")
 from hamiltonians import GetEvalsAndEvecsGen, PhiString, getevalsandevecs
-
+from FuncsGeneral import AlignGaugeBetweenVecs
 
 def HaldaneHamiltonianNur(k, params):
     """
@@ -176,4 +177,74 @@ def CalculateBerryConnectMatrixGraphene(k, params):
     return berryConnect
 
 
+def BerryCurvature(Hamiltonian, k, n0, n1, params):
+    
+    h = 0.0001
+    
+    H = Hamiltonian(k,params)
+    
+    d0,v0 = GetEvalsAndEvecsGen(H)
+                
+    #first eigenvector
+    u0bx=v0[:,n0]
+    u0by=v0[:,n1]
+    
+    #eigenvalues
+    lowerband = d0[0]
+    upperband = d0[1] 
+    
+    #dx direction
+    kxx = k + np.array([h,0])
+    H = Hamiltonian(kxx, params)
+    dx,vx = GetEvalsAndEvecsGen(H)
+    ux = vx[:,n0] # first eigenvector
+    
+    ux = AlignGaugeBetweenVecs(u0bx, ux)
+    
+    #dy direction
+    kyy = k+np.array([0,h])
+    H = Hamiltonian(kyy, params)
+    dy,vy = GetEvalsAndEvecsGen(H)
+    uy=vy[:,n1] # first eigenvector
+    
+    uy = AlignGaugeBetweenVecs(u0by, uy)
 
+    xder = (ux-u0bx)/h
+    yder = (uy-u0by)/h
+    
+    berrycurve = 2*np.imag(np.dot(np.conj(xder), yder))
+    
+    return berrycurve, lowerband, upperband
+
+
+def BerryCurvature2(Hamiltonian, k, params):
+    
+    h = 0.0001
+    
+    H = Hamiltonian(k,params)
+    
+    d0,v0 = getevalsandevecs(H)
+                
+    #first eigenvector
+    u0=v0[:,0]
+    lowerband = d0[0]
+    upperband = d0[1] 
+    
+    #dx direction
+    kxx = k + np.array([h,0])
+    H = Hamiltonian(kxx, params)
+    dx,vx = getevalsandevecs(H)
+    ux = vx[:,0]
+    
+    #dy direction
+    kyy = k+np.array([0,h])
+    H = Hamiltonian(kyy, params)
+    dy,vy = getevalsandevecs(H)
+    uy=vy[:,0]
+
+    xder = (ux-u0)/h
+    yder = (uy-u0)/h
+    
+    berrycurve = 2*np.imag(np.dot(np.conj(xder), yder))
+    
+    return berrycurve, lowerband, upperband
